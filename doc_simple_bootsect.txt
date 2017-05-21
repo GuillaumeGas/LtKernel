@@ -1,0 +1,28 @@
+# Création d'un secteur de boot
+
+On travail en 16 bits.
+Le secteur de boot va être chargé en 0000:7C00
+  -> = adresse réelle
+  -> adresse physique = 0x00000 + 0x7C00 = 0x07C00
+Initialisation des segments :
+  - ds (segment de données)
+  - es (autre segment de données)
+  - ss (segment de pile)
+Initialisation du pointeur de pile sp
+  -> l'adresse indiquée est un offset :
+       Si sp = 0xF000 et ss = 0x8000
+          -> adresse réelle = 8000:F000
+          -> adresse physique = 0x80000 + 0xF000 = 0x8F000
+
+[Comment afficher avec le BIOS]
+Utiliser l'interruption 10
+(le 1er argument var être l'adresse du texte, on peut utiliser l'instruction loadsb...)
+
+[Chargement du noyau]
+Appel à l'interruption 13 du bios afin de copier le noyau dans la ram.
+ - commencer par un reset disk drive ? (ah = 00h)
+ - "read sectors from drive" : ah = 02h
+
+On donne la main au noyau.
+
+Ne pas oublier de bourrer la suite de la mémoire, le bootsect doit faire 512 octets.
