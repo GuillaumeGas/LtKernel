@@ -4,7 +4,7 @@
 %define DATA_ADDR 0x07C0	; data segment
 %define STACK_ADDR 0x8000	; stack segment
 %define STACK_PTR_OFFSET 0xF000	; stack pointer
-%define KERNEL_ADDR 0x100	; kernel selector 0100:0000 -> 0x1000 (physical mem)
+%define KERNEL_ADDR 0x1000	; kernel selector 0100:0000 -> 0x1000 (physical mem)
 	
 %define BOOT_DRIVE 0x0 		; drive (for int 0x13)
 	

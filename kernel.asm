@@ -1,9 +1,9 @@
 [BITS 16]
 [ORG 0x0]
 
-%define DATA_ADDR 0x100		; data segment
-%define STACK_ADDR 0x8000 	; stack segment
-%define STACK_PTR_OFFSET 0xF000	; stack pointer
+%define DATA_ADDR 0x1000	; data segment
+%define STACK_ADDR 0x8000 	; stack segment, same as bootsect
+%define STACK_PTR_OFFSET 0xF000	; stack pointer, same as bootsect
 
 	jmp start
 
