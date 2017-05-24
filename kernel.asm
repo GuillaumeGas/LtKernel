@@ -1,28 +1,17 @@
-[BITS 16]
-[ORG 0x0]
+[BITS 32]
+[ORG 0x10000]
 
-%define DATA_ADDR 0x1000	; data segment
-%define STACK_ADDR 0x8000 	; stack segment, same as bootsect
-%define STACK_PTR_OFFSET 0xF000	; stack pointer, same as bootsect
-
-	jmp start
-
-%include "utils.asm"
-
-start:
-	;; Init segments
-	mov ax, DATA_ADDR
-	mov ds, ax
-	mov es, ax
-	mov ax, STACK_ADDR
-	mov ss, ax
-	mov sp, STACK_PTR_OFFSET
-
-	mov si, helloMsg
-	call print
+; Affichage d'un message par ecriture dans la RAM video
+    mov byte [0xB8A00], 'H'
+    mov byte [0xB8A01], 0x57
+    mov byte [0xB8A02], 'E'
+    mov byte [0xB8A03], 0x0A
+    mov byte [0xB8A04], 'L'
+    mov byte [0xB8A05], 0x4E
+    mov byte [0xB8A06], 'L'
+    mov byte [0xB8A07], 0x62
+    mov byte [0xB8A08], 'O'
+    mov byte [0xB8A09], 0x0E
 
 end:
-	jmp end
-
-	;; Variables
-	helloMsg db "Kernel loaded !", 13, 10, 0
+    jmp end
