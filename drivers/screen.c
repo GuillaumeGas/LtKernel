@@ -1,14 +1,4 @@
-// Screen properties
-#define SCREEN_PTR 0xB8000
-#define LINES 25
-#define COLUMNS 80
-#define LF 10
-
-#define BLACK 0x0
-#define WHITE 0x0F
-#define RED   0x4E
-
-typedef unsigned char u8;
+#include "screen.h"
 
 int _line = 0;
 int _column = 0;
@@ -37,7 +27,7 @@ void printChar (char c) {
     }
 }
 
-void print (u8 * str) {
+void print (char * str) {
     while ((*str) != 0)
     	printChar (*(str++));
 }

@@ -10,7 +10,7 @@
 	
 	jmp start
 	
-%include "utils.asm"
+%include "boot/utils.asm"
 
 start:	
 	;; Segments init
