@@ -5,14 +5,15 @@
 %define STACK_ADDR 0x8000	; stack segment
 %define STACK_PTR_OFFSET 0xF000	; stack pointer
 %define KERNEL_ADDR 0x1000	; kernel selector 1000:0000 -> 0x10000 (physical mem)
+%define KSIZE 30
 	
 %define BOOT_DRIVE 0x0 		; drive (for int 0x13)
 	
 	jmp start
 	
-%include "boot/utils.asm"
+%include "utils.asm"
 
-start:	
+start:
 	;; Segments init
 	mov ax, DATA_ADDR
 	mov ds, ax
@@ -35,7 +36,7 @@ start:
 	mov bx, 0
 	
 	mov ah, 0x02		; we read sectors from drive
-	mov al, [sectorsCount]
+	mov al, KSIZE
 	mov ch, 0
 	mov cl, [sectorNum]
 	mov dh, 0
@@ -92,10 +93,10 @@ next:
 	jmp dword 0x8:0x10000
 	
 	;; Variables
-	msgBoot db "Loading LtKernel...", 0
+	msgBoot db "[DEBUG] Loading LtKernel...", 0
 	loadGdtMsg db "Loading GDT...", 0
 	okMsg db "OK", 13, 10, 0
-	sectorsCount db 1
+	sectorsCount db 30
 	sectorNum db 2
 
 	;; Gdt
