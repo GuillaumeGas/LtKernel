@@ -3,7 +3,6 @@
 
 #include "types.h"
 
-void memset (u8 byte, u8 * data, unsigned int size);
 void memcopy (u8 * src, u8 * dst, unsigned int size);
 
 #endif

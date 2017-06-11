@@ -1,8 +1,8 @@
 #ifndef __DEF_GDT__
 #define __DEF_GDT__
 
-#include "../utils/types.h"
-#include "../utils/memory.h"
+#include "types.h"
+#include "memory.h"
 
 #define GDT_SIZE 0xFF
 #define GDT_ADDR 0x0

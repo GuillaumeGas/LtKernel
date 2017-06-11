@@ -1,29 +1,23 @@
-#include "../drivers/screen.h"
-/* #include "gdt.h" */
-
-#include "../utils/types.h"
-#include "../utils/memory.h"
+#include "screen.h"
+#include "types.h"
+#include "memory.h"
 #include "gdt.h"
 
 void kmain (void);
 
 void _start (void) {
+    init_gdt ();
     clear();
-
     setColor (WHITE);
     print ("< ## LtKernel ## >\n");
-
     print (">> Loading GDT...");
-    init_gdt ();
-
     print ("OK\n");
-
     kmain ();
 }
 
 void kmain (void) {
     setColor (RED);
-    print ("Hello from LtKernel !\n");
+    print ("Hello from LtKernel !");
 
     while (1) {}
 }

@@ -15,7 +15,7 @@ void init_gdt_descriptor (u32 limit, u32 base, u8 access, u8 flags, struct gdt_d
 }
 
 void init_gdt () {
-    init_gdt_descriptor (0, 0, 0, 0, &_gdt_desc);
+    init_gdt_descriptor (0, 0, 0, 0, &_gdt_desc[0]);
     init_gdt_descriptor (0xFFFFF, 0, 0x9B, 0x0D, &_gdt_desc[1]); // code
     init_gdt_descriptor (0xFFFFF, 0, 0x93, 0x0D, &_gdt_desc[2]); // data
     init_gdt_descriptor (0, 0, 0x97, 0x0D, &_gdt_desc[3]);      // stack
@@ -24,11 +24,6 @@ void init_gdt () {
     _gdt.base = GDT_ADDR;
 
     memcopy ((u8*)&_gdt_desc, (u8*)_gdt.base, _gdt.limit);
-    /* int i = 0; */
-    /* u8 * src = (u8*)&_gdt_desc; */
-    /* u8 * dst = (u8*)_gdt.base; */
-    /* for (; i < _gdt.limit; i++) */
-    /* 	*(src+i) = *(src+i); */
 
     /* chargement du registre GDTR */
     asm("lgdtl (_gdt)");

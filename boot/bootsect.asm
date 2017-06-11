@@ -93,7 +93,7 @@ next:
 	jmp dword 0x8:0x10000
 	
 	;; Variables
-	msgBoot db "[DEBUG] Loading LtKernel...", 0
+	msgBoot db "Loading LtKernel...", 0
 	loadGdtMsg db "Loading GDT...", 0
 	okMsg db "OK", 13, 10, 0
 	sectorsCount db 30
