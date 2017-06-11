@@ -1,8 +1,8 @@
 #include "screen.h"
 
-int _line = 0;
-int _column = 0;
-char _color = 0x0F;
+int _line = 1;
+int _column = 1;
+u8 _color = 0x0F;
 
 void printChar (char c) {
     if (c == LF) {
@@ -11,13 +11,9 @@ void printChar (char c) {
     } else if (c == CR) {
 	_column = 0;
     } else {
-	u8 * screen_ptr = (u8*) (SCREEN_PTR + 2 * _column + (COLUMNS*2) * _line);
+	u8 * screen_ptr = (u8*) SCREEN_PTR + ((_column + (_line * COLUMNS))*2);
 	*screen_ptr = c;
-	if (_color == 0x0F) {
-	    *(screen_ptr+1) = WHITE;
-	} else {
-	    *(screen_ptr+1) = RED;
-	}
+	*(screen_ptr+1) = _color;
 	_column++;
     }
 
@@ -25,11 +21,21 @@ void printChar (char c) {
 	_column = 0;
 	_line++;
     }
+
+    if (_line > LINES) {
+    	scrollUp ();
+    	_line--;
+    }
 }
 
 void print (char * str) {
     while ((*str) != 0)
     	printChar (*(str++));
+}
+
+void println (char * str) {
+    print (str);
+    printChar ('\n');
 }
 
 void clear () {
@@ -43,4 +49,19 @@ void clear () {
 
 void setColor (u8 value) {
     _color = value;
+}
+
+void scrollUp () {
+    u8 * screen_ptr = (u8*) SCREEN_PTR;
+    u8 * screen_end_ptr = (u8*) SCREEN_END_PTR;
+    u8 * last_line_ptr = screen_ptr + ((1 + (LINES * COLUMNS)) * 2);
+    
+    while (screen_ptr <= screen_end_ptr) {
+	if (screen_ptr < last_line_ptr) {
+	    *screen_ptr = *(screen_ptr + (COLUMNS * 2));
+	} else {
+	    *screen_ptr = 0;
+	}
+	screen_ptr++;
+    }
 }

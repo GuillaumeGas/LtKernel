@@ -6,18 +6,22 @@
 void kmain (void);
 
 void _start (void) {
-    init_gdt ();
     clear();
+
     setColor (WHITE);
-    print ("< ## LtKernel ## >\n");
+    println ("< ## LtKernel ## >");
     print (">> Loading GDT...");
-    print ("OK\n");
+
+    init_gdt ();
+    println ("OK");
+
     kmain ();
 }
 
 void kmain (void) {
     setColor (RED);
-    print ("Hello from LtKernel !");
+    println ("Hello from LtKernel !");
+    setColor (WHITE);
 
     while (1) {}
 }

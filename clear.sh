@@ -1,9 +1,0 @@
-rm *.o
-rm *~
-rm floppyA
-rm kernel_bin
-rm bootsect_bin
-rm boot/*~
-rm drivers/*~
-rm kernel/*~
-rm utils/*~
