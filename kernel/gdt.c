@@ -3,7 +3,8 @@
 struct gdt_descriptor _gdt_desc[4];
 struct gdt _gdt;
 
-void init_gdt_descriptor (u32 limit, u32 base, u8 access, u8 flags, struct gdt_descriptor * entry) {
+void init_gdt_descriptor (u32 limit, u32 base, u8 access, u8 flags, struct gdt_descriptor * entry)
+{
     u32 mask = 0xFFFF;
     entry->limit0_15 = limit & mask;
     entry->base0_15 = base & mask;
@@ -14,7 +15,8 @@ void init_gdt_descriptor (u32 limit, u32 base, u8 access, u8 flags, struct gdt_d
     entry->base24_31 = (base & 0xFF000000) >> 24;
 }
 
-void init_gdt () {
+void init_gdt ()
+{
     init_gdt_descriptor (0, 0, 0, 0, &_gdt_desc[0]);
     init_gdt_descriptor (0xFFFFF, 0, 0x9B, 0x0D, &_gdt_desc[1]); // code
     init_gdt_descriptor (0xFFFFF, 0, 0x93, 0x0D, &_gdt_desc[2]); // data

@@ -4,7 +4,8 @@ int _line = 1;
 int _column = 1;
 u8 _color = 0x0F;
 
-void printChar (char c) {
+void printChar (char c)
+{
     if (c == LF) {
 	_line++;
 	_column = 0;
@@ -28,17 +29,20 @@ void printChar (char c) {
     }
 }
 
-void print (char * str) {
+void print (char * str)
+{
     while ((*str) != 0)
     	printChar (*(str++));
 }
 
-void println (char * str) {
+void println (char * str)
+{
     print (str);
     printChar ('\n');
 }
 
-void clear () {
+void clear ()
+{
     int i = 0;
     u8 * screen_ptr = (u8*)SCREEN_PTR;
     for (; i < (LINES*COLUMNS)*2; i++)
@@ -47,11 +51,13 @@ void clear () {
     _column = 0;
 }
 
-void setColor (u8 value) {
+void setColor (u8 value)
+{
     _color = value;
 }
 
-void scrollUp () {
+void scrollUp ()
+{
     u8 * screen_ptr = (u8*) SCREEN_PTR;
     u8 * screen_end_ptr = (u8*) SCREEN_END_PTR;
     u8 * last_line_ptr = screen_ptr + ((1 + (LINES * COLUMNS)) * 2);

@@ -7,7 +7,8 @@
 #define GDT_SIZE 0xFF
 #define GDT_ADDR 0x0
 
-struct gdt_descriptor {
+struct gdt_descriptor
+{
     u16 limit0_15;
     u16 base0_15;
     u8 base16_23;
@@ -17,7 +18,8 @@ struct gdt_descriptor {
     u8 base24_31;
 } __attribute__ ((packed)); // means we don't want data alignment
 
-struct gdt {
+struct gdt
+{
     u16 limit; // gdt size
     u32 base;  // gdt location
 } __attribute__ ((packed));
