@@ -1,4 +1,4 @@
-[BITS 16]
+[BITS 16]		
 [ORG 0x0]
 
 ;;; Print function

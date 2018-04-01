@@ -5,7 +5,7 @@
 #include "memory.h"
 
 #define GDT_SIZE 0xFF
-#define GDT_ADDR 0x0
+#define GDT_ADDR 0x00
 
 struct gdt_descriptor
 {
@@ -26,5 +26,13 @@ struct gdt
 
 void init_gdt ();
 void init_gdt_descriptor (u32 limit, u32 base, u8 access, u8 flags, struct gdt_descriptor * entry);
+
+/* #ifdef __GDT__ */
+/* struct gdt_descriptor _gdt_desc[4]; */
+/* struct gdt _gdt; */
+/* #else */
+/* extern struct gdt_descriptor _gdt_desc[]; */
+/* extern struct gdt _gdt; */
+/* #endif */
 
 #endif

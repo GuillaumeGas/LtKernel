@@ -4,7 +4,7 @@
 %define DATA_ADDR 0x07C0	; data segment
 %define STACK_ADDR 0x8000	; stack segment
 %define STACK_PTR_OFFSET 0xF000	; stack pointer
-%define KERNEL_ADDR 0x1000	; kernel selector 1000:0000 -> 0x10000 (physical mem)
+%define KERNEL_ADDR 0x100 	; kernel selector 0100:0000 -> 0x1000 (physical mem)
 %define KSIZE 30
 	
 %define BOOT_DRIVE 0x0 		; drive (for int 0x13)
@@ -75,8 +75,10 @@ start:
 	call print
 	
 	;; Enable protected mode
-	xor eax, eax
-	mov eax, 1
+	;; xor eax, eax
+	;; mov eax, 1
+	mov eax, cr0
+	or ax, 1
 	mov cr0, eax
 
 	;; because of the documentation...
@@ -90,7 +92,7 @@ next:
 	mov ss, ax
 	mov esp, 0x9F000
 
-	jmp dword 0x8:0x10000
+	jmp dword 0x8:0x1000
 	
 	;; Variables
 	msgBoot db "Loading LtKernel...", 0
@@ -109,7 +111,7 @@ gdt_ds:				; data segment
 gdt_end:
 
 gdt_ptr:
-	dw 0			; limit : 16 bits (word)
+	dw 0x0000               ; limit : 16 bits (word)
 	dd 0			; base : 32 bits (dword)
 	
 times 510-($-$$) db 144

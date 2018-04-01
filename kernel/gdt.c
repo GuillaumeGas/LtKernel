@@ -1,7 +1,7 @@
+#define __GDT__
 #include "gdt.h"
 
-struct gdt_descriptor _gdt_desc[4];
-struct gdt _gdt;
+void _asm_gdt_init(void);
 
 void init_gdt_descriptor (u32 limit, u32 base, u8 access, u8 flags, struct gdt_descriptor * entry)
 {
@@ -17,27 +17,29 @@ void init_gdt_descriptor (u32 limit, u32 base, u8 access, u8 flags, struct gdt_d
 
 void init_gdt ()
 {
-    init_gdt_descriptor (0, 0, 0, 0, &_gdt_desc[0]);
-    init_gdt_descriptor (0xFFFFF, 0, 0x9B, 0x0D, &_gdt_desc[1]); // code
-    init_gdt_descriptor (0xFFFFF, 0, 0x93, 0x0D, &_gdt_desc[2]); // data
-    init_gdt_descriptor (0, 0, 0x97, 0x0D, &_gdt_desc[3]);      // stack
+    _asm_gdt_init();
+    
+    /* init_gdt_descriptor (0, 0, 0, 0, &_gdt_desc[0]); */
+    /* init_gdt_descriptor (0xFFFFF, 0, 0x9B, 0x0D, &_gdt_desc[1]); // code */
+    /* init_gdt_descriptor (0xFFFFF, 0, 0x93, 0x0D, &_gdt_desc[2]); // data */
+    /* init_gdt_descriptor (0, 0, 0x97, 0x0D, &_gdt_desc[3]);      // stack */
 
-    _gdt.limit = GDT_SIZE * 8;
-    _gdt.base = GDT_ADDR;
+    /* _gdt.limit = GDT_SIZE * 8; */
+    /* _gdt.base = GDT_ADDR; */
 
-    memcopy ((u8*)&_gdt_desc, (u8*)_gdt.base, _gdt.limit);
+    /* memcopy ((u8*)_gdt_desc, (u8*)_gdt.base, _gdt.limit); */
 
-    /* chargement du registre GDTR */
-    asm("lgdtl (_gdt)");
+    /* /\* chargement du registre GDTR *\/ */
+    /* asm ("lgdtl (_gdt)"); */
 
-    /* initialisation des segments */
-    asm (" movw $0x10, %ax \n");
-    asm (" movw %ax, %ds \n");
-    asm (" movw %ax, %es \n");
-    asm (" movw %ax, %fs \n");
-    asm (" movw %ax, %gs \n");
-    asm (" ljmp $0x08, $next \n");
-    asm (" next: \n");
+    /* /\* initialisation des segments *\/ */
+    /* asm (" movw $0x10, %ax \n"); */
+    /* asm (" movw %ax, %ds \n"); */
+    /* asm (" movw %ax, %es \n"); */
+    /* asm (" movw %ax, %fs \n"); */
+    /* asm (" movw %ax, %gs \n"); */
+    /* asm (" ljmp $0x08, $next \n"); */
+    /* asm (" next: \n"); */
 
     // we can't init the esp register because the leave instructure at the end
     // of this function is going to erase esp with ebp value
