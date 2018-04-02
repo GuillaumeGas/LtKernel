@@ -47,7 +47,7 @@ tmp2:
 	;; x x x x x x x x
 	;; Chaque bit permet de masquer une interruption (1) ou non (0)
 	;; 1 1 1 1 1 1 1 0 ;; on masque tout sauf l'horloge système
-	mov al, 0xFE
+	mov al, 0xFC
 	out 0x21, al
 	;; outb (0x21, 0xFC);
 	;; outb (0xA1, 0xFF);
