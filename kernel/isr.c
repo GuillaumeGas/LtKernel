@@ -1,12 +1,12 @@
 #include "screen.h"
 #include "types.h"
 
-void isr_default_int (void)
+void default_isr (void)
 {
     println ("Unhandled interrupt");
 }
 
-void isr_clock_int (void)
+void clock_isr (void)
 {
     static int tic = 0;
     static int sec = 0;

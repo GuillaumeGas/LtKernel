@@ -24,14 +24,21 @@
 #define CR             13 // x = 0
 
 #define BLACK          0x0
-#define WHITE          0x0F
-#define RED            0x4E
+#define BLUE           0x1
+#define GREEN          0x2
+#define CYAN           0x3
+#define RED            0x4
+#define MAGENTA        0x5
+#define YELLOW         0x6
+#define WHITE          0x7
+
 
 void print (char * str);
 void println (char * str);
 void printChar (char c);
 void clear ();
 void setColor (u8 color);
+void setColorEx (u8, u8, u8, u8);
 void scrollUp ();
 
 #endif

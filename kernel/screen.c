@@ -53,7 +53,20 @@ void clear ()
 
 void setColor (u8 value)
 {
-    _color = value;
+    setColorEx (BLACK, WHITE, 0, 0);
+}
+
+void setColorEx (u8 background, u8 foreground, u8 blink, u8 intensity)
+{
+    _color = 0x0;
+    u8 mask = (0x1 << 7);
+    _color = (blink & mask);
+    mask = (0x7 << 4);
+    _color |= (mask & (background << 4));
+    mask = (0x1 << 3);
+    _color |= (mask & (intensity << 3));
+    mask = 0x7;
+    _color |= (mask & foreground);
 }
 
 void scrollUp ()

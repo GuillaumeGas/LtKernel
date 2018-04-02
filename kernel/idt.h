@@ -1,11 +1,6 @@
 #ifndef __DEF_IDT__
 #define __DEF_IDT__
 
-#include "types.h"
-
-#define IDT_SIZE 0xFF // 32 (exceptions) + 16 irqs
-#define IDT_ADDR 0x800 // bon, pk pas
-
 // Liste des IRQs
 /*
 
@@ -28,6 +23,9 @@
 
  */
 
+// Structures utilisées
+
+/*
 // Concernant le champ type :
 //  P D P L . 0 1 1 1 . 0 0 0 x . x x x x
 //  P : indique si le segment est présent en mémoire (1) ou non (0)
@@ -46,17 +44,9 @@ struct Idt
     u16 limit;
     u32 base;
 } __attribute__ ((packed));
+*/
 
 void init_idt (void);
-void init_idt_descriptor (u32 offset_irq, u16 selector, u16 type, struct Idt_descriptor * desc);
-void init_pic ();
-
-/* #ifdef __IDT__ */
-/* struct Idt idt; */
-/* struct Idt_descriptor idt_desc[IDT_SIZE]; */
-/* #else */
-/* extern struct Idt idt; */
-/* extern struct Idt_descriptor idt_desc[]; */
-/* #endif */
+void init_pic (void);
 
 #endif
