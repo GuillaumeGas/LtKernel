@@ -16,8 +16,8 @@ void clock_isr (void)
     if (tic % 100 == 0){
 	sec++;
 	tic = 0;
-	/* if (sec % 2 == 0) */
-	/*     println ("tic"); */
+	if (sec % 2 == 0)
+	    println (".");
 	/* else */
 	/*     println ("tac"); */
     }

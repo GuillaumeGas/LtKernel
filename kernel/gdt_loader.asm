@@ -1,11 +1,11 @@
 [BITS 32]
 
-global gdt_loader
+global load_gdt
 
-gdt_loader:
+load_gdt:
 	push ebp
 	mov ebp, esp
-
+	
 	mov eax, [ebp+8]
 	lgdt [eax]
 
