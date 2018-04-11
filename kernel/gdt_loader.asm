@@ -5,22 +5,30 @@ extern g_tss
 global asm_init_gdt
 		
 asm_init_gdt:
+	push ebp
+	mov ebp, esp
+	
 	;; on stock les info de tss dans le segment correspondant
+	;; On commande par la base
 	mov eax, g_tss
 	mov edx, gdt_tss
-	mov word [edx], ax
-	shr eax, 16
-	mov word [edx+6], ax
-
-	mov eax, g_tss
-	add eax, 104 		; struct tss size
-
-	mov edx, [gdt_tss+2]
-	mov word [edx], ax
+	mov word [edx+2], ax
 	shr eax, 16
 	mov byte [edx+4], al
 	shr eax, 8
 	mov byte [edx+7], al
+
+	;; calcul de l'adresse limite
+	mov eax, g_tss
+	add eax, 103 		; struct tss size
+
+	mov edx, gdt_tss
+	mov word [edx], ax
+	shr eax, 16
+	and al, 0xF
+	mov byte bl, [edx+6]
+	or bl, al
+	mov byte [edx+6], bl
 
 	mov eax, 0		; adresse de destination
 	mov ebx, gdt_begin	; adresse de la gdt locale
@@ -52,9 +60,10 @@ loop:
 	mov gs, ax
 	;; un jump pour mettre à jour le registre segment de code
 	jmp 0x08:next
-next:	
+next:
+	leave
 	ret
-
+	
 ;; Gdt
 gdt_begin:
 	db 0, 0, 0, 0, 0, 0, 0, 0

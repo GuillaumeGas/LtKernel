@@ -8,6 +8,7 @@
 void kmain (void);
 
 void _asm_gdt_init (void);
+void task_switch (void);
 
 void _start (void)
 {
@@ -41,18 +42,18 @@ void test_task ()
 
 void kmain (void)
 {
-    println ("[Boot] GDT loaded\n");
+    /* println ("[Boot] GDT loaded\n"); */
 
     sti ();
-    setColorEx (BLACK, BLUE, 0, 1);
-    println ("[Kernel] Interrupts enabled\n");
+    /* setColorEx (BLACK, BLUE, 0, 1); */
+    /* println ("[Kernel] Interrupts enabled\n"); */
 
-    setColorEx (BLACK, RED, 0, 1);
-    println ("Hello from LtKernel !");
-    setColor (WHITE);
+    /* setColorEx (BLACK, RED, 0, 1); */
+    /* println ("Hello from LtKernel !"); */
+    /* setColor (WHITE); */
 
     /* println ("Starting new task..."); */
-    /* memcopy ((u8*)test_task, (u8*)0x30000, 100); */
+    memcopy ((u8*)test_task, (u8*)0x30000, 100);
 
     // on désactive les interruptions pendant la commutation de tâche (commutation software)
     // on utilise le mécanisme utilisé par le proc quand il termine l'exécution d'une interruption
@@ -63,7 +64,8 @@ void kmain (void)
     // dans les descripteurs de segments utilisateur dans la gdt
     // On modifie également l'EFLAGS afin de désactiver le bit NT (Nested Task) et donc la commutation hardware
     // ainsi que le bit IF afin d'autoriser les interrupts une fois dans la tâche utilisateur.
-    /* cli (); */
+    cli ();
+    task_switch ();
     /* asm ("push $0x23"); */
     /* asm ("push $0x30000 "); */
     /* asm ("pushfl"); */
@@ -74,7 +76,9 @@ void kmain (void)
     /* asm ("push $0x1B "); */
     /* asm ("push $0x30000 "); */
     /* // on garde en mémoire le pointeur sur la pile noyau qui sera utilisé pour de futur interruptions */
-    /* asm ("movl $0x20000, %0" : "=m" (g_tss.esp0) : ); */
+    /* asm ("movl $0, %eax" : : "r"(&g_tss) : ); */
+    /* /\* asm ("movl $0x20000, %0" : "=m" (g_tss.esp0) : ); *\/ */
+    /* asm ("movl $0x20000, (%eax)"); */
     /* asm ("movw $0x23, %ax "); */
     /* asm ("movw %ax, %ds "); */
     /* asm ("iret"); */
