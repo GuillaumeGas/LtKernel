@@ -6,6 +6,8 @@ extern void asm_init_gdt (void);
 
 void init_gdt ()
 {
+    memset ((u8*)&g_tss, 0, sizeof (struct tss));
+    
     g_tss.debug_flag = 0x00;
     g_tss.io_map = 0x00;
     g_tss.esp0 = 0x20000;

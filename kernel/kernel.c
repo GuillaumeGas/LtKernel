@@ -44,7 +44,7 @@ void kmain (void)
 {
     /* println ("[Boot] GDT loaded\n"); */
 
-    sti ();
+    /* sti (); */
     /* setColorEx (BLACK, BLUE, 0, 1); */
     /* println ("[Kernel] Interrupts enabled\n"); */
 
@@ -55,33 +55,7 @@ void kmain (void)
     /* println ("Starting new task..."); */
     memcopy ((u8*)test_task, (u8*)0x30000, 100);
 
-    // on désactive les interruptions pendant la commutation de tâche (commutation software)
-    // on utilise le mécanisme utilisé par le proc quand il termine l'exécution d'une interruption
-    // il va dépiler tous ces éléments pour restaurer les registres et retourner sur la précédente
-    // tâche.
-    // On push donc les éléments qui nous intéressent, afin qu'il saute sur la tâche utilisateur
-    // On prend garde de changer les droits des segments en ring 3 car ce sont les droits donnés
-    // dans les descripteurs de segments utilisateur dans la gdt
-    // On modifie également l'EFLAGS afin de désactiver le bit NT (Nested Task) et donc la commutation hardware
-    // ainsi que le bit IF afin d'autoriser les interrupts une fois dans la tâche utilisateur.
-    cli ();
     task_switch ();
-    /* asm ("push $0x23"); */
-    /* asm ("push $0x30000 "); */
-    /* asm ("pushfl"); */
-    /* asm ("popl %eax "); */
-    /* asm ("orl $0x200, %eax "); */
-    /* asm ("and $0xffffbfff, %eax "); */
-    /* asm ("push %eax "); */
-    /* asm ("push $0x1B "); */
-    /* asm ("push $0x30000 "); */
-    /* // on garde en mémoire le pointeur sur la pile noyau qui sera utilisé pour de futur interruptions */
-    /* asm ("movl $0, %eax" : : "r"(&g_tss) : ); */
-    /* /\* asm ("movl $0x20000, %0" : "=m" (g_tss.esp0) : ); *\/ */
-    /* asm ("movl $0x20000, (%eax)"); */
-    /* asm ("movw $0x23, %ax "); */
-    /* asm ("movw %ax, %ds "); */
-    /* asm ("iret"); */
     
     while (1);
 }
