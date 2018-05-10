@@ -20,7 +20,7 @@ task_switch:
 	pushf
 	pop eax
 	or eax, 0x200
-	and eax, 0xFFFFBFFF
+	and eax, 0xFFFFBDFF
 	push eax
 	push 0x1B
 	push 0x30000

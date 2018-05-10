@@ -41,6 +41,14 @@ void println (char * str)
     printChar ('\n');
 }
 
+void printInt (int value)
+{
+    while (value > 0) {
+	printChar ((char) ((value % 10) + '0'));
+	value /= 10;
+    }
+}
+
 void clear ()
 {
     int i = 0;

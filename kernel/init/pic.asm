@@ -46,8 +46,9 @@ tmp2:
 	;; OCW1, port 0x21 (et 0xA1 pour esclave)
 	;; x x x x x x x x
 	;; Chaque bit permet de masquer une interruption (1) ou non (0)
-	;; 1 1 1 1 1 1 1 0 ;; on masque tout sauf l'horloge système
-	mov al, 0xFC
+	;; 1 1 1 0 1 1 0 0 ;; on masque tout sauf l'horloge système (IRQ0), le clavier (IRQ1) et le port COM1 (IRQ4)
+	;; mov al, 0xEC
+	mov al, 0x0
 	out 0x21, al
 	;; outb (0x21, 0xFC);
 	;; outb (0xA1, 0xFF);

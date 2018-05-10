@@ -45,21 +45,15 @@ struct tss
 } __attribute__ ((packed));
 
 void init_gdt ();
-/* void init_gdt_descriptor (u32 base, u32 limit, u8 access, u8 flags, struct gdt_descriptor * entry); */
+
+void print_gdt ();
+void print_gdt_in_memory ();
+void print_gdt_descriptor (struct gdt_descriptor * entry);
 
 #ifdef __GDT__
 struct tss g_tss;
 #else
 extern struct tss g_tss;
 #endif
-
-/* #ifdef __GDT__ */
-/* struct gdt g_gdt; */
-/* struct gdt_descriptor g_gdt_desc[GDT_SIZE]; */
-/* #else */
-/* extern struct gdt g_gdt; */
-/* extern struct gdt_descriptor g_gdt_desc[]; */
-/* /\* extern struct tss g_tss; *\/ */
-/* #endif */
 
 #endif
