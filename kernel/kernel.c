@@ -18,10 +18,10 @@ void _start (void)
     
     sc_clear();
     
-    sc_setColorEx (BLACK, WHITE, 0, 1);
+    sc_setColor (WHITE);
     kprint ("< ## LtKernel ## >\n\n");
 
-    sc_setColorEx (BLACK, CYAN, 0, 1);
+    sc_setColor (CYAN);
 
     init_pic ();
     kprint ("[Boot] PIC loaded\n");
@@ -51,17 +51,17 @@ void kmain (void)
     kprint ("[Boot] Serial port COM1 initialized\n");
     
     sti ();
-    sc_setColorEx (BLACK, BLUE, 0, 1);
+    sc_setColor (BLUE);
     kprint ("[Kernel] Interrupts enabled\n\n");
     
-    sc_setColorEx (BLACK, RED, 0, 1);
+    sc_setColor (RED);
     kprint ("Hello from LtKernel !\n");
     sc_setColor (WHITE);
 
-    /* println ("Starting new task..."); */
-    /* memcopy ((u8*)test_task, (u8*)0x30000, 100); */
+    /* kprint ("Starting new task...\n"); */
+    /* mmcopy ((u8*)test_task, (u8*)0x30000, 100); */
 
     /* task_switch (); */
-    asm ("int $3");
+    /* asm ("int $3"); */
     while (1);
 }

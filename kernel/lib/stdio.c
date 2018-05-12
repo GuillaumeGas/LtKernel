@@ -2,9 +2,12 @@
 #include "stdio.h"
 #include "../drivers/screen.h"
 
+// pour le moment on ne gère pas les entiers > 32 bits
+#define MAX_BITS 32
+
 static int checkType (char type)
 {
-    return (type == 'd' || type == 'c' || type == 's' || type == 'x');
+    return (type == 'd' || type == 'c' || type == 's' || type == 'x' || type == 'b');
 }
 
 static void printStr (char * str)
@@ -53,9 +56,32 @@ static void printInt (const int x, const unsigned short base)
     }
 }
 
+static void printBin (const int value, int nbBits)
+{
+    int offset;
+    int i = 0;
+    
+    if (nbBits > MAX_BITS)
+	nbBits = MAX_BITS;
+
+    offset = nbBits-1;
+    while (offset >= 0) {
+	if (nbBits > 8 && i % 8 == 0 && i != 0)
+	    sc_printChar ('.');
+	i++;
+	if (((value >> offset--) & 1) == 1)
+	    sc_printChar ('1');
+	else
+	    sc_printChar ('0');
+    }
+    
+    sc_printChar ('b');
+}
 
 void kprint (const char * format, ...)
 {
+    int nbBits = 8;
+    int value;
     va_list ap;
     va_start (ap, format);
 
@@ -74,6 +100,14 @@ void kprint (const char * format, ...)
 		case 'x':
 		    printStr ("0x");
 		    printInt (va_arg (ap, int), 16);
+		    break;
+		case 'b':
+		    value = va_arg (ap, int);
+		    if (*(format + 2) == '*') {
+			nbBits = va_arg (ap, int);
+			format++;
+		    }
+		    printBin (value, nbBits);
 		    break;
 		case 's':
 		    printStr ((char*) va_arg (ap, char *));

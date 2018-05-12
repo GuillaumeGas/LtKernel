@@ -7,18 +7,19 @@
 
 #include "../init/gdt.h"
 
-int next_instruction = 0;
-
 void divided_by_zero_isr (void) { sc_setColor (RED); kprint ("[Fault] Divided by zero"); sc_setColor (WHITE); }
 void debug_isr (void) { sc_setColor (RED); kprint ("[Fault/Trap] Debug"); sc_setColor (WHITE); }
 void non_maskable_int_isr (void) { sc_setColor (RED); kprint ("[Interrupt] Non-maskable Interrupt"); sc_setColor (WHITE); }
 void breakpoint_isr (void)
 {
+    sc_clear ();
+    
     sc_setColor (RED); kprint ("[Trap] Breakpoint\n"); sc_setColor (WHITE);
     write_serial ('a');
 
-    /* print_gdt (); */
-    print_gdt_in_memory ();
+    print_gdt ();
+    kprint ("\n");
+    print_tss ();
     
     while (1) {}
 }	
@@ -126,4 +127,5 @@ void keyboard_isr (void)
 void com1_isr ()
 {
     kprint ("COM1 event !\n");
+    /* kprint ("Value : %c\n", read_serial ()); */
 }

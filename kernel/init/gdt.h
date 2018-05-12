@@ -4,8 +4,6 @@
 #define GDT_ADDR 0x0
 #define GDT_SIZE 6
 
-// Structures utilisées
-
 struct gdt_descriptor
 {
     u16 limit0_15;
@@ -47,12 +45,16 @@ struct tss
 void init_gdt ();
 
 void print_gdt ();
-void print_gdt_in_memory ();
 void print_gdt_descriptor (struct gdt_descriptor * entry);
+void print_tss ();
 
 #ifdef __GDT__
+struct gdt g_gdt;
+struct gdt_descriptor g_gdt_descriptor[GDT_SIZE];
 struct tss g_tss;
 #else
+extern struct gdt g_gdt;
+extern struct gdt_descriptor g_gdt_descriptor[];
 extern struct tss g_tss;
 #endif
 

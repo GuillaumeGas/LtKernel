@@ -1,10 +1,10 @@
 OBJ=kernel
-CC=gcc -Wall -m32 -g -fno-stack-protector
+CC=gcc -Wall -m32 -g -fno-stack-protector -fno-pie
 
 all: $(OBJ) 
 
 kernel: kernel.o idt.o int.o isr.o gdt.o pic.o gdt_loader.o screen.o serial.o memory.o stdio.o task_switch.o
-	ld -m elf_i386 --oformat binary --ignore-unresolved-symbol _GLOBAL_OFFSET_TABLE_ -Ttext 1000 $^ -o $@
+	ld -m elf_i386 --oformat binary -Ttext 1000 $^ -o $@
 
 memory.o: lib/memory.c
 	$(CC) -c $^

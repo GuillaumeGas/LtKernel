@@ -18,7 +18,7 @@ void sc_printChar (char c)
 	_column++;
     }
 
-    if (_column > COLUMNS) {
+    if (_column > COLUMNS - 1) {
 	_column = 0;
 	_line++;
     }
@@ -41,7 +41,7 @@ void sc_clear ()
 
 void sc_setColor (u8 value)
 {
-    sc_setColorEx (BLACK, WHITE, 0, 0);
+    sc_setColorEx (BLACK, value, 0, 0);
 }
 
 void sc_setColorEx (u8 background, u8 foreground, u8 blink, u8 intensity)
