@@ -37,5 +37,6 @@ void sc_clear ();
 void sc_setColor (u8 color);
 void sc_setColorEx (u8, u8, u8, u8);
 void sc_scrollUp ();
+void sc_setBackground (u8 color);
 
 #endif

@@ -41,7 +41,10 @@ void sc_clear ()
 
 void sc_setColor (u8 value)
 {
-    sc_setColorEx (BLACK, value, 0, 0);
+    if (value == WHITE)
+	sc_setColorEx (BLACK, value, 0, 0);
+    else
+	sc_setColorEx (BLACK, value, 0, 1);
 }
 
 void sc_setColorEx (u8 background, u8 foreground, u8 blink, u8 intensity)
@@ -71,4 +74,13 @@ void sc_scrollUp ()
 	}
 	screen_ptr++;
     }
+}
+
+void sc_setBackground (u8 color)
+{
+    u8 * screen_ptr = (u8*) SCREEN_PTR + 1;
+    u8 * screen_end_ptr = (u8*) SCREEN_END_PTR;
+    
+    for (; screen_ptr <= screen_end_ptr; screen_ptr += 2)
+	*screen_ptr = (*screen_ptr & 0x8F) | ((color & 0x7) << 4);
 }

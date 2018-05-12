@@ -3,13 +3,19 @@ CC=gcc -Wall -m32 -g -fno-stack-protector -fno-pie
 
 all: $(OBJ) 
 
-kernel: kernel.o idt.o idt_loader.o int.o isr.o gdt.o pic.o gdt_loader.o screen.o serial.o memory.o stdio.o task_switch.o
+kernel: kernel.o idt.o idt_loader.o int.o isr.o gdt.o pic.o gdt_loader.o screen.o serial.o memory.o stdio.o stdlib.o task_switch.o debug.o
 	ld -m elf_i386 --oformat binary -Ttext 1000 $^ -o $@
+
+debug.o: debug/debug.c
+	$(CC) -c $^
 
 memory.o: lib/memory.c
 	$(CC) -c $^
 
 stdio.o: lib/stdio.c
+	$(CC) -c $^
+
+stdlib.o: lib/stdlib.c
 	$(CC) -c $^
 
 int.o: init/int.asm

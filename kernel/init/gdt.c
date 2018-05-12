@@ -82,12 +82,12 @@ void print_tss ()
 {
     kprint (">> TSS (base : %x, limit : %x)\n\n", (int)&g_tss, (int)(&g_tss) + sizeof (struct tss));
 
-    kprint ("esp0 : %x | ss0 : %x\n", g_tss.esp0, g_tss.ss0);
-    kprint ("esp1 : %x | ss1 : %x\n", g_tss.esp1, g_tss.ss1);
-    kprint ("esp2 : %x | ss2 : %x\n", g_tss.esp2, g_tss.ss2);
-    kprint ("cr3 : %x (%b)\n", g_tss.cr3, g_tss.cr3);
-    kprint ("eip (%x), eflags (%x), eax (%x), ecx (%x), edx (%x), esp (%x), ebp (%x), esi (%x), edi (%x)\n",
+    kprint (" esp0 : %x | ss0 : %x\n", g_tss.esp0, g_tss.ss0);
+    kprint (" esp1 : %x | ss1 : %x\n", g_tss.esp1, g_tss.ss1);
+    kprint (" esp2 : %x | ss2 : %x\n", g_tss.esp2, g_tss.ss2);
+    kprint (" cr3 : %x (%b)\n", g_tss.cr3, g_tss.cr3);
+    kprint (" eip (%x), eflags (%x), eax (%x), ecx (%x), edx (%x), esp (%x), ebp (%x), esi (%x), edi (%x)\n",
 	    g_tss.eip, g_tss.eflags, g_tss.eax, g_tss.ecx, g_tss.edx, g_tss.ebx, g_tss.esp, g_tss.ebp, g_tss.esi, g_tss.edi);
-    kprint ("es (%x), cs (%x), ss (%x), ds (%x), fs (%x), gs (%x)\n",
+    kprint (" es (%x), cs (%x), ss (%x), ds (%x), fs (%x), gs (%x)\n",
 	    g_tss.es, g_tss.cs, g_tss.ss, g_tss.ds, g_tss.fs, g_tss.gs);
 }

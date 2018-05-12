@@ -4,6 +4,7 @@
 #include "../drivers/kbmap.h"
 #include "../lib/types.h"
 #include "../lib/stdio.h"
+#include "../debug/debug.h"
 
 #include "gdt.h"
 
@@ -12,14 +13,9 @@ void debug_isr (void) { sc_setColor (RED); kprint ("[Fault/Trap] Debug"); sc_set
 void non_maskable_int_isr (void) { sc_setColor (RED); kprint ("[Interrupt] Non-maskable Interrupt"); sc_setColor (WHITE); }
 void breakpoint_isr (void)
 {
-    sc_clear ();
-    
-    sc_setColor (RED); kprint ("[Trap] Breakpoint\n"); sc_setColor (WHITE);
     write_serial ('a');
 
-    print_gdt ();
-    kprint ("\n");
-    print_tss ();
+    kernel_structure_dump ();
     
     while (1) {}
 }	
@@ -79,7 +75,7 @@ void keyboard_isr (void)
     static int rshift_enable;
     /* static int alt_enable; */
     /* static int ctrl_enable; */
-
+    
     do {
 	i = inb(0x64);
     } while ((i & 0x01) == 0);
@@ -101,7 +97,7 @@ void keyboard_isr (void)
 	/* case 0x37: */
 	/*     alt_enable = 1; */
 	/*     break; */
-	/* default: */
+	default:
 	    kprint ("%c", kbdmap
 		   [i * 4 + (lshift_enable || rshift_enable)]);
 	}

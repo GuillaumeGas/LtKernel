@@ -58,10 +58,10 @@ void kmain (void)
     kprint ("Hello from LtKernel !\n");
     sc_setColor (WHITE);
 
-    kprint ("Starting new task...\n");
-    mmcopy ((u8*)test_task, (u8*)0x30000, 100);
+    /* kprint ("Starting new task...\n"); */
+    /* mmcopy ((u8*)test_task, (u8*)0x30000, 100); */
 
     /* task_switch (); */
-    /* asm ("int $3"); */
+    asm ("int $3");
     while (1);
 }
