@@ -32,14 +32,10 @@
 #define YELLOW         0x6
 #define WHITE          0x7
 
-
-void print (char * str);
-void println (char * str);
-void printChar (char c);
-void printInt (int value);
-void clear ();
-void setColor (u8 color);
-void setColorEx (u8, u8, u8, u8);
-void scrollUp ();
+void sc_printChar (char c);
+void sc_clear ();
+void sc_setColor (u8 color);
+void sc_setColorEx (u8, u8, u8, u8);
+void sc_scrollUp ();
 
 #endif

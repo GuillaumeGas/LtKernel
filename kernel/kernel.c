@@ -1,5 +1,6 @@
 #include "lib/types.h"
 #include "lib/memory.h"
+#include "lib/stdio.h"
 #include "init/gdt.h"
 #include "init/idt.h"
 #include "drivers/proc_io.h"
@@ -13,18 +14,18 @@ void task_switch (void);
 
 void _start (void)
 {
-    clear();
+    sc_clear();
     
-    setColorEx (BLACK, WHITE, 0, 1);
-    println ("< ## LtKernel ## >\n");
+    sc_setColorEx (BLACK, WHITE, 0, 1);
+    kprint ("< ## LtKernel ## >\n\n");
 
-    setColorEx (BLACK, CYAN, 0, 1);
+    sc_setColorEx (BLACK, CYAN, 0, 1);
 
     init_pic ();
-    println ("[Boot] PIC loaded");
+    kprint ("[Boot] PIC loaded\n");
 
     init_idt ();
-    println ("[Boot] IDT loaded");
+    kprint ("[Boot] IDT loaded\n");
     
     init_gdt ();
     
@@ -42,23 +43,23 @@ void test_task ()
 
 void kmain (void)
 {
-    println ("[Boot] GDT loaded\n");
+    kprint ("[Boot] GDT loaded\n");
 
     init_serial ();
-    println ("[Boot] Serial port COM1 initialized");
+    kprint ("[Boot] Serial port COM1 initialized\n");
     
     sti ();
-    setColorEx (BLACK, BLUE, 0, 1);
-    println ("[Kernel] Interrupts enabled\n");
+    sc_setColorEx (BLACK, BLUE, 0, 1);
+    kprint ("[Kernel] Interrupts enabled\n\n");
     
-    setColorEx (BLACK, RED, 0, 1);
-    println ("Hello from LtKernel !");
-    setColor (WHITE);
+    sc_setColorEx (BLACK, RED, 0, 1);
+    kprint ("Hello from LtKernel !\n");
+    sc_setColor (WHITE);
 
     /* println ("Starting new task..."); */
     /* memcopy ((u8*)test_task, (u8*)0x30000, 100); */
 
     /* task_switch (); */
-    /* asm ("int $3"); */
+    asm ("int $3");
     while (1);
 }

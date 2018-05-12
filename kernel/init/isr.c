@@ -3,57 +3,57 @@
 #include "../drivers/proc_io.h"
 #include "../drivers/kbmap.h"
 #include "../lib/types.h"
+#include "../lib/stdio.h"
 
 #include "../init/gdt.h"
 
 int next_instruction = 0;
 
-void divided_by_zero_isr (void) { setColor (RED); println ("[Fault] Divided by zero"); setColor (WHITE); }
-void debug_isr (void) { setColor (RED); println ("[Fault/Trap] Debug"); setColor (WHITE); }
-void non_maskable_int_isr (void) { setColor (RED); println ("[Interrupt] Non-maskable Interrupt"); setColor (WHITE); }
+void divided_by_zero_isr (void) { sc_setColor (RED); kprint ("[Fault] Divided by zero"); sc_setColor (WHITE); }
+void debug_isr (void) { sc_setColor (RED); kprint ("[Fault/Trap] Debug"); sc_setColor (WHITE); }
+void non_maskable_int_isr (void) { sc_setColor (RED); kprint ("[Interrupt] Non-maskable Interrupt"); sc_setColor (WHITE); }
 void breakpoint_isr (void)
 {
-    setColor (RED); println ("[Trap] Breakpoint"); setColor (WHITE);
+    sc_setColor (RED); kprint ("[Trap] Breakpoint\n"); sc_setColor (WHITE);
     write_serial ('a');
 
     /* print_gdt (); */
-    /* print_gdt_in_memory (); */
+    print_gdt_in_memory ();
     
     while (1) {}
 }	
-void overflow_isr (void) { setColor (RED); println ("[Trap] Overflow"); setColor (WHITE); }
-void bound_range_exceeded_isr (void) { setColor (RED); println ("[Fault] Bound Range Exceeded"); setColor (WHITE); }
-void invalid_opcode_isr (void) { setColor (RED); println ("[Fault] Invalid Opcode"); setColor (WHITE); }
-void device_not_available_isr (void) { setColor (RED); println ("[Fault] Device not available"); setColor (WHITE); }
-void double_fault_isr (void) { setColor (RED); println ("[Abort] Double fault"); setColor (WHITE); }
-void invalid_tss_isr (void) { setColor (RED); println ("[Fault] Invalid TSS"); setColor (WHITE); }
-void segment_not_present_isr (void) { setColor (RED); println ("[Fault] Segment not present"); setColor (WHITE); }
-void stack_segment_fault_isr (void) { setColor (RED); println ("[Fault] Stack-Segment fault"); setColor (WHITE); while (1) {} }
-void general_protection_fault_isr (void) { setColor (RED); println ("[Fault] General protection fault"); setColor (WHITE); }
+void overflow_isr (void) { sc_setColor (RED); kprint ("[Trap] Overflow"); sc_setColor (WHITE); }
+void bound_range_exceeded_isr (void) { sc_setColor (RED); kprint ("[Fault] Bound Range Exceeded"); sc_setColor (WHITE); }
+void invalid_opcode_isr (void) { sc_setColor (RED); kprint ("[Fault] Invalid Opcode"); sc_setColor (WHITE); }
+void device_not_available_isr (void) { sc_setColor (RED); kprint ("[Fault] Device not available"); sc_setColor (WHITE); }
+void double_fault_isr (void) { sc_setColor (RED); kprint ("[Abort] Double fault"); sc_setColor (WHITE); }
+void invalid_tss_isr (void) { sc_setColor (RED); kprint ("[Fault] Invalid TSS"); sc_setColor (WHITE); }
+void segment_not_present_isr (void) { sc_setColor (RED); kprint ("[Fault] Segment not present"); sc_setColor (WHITE); }
+void stack_segment_fault_isr (void) { sc_setColor (RED); kprint ("[Fault] Stack-Segment fault"); sc_setColor (WHITE); while (1) {} }
+void general_protection_fault_isr (void) { sc_setColor (RED); kprint ("[Fault] General protection fault"); sc_setColor (WHITE); }
 
 void page_fault_isr (void)
 {
-    setColor (RED);
+    sc_setColor (RED);
     /* register void * cr2 asm ("cr2"); */
     /* printInt (254); */
-    print ("[Fault] Page fault ! Caused by the virtual address 0x");
+    kprint ("[Fault] Page fault ! Caused by the virtual address 0x\n");
     /* printInt (cr2); */
-    println ("");
-    setColor (WHITE);
+    sc_setColor (WHITE);
 }
 
-void x87_floating_point_isr (void) { setColor (RED); println ("[Fault] x87 Floating-point exception"); setColor (WHITE); }
-void alignment_check_isr (void) { setColor (RED); println ("[Fault] Alignment check"); setColor (WHITE); }
-void machine_check_isr (void) { setColor (RED); println ("[Abort] Machine check"); setColor (WHITE); }
-void simd_floating_point_isr (void) { setColor (RED); println ("[Fault] SIMD Floating-point exception"); setColor (WHITE); }
-void virtualization_isr (void) { setColor (RED); println ("[Fault] Virtualization exception"); setColor (WHITE); }
-void security_isr (void) { setColor (RED); println ("[!] Security exception"); setColor (WHITE); }
-void triple_fault_isr (void) { setColor (RED); println ("[!] Triple fault"); setColor (WHITE); }
+void x87_floating_point_isr (void) { sc_setColor (RED); kprint ("[Fault] x87 Floating-point exception"); sc_setColor (WHITE); }
+void alignment_check_isr (void) { sc_setColor (RED); kprint ("[Fault] Alignment check"); sc_setColor (WHITE); }
+void machine_check_isr (void) { sc_setColor (RED); kprint ("[Abort] Machine check"); sc_setColor (WHITE); }
+void simd_floating_point_isr (void) { sc_setColor (RED); kprint ("[Fault] SIMD Floating-point exception"); sc_setColor (WHITE); }
+void virtualization_isr (void) { sc_setColor (RED); kprint ("[Fault] Virtualization exception"); sc_setColor (WHITE); }
+void security_isr (void) { sc_setColor (RED); kprint ("[!] Security exception"); sc_setColor (WHITE); }
+void triple_fault_isr (void) { sc_setColor (RED); kprint ("[!] Triple fault"); sc_setColor (WHITE); }
 
 
 void default_isr (void)
 {
-    println ("Unhandled interrupt");
+    kprint ("Unhandled interrupt\n");
 }
 
 void clock_isr (void)
@@ -65,9 +65,9 @@ void clock_isr (void)
 	sec++;
 	tic = 0;
 	if (sec % 2 == 0)
-	    println (".");
+	    kprint (".");
 	/* else */
-	/*     println ("tac"); */
+	/*     kprint ("tac"); */
     }
 }
 
@@ -101,7 +101,7 @@ void keyboard_isr (void)
 	/*     alt_enable = 1; */
 	/*     break; */
 	/* default: */
-	    printChar(kbdmap
+	    kprint ("%c", kbdmap
 		   [i * 4 + (lshift_enable || rshift_enable)]);
 	}
     } else {                /* touche relachee */
@@ -125,5 +125,5 @@ void keyboard_isr (void)
 
 void com1_isr ()
 {
-    println ("COM1 event !");
+    kprint ("COM1 event !\n");
 }

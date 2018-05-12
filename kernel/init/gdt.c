@@ -1,4 +1,5 @@
 #include "../lib/memory.h"
+#include "../lib/stdio.h"
 #include "../drivers/screen.h"
 #define __GDT__
 #include "gdt.h"
@@ -22,14 +23,11 @@ void print_gdt_in_memory ()
     int i = 0;
     struct gdt_descriptor * gdt_desc = (struct gdt_descriptor*) 0;
 
-    println ("|              GDT in memory            |");
-    println ("-----------------------------------------");
-    println (" [Theoritical GDT base and limit values]");
-    print (" Base : ");
-    printInt (0);
-    print (", Limit : ");
-    printInt (0x20);
-    println ("\n---------------------------------------");    
+    kprint ("|              GDT in memory            |\n");
+    kprint ("-----------------------------------------\n");
+    kprint (" [Theoritical GDT base and limit values]\n");
+    kprint (" Base : %x, Limit : %x\n", 0, 0x20);
+    kprint ("----------------------------------------\n");    
     
     for (; i < GDT_SIZE; i++)
 	print_gdt_descriptor (&gdt_desc[i]);
@@ -47,9 +45,5 @@ void print_gdt_descriptor (struct gdt_descriptor * gdt_desc)
     limit = (0xFF & gdt_desc->limit0_15);
     limit |= (0xF0 & gdt_desc->limit16_19) << 16;
     
-    print (" base : ");
-    printInt (base);
-    print (", limite : ");
-    printInt (limit);
-    println ("");
+    kprint (" base : %x, limit : %x\n");
 }
