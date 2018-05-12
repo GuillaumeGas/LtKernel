@@ -20,6 +20,9 @@ static void printInt (const int x, const unsigned short base)
     char chaine[34];
     int quotient = x;
 
+    if (x == 0)
+	sc_printChar ('0');
+    
     /* vérification de la base. il faut que ça cadre avec "HEX" */
     if ((base < 2) || (16<base)) {
 	kprint("stdio!printInt () error : base non valide !\n");

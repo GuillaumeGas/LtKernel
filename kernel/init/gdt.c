@@ -21,15 +21,12 @@ void init_gdt ()
 void print_gdt_in_memory ()
 {
     int i = 0;
-    struct gdt_descriptor * gdt_desc = (struct gdt_descriptor*) 0;
+    struct gdt_descriptor * gdt_desc = (struct gdt_descriptor*) (0 + sizeof (struct gdt_descriptor));
 
-    kprint ("|              GDT in memory            |\n");
-    kprint ("-----------------------------------------\n");
-    kprint (" [Theoritical GDT base and limit values]\n");
-    kprint (" Base : %x, Limit : %x\n", 0, 0x20);
-    kprint ("----------------------------------------\n");    
-    
-    for (; i < GDT_SIZE; i++)
+    kprint (">> GDT (base : %x, limit : %x)\n\n", GDT_ADDR, GDT_ADDR + (GDT_SIZE * sizeof (struct gdt_descriptor)));
+
+    // On n'affiche pas la ligne vide
+    for (; i < (GDT_SIZE - 1); i++)
 	print_gdt_descriptor (&gdt_desc[i]);
 }
 
@@ -45,5 +42,5 @@ void print_gdt_descriptor (struct gdt_descriptor * gdt_desc)
     limit = (0xFF & gdt_desc->limit0_15);
     limit |= (0xF0 & gdt_desc->limit16_19) << 16;
     
-    kprint (" base : %x, limit : %x\n");
+    kprint (" base : %x, limit : %x\n", base, limit);
 }

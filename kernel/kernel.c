@@ -14,6 +14,8 @@ void task_switch (void);
 
 void _start (void)
 {
+    cli ();
+    
     sc_clear();
     
     sc_setColorEx (BLACK, WHITE, 0, 1);

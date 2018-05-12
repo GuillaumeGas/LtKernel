@@ -48,7 +48,7 @@ tmp2:
 	;; Chaque bit permet de masquer une interruption (1) ou non (0)
 	;; 1 1 1 0 1 1 0 0 ;; on masque tout sauf l'horloge système (IRQ0), le clavier (IRQ1) et le port COM1 (IRQ4)
 	;; mov al, 0xEC
-	mov al, 0x0
+	mov al, 0xEC
 	out 0x21, al
 	;; outb (0x21, 0xFC);
 	;; outb (0xA1, 0xFF);
