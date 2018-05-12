@@ -5,7 +5,7 @@
 #include "../lib/types.h"
 #include "../lib/stdio.h"
 
-#include "../init/gdt.h"
+#include "gdt.h"
 
 void divided_by_zero_isr (void) { sc_setColor (RED); kprint ("[Fault] Divided by zero"); sc_setColor (WHITE); }
 void debug_isr (void) { sc_setColor (RED); kprint ("[Fault/Trap] Debug"); sc_setColor (WHITE); }
@@ -126,6 +126,5 @@ void keyboard_isr (void)
 
 void com1_isr ()
 {
-    kprint ("COM1 event !\n");
-    /* kprint ("Value : %c\n", read_serial ()); */
+    kprint ("One byte received on COM port : %c\n", read_serial ());
 }

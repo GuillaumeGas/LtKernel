@@ -1,6 +1,9 @@
 #ifndef __DEF_IDT__
 #define __DEF_IDT__
 
+#define IDT_SIZE 255
+#define IDT_ADDR 0x800
+
 // Liste des IRQs
 /*
 
@@ -25,13 +28,12 @@
 
 // Structures utilisées
 
-/*
 // Concernant le champ type :
 //  P D P L . 0 1 1 1 . 0 0 0 x . x x x x
 //  P : indique si le segment est présent en mémoire (1) ou non (0)
 //  Dpl : niveau de privilège du segment. (super utilisateur : 0)
 //  Les x, c'est le reste du champ de 16 bits qui n'est pas pris en compte
-struct Idt_descriptor
+struct idt_descriptor
 {
     u16 offset0_15;
     u16 selector;
@@ -39,14 +41,21 @@ struct Idt_descriptor
     u16 offset16_31;
 } __attribute__ ((packed));
 
-struct Idt
+struct idt
 {
     u16 limit;
     u32 base;
 } __attribute__ ((packed));
-*/
 
 void init_idt (void);
 void init_pic (void);
+
+#ifdef __IDT__
+struct idt g_idt;
+struct idt_descriptor g_idt_descriptor[IDT_SIZE];
+#else
+extern struct idt g_idt;
+extern struct idt_descriptor g_idt_descriptor[];
+#endif
 
 #endif
