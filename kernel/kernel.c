@@ -6,6 +6,7 @@
 #include "drivers/proc_io.h"
 #include "drivers/screen.h"
 #include "drivers/serial.h"
+#include "logger.h"
 
 void kmain (void);
 void task_switch (void);
@@ -13,6 +14,8 @@ void task_switch (void);
 void _start (void)
 {
     cli ();
+
+    init_logger (LOG_SCREEN);
     
     sc_clear();
     
@@ -43,10 +46,11 @@ void test_task ()
 
 void kmain (void)
 {
-    kprint ("[Boot] GDT loaded\n");
-
     init_serial ();
-    kprint ("[Boot] Serial port COM1 initialized\n");
+    init_logger (LOG_SCREEN | LOG_SERIAL);
+    
+    kprint ("[Kernel] GDT loaded\n");
+    kprint ("[Kernel] Serial port COM1 initialized\n");
     
     sti ();
     sc_setColor (BLUE);
@@ -57,7 +61,7 @@ void kmain (void)
     sc_setColor (WHITE);
 
     kprint ("Starting new task...\n");
-    mmcopy ((u8*)test_task, (u8*)0x40000, 100);
+    mmcopy ((u8*)test_task, (u8*)0x30000, 100);
 
     /* asm ("int $3"); */
     

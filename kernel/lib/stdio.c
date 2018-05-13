@@ -1,6 +1,9 @@
 #include <stdarg.h>
 #include "stdio.h"
+#include "stdlib.h"
 #include "../drivers/screen.h"
+#include "../drivers/serial.h"
+#include "../logger.h"
 
 // pour le moment on ne gère pas les entiers > 32 bits
 #define MAX_BITS 32
@@ -10,10 +13,19 @@ static int checkType (char type)
     return (type == 'd' || type == 'c' || type == 's' || type == 'x' || type == 'b');
 }
 
+static void printChar (char c)
+{
+    if (FlagOn (g_logType, LOG_SCREEN))
+	sc_printChar (c);
+    if (FlagOn (g_logType, LOG_SERIAL))
+	write_serial (c);
+}
+
 static void printStr (char * str)
 {
-    while (*str != '\0')
-	sc_printChar (*(str++));
+    while (*str != '\0') {
+	printChar (*(str++));
+    }
 }
 
 static void printInt (const int x, const unsigned short base)
@@ -24,7 +36,7 @@ static void printInt (const int x, const unsigned short base)
     int quotient = x;
 
     if (x == 0)
-	sc_printChar ('0');
+	printChar ('0');
     
     /* vérification de la base. il faut que ça cadre avec "HEX" */
     if ((base < 2) || (16<base)) {
@@ -52,7 +64,7 @@ static void printInt (const int x, const unsigned short base)
     }
 
     for (i = cpt - 1; i >= 0; i--) {
-	sc_printChar (chaine[i]);
+	printChar (chaine[i]);
     }
 }
 
@@ -67,15 +79,15 @@ static void printBin (const int value, int nbBits)
     offset = nbBits-1;
     while (offset >= 0) {
 	if (nbBits > 8 && i % 8 == 0 && i != 0)
-	    sc_printChar ('.');
+	    printChar ('.');
 	i++;
 	if (((value >> offset--) & 1) == 1)
-	    sc_printChar ('1');
+	    printChar ('1');
 	else
-	    sc_printChar ('0');
+	    printChar ('0');
     }
     
-    sc_printChar ('b');
+    printChar ('b');
 }
 
 void kprint (const char * format, ...)
@@ -91,7 +103,7 @@ void kprint (const char * format, ...)
 	if (c == '%') {
 	    char type = *(format+1);
 	    if (checkType (type) == 0) {
-		sc_printChar (c);
+		printChar (c);
 	    } else {
 		switch (type) {
 		case 'd':
@@ -114,12 +126,12 @@ void kprint (const char * format, ...)
 		    break;
 		case 'c':
 		default:
-		    sc_printChar ((char)va_arg (ap, int));
+		    printChar ((char)va_arg (ap, int));
 		}
 		format++;
 	    }
 	} else {
-	    sc_printChar (*format);
+	    printChar (*format);
 	}
 	
 	format++;

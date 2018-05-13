@@ -14,8 +14,6 @@ void debug_isr (void) { sc_setColor (RED); panic ("[Fault/Trap] Debug"); sc_setC
 void non_maskable_int_isr (void) { sc_setColor (RED); panic ("[Interrupt] Non-maskable Interrupt"); sc_setColor (WHITE); }
 void breakpoint_isr (void)
 {
-    write_serial ('a');
-
     kdump ();
     
     while (1) {}
