@@ -8,8 +8,6 @@
 #include "drivers/serial.h"
 
 void kmain (void);
-
-void _asm_gdt_init (void);
 void task_switch (void);
 
 void _start (void)
@@ -58,10 +56,12 @@ void kmain (void)
     kprint ("Hello from LtKernel !\n");
     sc_setColor (WHITE);
 
-    /* kprint ("Starting new task...\n"); */
-    /* mmcopy ((u8*)test_task, (u8*)0x30000, 100); */
+    kprint ("Starting new task...\n");
+    mmcopy ((u8*)test_task, (u8*)0x40000, 100);
 
-    /* task_switch (); */
-    asm ("int $3");
+    /* asm ("int $3"); */
+    
+    task_switch ();
+   
     while (1);
 }

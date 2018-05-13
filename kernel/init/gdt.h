@@ -1,8 +1,23 @@
 #ifndef __DEF_GDT__
 #define __DEF_GDT__
 
+/*
+  La Gdt est stockée à l'adresse 0 de la RAM.
+  Elle comporte 6 entrées :
+   - Segment de code noyau
+   - Segment de données noyau
+   - Segment de code utilisateur
+   - Segment de données utilisateur
+   - Segment TSS
+
+   Pour faire simple dans un premier temps, on utilise le segment de données pour la pile.
+   Et le segment de données est confondu avec le celui de code.
+ */
+
 #define GDT_ADDR 0x0
 #define GDT_SIZE 6
+
+#define TSS_SEG_SELECTOR 0x28
 
 struct gdt_descriptor
 {

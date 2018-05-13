@@ -64,10 +64,10 @@ global _asm_com1_isr
         push es
         push fs
         push gs
-        push ebx
-        mov bx,0x10
-        mov ds,bx
-        pop ebx
+	push ebx
+	mov bx, 0x10
+	mov ds, bx
+	pop ebx
 %endmacro
 
 %macro  RESTORE_REGS 0
@@ -92,6 +92,11 @@ global _asm_com1_isr
 	RESTORE_REGS
 	iret
 %endmacro
+
+;; %macro  GET_EXC_CODE 0
+;; 	mov eax, [ebp+52]
+;; 	push eax
+;; %endmacro
 	
 ;;; Processor exceptions & faults
 _asm_divided_by_zero_isr:
@@ -159,8 +164,17 @@ _asm_general_protection_fault_isr:
 	call general_protection_fault_isr
 	INT_EPILOG
 
+extern kprint
+	_format db "CR2 : %x", 10, 0
 _asm_page_fault_isr:
 	INT_PROLOG
+	;; GET_EXC_CODE
+
+	mov eax, cr2
+	push eax
+	push _format
+	call kprint
+	
 	call page_fault_isr
 	INT_EPILOG
 

@@ -5,7 +5,8 @@
 #define __GDT__
 #include "gdt.h"
 
-void load_gdt (struct gdt * gdt_ptr);
+void load_gdt (const struct gdt * gdt_ptr);
+void load_tss (const u16 tss_selector);
 
 static void init_gdt_descriptor (u32 base, u32 limit, u8 access, u8 flags, struct gdt_descriptor * desc);
 static void init_tss ();
@@ -30,6 +31,7 @@ void init_gdt ()
     mmcopy ((u8*) g_gdt_descriptor, (u8*) g_gdt.base, g_gdt.limit);
 
     load_gdt (&g_gdt);
+    load_tss (TSS_SEG_SELECTOR);
 }
 
 static void init_gdt_descriptor (u32 base, u32 limit, u8 access, u8 flags, struct gdt_descriptor * desc)
@@ -47,8 +49,6 @@ static void init_tss ()
 {
     g_tss.debug_flag = 0x00;
     g_tss.io_map = 0x00;
-    g_tss.esp0 = 0x20000;
-    g_tss.ss0 = 0x10;
 }
 
 void print_gdt ()

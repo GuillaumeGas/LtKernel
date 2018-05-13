@@ -1,7 +1,10 @@
 [BITS 32]
 
 global load_gdt
+global load_tss
 
+extern g_tss
+	
 ;;; Transmet l'adresse de la gdt au processeur
 ;;; Param : adresse de la gdt
 load_gdt:
@@ -20,5 +23,24 @@ load_gdt:
 	;; un jump pour mettre à jour le registre segment de code
 	jmp 0x08:next
 next:
+	leave
+	ret
+
+;;; Renseigne le selecteur correspondant au descripteur tss dans la gdt
+;;;  On en profite pour le segment et pointeur de pile du noyau
+;;; Param : selecteur de segment (u16)
+load_tss:
+	push ebp
+	mov ebp, esp
+
+	xor eax, eax
+	mov eax, [ebp+8]
+	ltr ax
+
+	mov eax, g_tss
+	mov ebx, 0x20000
+	mov dword [eax+4], ebx
+	mov word [eax+8], ss
+
 	leave
 	ret

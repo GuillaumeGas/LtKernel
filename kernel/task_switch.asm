@@ -1,6 +1,8 @@
 [BITS 32]
 
 extern g_tss
+extern kprint
+extern print_tss
 global task_switch
 
     ;; on désactive les interruptions pendant la commutation de tâche (commutation software)
@@ -20,13 +22,18 @@ task_switch:
 	pushf
 	pop eax
 	or eax, 0x200
-	and eax, 0xFFFFBDFF
+	and eax, 0xFFFFBFFF
 	push eax
 	push 0x1B
 	push 0x30000
+
 	mov eax, g_tss
 	mov dword [eax+4], 0x20000
 	mov word [eax+8], 0x10
+
+	;; call print_tss
+	
 	mov ax, 0x23
 	mov ds, ax
+	
 	iret

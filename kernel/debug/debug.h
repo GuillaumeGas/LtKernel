@@ -1,3 +1,4 @@
 #pragma once
 
-void kernel_structure_dump ();
+void kdump ();
+void panic (const char * str);
