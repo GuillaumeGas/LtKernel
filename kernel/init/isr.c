@@ -150,3 +150,8 @@ void com1_isr ()
 {
     kprint ("One byte received on COM port : %c\n", read_serial ());
 }
+
+void syscall_isr ()
+{
+    kprint ("Syscall !");
+}

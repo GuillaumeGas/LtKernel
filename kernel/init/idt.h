@@ -4,6 +4,13 @@
 #define IDT_SIZE 255
 #define IDT_ADDR 0x800
 
+/*
+  -- IDT --
+  On retrouve sur les 32 premières entrées les exceptions du processeur.
+  Puis les 16 entrees reservees au materiel.
+  Puis une entree pour les appels systeme (0x30)
+ */
+
 // Liste des IRQs
 /*
 

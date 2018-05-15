@@ -41,6 +41,7 @@ void _start (void)
 
 void test_task ()
 {
+    asm ("int $0x30");
     while (1) {}
 }
 

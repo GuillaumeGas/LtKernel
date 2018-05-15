@@ -32,6 +32,8 @@ void _asm_clock_isr (void);
 void _asm_keyboard_isr (void);
 void _asm_com1_isr (void);
 
+void _asm_syscall_isr (void);
+
 void load_idt (struct idt * idt_ptr);
 
 static void init_idt_descriptor (u32 offset_irq, u16 selector, u16 type, struct idt_descriptor * desc);
@@ -39,6 +41,11 @@ static void init_idt_descriptor (u32 offset_irq, u16 selector, u16 type, struct 
 void init_idt ()
 {
     int i = 0;
+
+    g_idt.limit = IDT_SIZE * sizeof (struct idt_descriptor);
+    g_idt.base = IDT_ADDR;
+
+    mmset ((u8*) IDT_ADDR, 0, g_idt.limit);
     
     for (; i < IDT_SIZE; i++)
     	init_idt_descriptor ((u32)_asm_default_isr, 0x8, 0x8E00, &g_idt_descriptor[i]);
@@ -73,9 +80,7 @@ void init_idt ()
     init_idt_descriptor ((u32) _asm_clock_isr, 0x8, 0x8E00, &g_idt_descriptor[32]);
     init_idt_descriptor ((u32) _asm_keyboard_isr, 0x8, 0x8E00, &g_idt_descriptor[33]);
     init_idt_descriptor ((u32) _asm_com1_isr, 0x8, 0x8E00, &g_idt_descriptor[36]);
-    
-    g_idt.limit = IDT_SIZE * sizeof (struct idt_descriptor);
-    g_idt.base = IDT_ADDR;
+    init_idt_descriptor ((u32) _asm_syscall_isr, 0x8, 0xEF00, &g_idt_descriptor[48]); // Trag Gate, appels systeme int 0x30
 
     mmcopy ((u8*)g_idt_descriptor, (u8*)g_idt.base, g_idt.limit);
     

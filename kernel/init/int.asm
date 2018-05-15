@@ -27,7 +27,10 @@ extern triple_fault_isr
 extern default_isr
 extern clock_isr
 extern keyboard_isr
-extern com1_isr	
+extern com1_isr
+
+;;; Appels systeme
+extern syscall_isr
 
 ;;; Processor exceptions & faults	
 global _asm_divided_by_zero_isr
@@ -57,6 +60,9 @@ global _asm_default_isr
 global _asm_clock_isr
 global _asm_keyboard_isr
 global _asm_com1_isr
+
+;;; Appels systeme
+global _asm_syscall_isr
 
 %macro  SAVE_REGS 0
         pushad
@@ -232,5 +238,11 @@ _asm_keyboard_isr:
 _asm_com1_isr:
 	INT_PROLOG
 	call com1_isr
+	INT_EPILOG
+
+;;; Appels systeme
+_asm_syscall_isr:
+	INT_PROLOG
+	call syscall_isr
 	INT_EPILOG
 	
