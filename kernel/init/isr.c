@@ -151,7 +151,17 @@ void com1_isr ()
     kprint ("One byte received on COM port : %c\n", read_serial ());
 }
 
-void syscall_isr ()
+void syscall_isr (int syscall_number)
 {
-    kprint ("Syscall !");
+    char * message = 0;
+    switch (syscall_number) {
+    case 1:
+	// trop simple, les segments de l'utilisateur sont les mêmes que ceux du noyau... pas besoin de
+	// retrouver le selecteur de segment
+	asm ("mov 44(%%ebp), %%eax; mov %%eax, %0" : "=m" (message));
+	kprint (message);
+	break;
+    default:
+	kprint ("Unhandled syscall number !");
+    }
 }

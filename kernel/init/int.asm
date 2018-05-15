@@ -243,6 +243,8 @@ _asm_com1_isr:
 ;;; Appels systeme
 _asm_syscall_isr:
 	INT_PROLOG
+	push eax
 	call syscall_isr
+	pop eax
 	INT_EPILOG
 	

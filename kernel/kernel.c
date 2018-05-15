@@ -39,9 +39,17 @@ void _start (void)
     kmain ();
 }
 
+// Test utilisateur (CPL 3)
 void test_task ()
 {
-    asm ("int $0x30");
+    char * str = (char*) 0x30100;
+    str[0] = 'H';
+    str[1] = 'e';
+    str[2] = 'l';
+    str[3] = 'l';
+    str[4] = 'o';
+    str[5] = 'w';
+    asm ("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
     while (1) {}
 }
 
