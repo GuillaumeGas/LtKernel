@@ -30,9 +30,14 @@ void general_protection_fault_isr (void) { sc_setColor (RED); panic ("[Fault] Ge
 
 void page_fault_isr (u32 code)
 {
-    /* sc_clear (); */
-    /* sc_setBackground (BLUE); */
-
+    u32 * eip = 0;
+    u32 * cr2 = 0;
+    asm ("mov 56(%%ebp), %%eax; mov %%eax, %0" : "=m" (eip));    
+    asm ("mov %%cr2, %%eax; mov %%eax, %0" : "=m" (cr2));
+    
+    sc_clear ();
+    sc_setBackground (BLUE);
+    
     sc_setColorEx (BLUE, RED, 0, 1);
     kprint (">> [Fault] Page fault ! \n\n");
     
@@ -51,8 +56,9 @@ void page_fault_isr (u32 code)
     /* kprint (" - RSVD : %d (%s)\n", rsvd ? 1 : 0, rsvd ? "one or more page directory entries contain reserved bits which are set to 1" : "PSE or PAE flags in CR4 are set to 1"); */
     /* kprint (" - I/D : %d (%s)\n\n", id ? 1 : 0, id ? "instruction fetch (applies when the No-Execute bit is supported and enabled" : "-"); */
 
-    /* print_gdt (); */
-    /* kprint ("\n"); */
+    kprint ("EIP : %x, CR2 : %x\n\n", eip, cr2);
+    print_gdt ();
+    kprint ("\n");
     print_tss ();
     
     pause ();
@@ -153,12 +159,24 @@ void com1_isr ()
 
 void syscall_isr (int syscall_number)
 {
-    char * message = 0;
+    char * message = NULL;
+    u8 ds_selector = 0;
+    struct gdt_descriptor * user_ds_seg_desc = NULL;
+    u32 user_seg_base_addr = 0;
+    
     switch (syscall_number) {
     case 1:
-	// trop simple, les segments de l'utilisateur sont les mêmes que ceux du noyau... pas besoin de
-	// retrouver le selecteur de segment
+	// On va chercher le param qu'on a passe dans ebx, sauvegarde sur la pile
 	asm ("mov 44(%%ebp), %%eax; mov %%eax, %0" : "=m" (message));
+	// On va chercher le selecteur de segment de donnees utilisateur sur la pile
+	asm ("mov 24(%%ebp), %%ax; mov %%ax, %0" : "=m" (ds_selector));
+
+	ds_selector &= 0xF8; // on modifie le champ RPL (Requested Privilege Level) avant utilisation
+	user_ds_seg_desc = get_gdt_descriptor (ds_selector);
+	user_seg_base_addr = (u32) get_base_addr (user_ds_seg_desc);
+
+	message += user_seg_base_addr;
+	
 	kprint (message);
 	break;
     default:

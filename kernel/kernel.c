@@ -42,7 +42,7 @@ void _start (void)
 // Test utilisateur (CPL 3)
 void test_task ()
 {
-    char * str = (char*) 0x30100;
+    char * str = (char*) 0x100;
     str[0] = 'H';
     str[1] = 'e';
     str[2] = 'l';
@@ -70,7 +70,7 @@ void kmain (void)
     sc_setColor (WHITE);
 
     kprint ("Starting new task...\n");
-    mmcopy ((u8*)test_task, (u8*)0x30000, 100);
+    mmcopy ((u8*)test_task, (u8*)0x40000, 100);
 
     /* asm ("int $3"); */
     

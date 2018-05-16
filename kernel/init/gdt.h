@@ -58,6 +58,8 @@ struct tss
 } __attribute__ ((packed));
 
 void init_gdt ();
+struct gdt_descriptor * get_gdt_descriptor (u8 selector);
+u32 get_base_addr (struct gdt_descriptor * desc);
 
 void print_gdt ();
 void print_gdt_descriptor (struct gdt_descriptor * entry);

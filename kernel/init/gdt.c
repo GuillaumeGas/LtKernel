@@ -13,16 +13,16 @@ static void init_tss ();
 
 void init_gdt ()
 {
-    mmset ((u8*)0x0, 0, (u32) (GDT_SIZE * sizeof (struct gdt_descriptor)));
+    mmset ((u8*)GDT_ADDR, 0, (u32) (GDT_SIZE * sizeof (struct gdt_descriptor)));
     mmset ((u8*)&g_tss, 0, (u32) (sizeof (struct tss)));
 
     init_tss ();
     
     init_gdt_descriptor (0, 0, 0, 0, &g_gdt_descriptor[0]);
-    init_gdt_descriptor (0, 0xFFFF, 0x9B, 0x0D, &g_gdt_descriptor[1]);
-    init_gdt_descriptor (0, 0xFFFF, 0x93, 0x0D, &g_gdt_descriptor[2]);
-    init_gdt_descriptor (0, 0xFFFF, 0xFF, 0x0F, &g_gdt_descriptor[3]);
-    init_gdt_descriptor (0, 0xFFFF, 0xF3, 0x0F, &g_gdt_descriptor[4]);
+    init_gdt_descriptor (0, 0xFFFFF, 0x9B, 0x0D, &g_gdt_descriptor[1]);
+    init_gdt_descriptor (0, 0xFFFFF, 0x93, 0x0D, &g_gdt_descriptor[2]);
+    init_gdt_descriptor (0x30000, 0xFFFFF, 0xFF, 0x0F, &g_gdt_descriptor[3]);
+    init_gdt_descriptor (0x30000, 0xFFFFF, 0xF3, 0x0F, &g_gdt_descriptor[4]);
     init_gdt_descriptor ((u32)&g_tss, (u32) (sizeof (struct tss)), 0xE9, 0, &g_gdt_descriptor[5]);
 
     g_gdt.limit = GDT_SIZE * sizeof (struct gdt_descriptor);
@@ -36,11 +36,11 @@ void init_gdt ()
 
 static void init_gdt_descriptor (u32 base, u32 limit, u8 access, u8 flags, struct gdt_descriptor * desc)
 {
-    desc->limit0_15 = limit & 0xFFFF;
+    desc->limit0_15 = (limit & 0xFFFF);
     desc->base0_15 = (base & 0xFFFF);
     desc->base16_23 = (base >> 16) & 0xFF;
     desc->access = access;
-    desc->limit16_19 = limit >> 16;
+    desc->limit16_19 = (limit >> 16) & 0xF;
     desc->flags = flags & 0xF;
     desc->base24_31 = (base >> 24) & 0xFF;
 }
@@ -49,6 +49,21 @@ static void init_tss ()
 {
     g_tss.debug_flag = 0x00;
     g_tss.io_map = 0x00;
+}
+
+struct gdt_descriptor * get_gdt_descriptor (u8 selector)
+{
+    if (selector <= ((GDT_SIZE - 1) * sizeof (struct gdt_descriptor)))
+	return (struct gdt_descriptor*) selector;
+    return (struct gdt_descriptor*) 0;
+}
+
+u32 get_base_addr (struct gdt_descriptor * desc)
+{
+    u32 addr = desc->base0_15;
+    addr |= (desc->base16_23 << 16);
+    addr |= (desc->base24_31 << 24);
+    return addr;
 }
 
 void print_gdt ()
