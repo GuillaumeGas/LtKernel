@@ -2,3 +2,9 @@
 *.o
 bootsect_bin
 kernel_bin
+/.vs/ltkernel/v15
+/Debug
+/boot/bootsect
+/kernel/kernel
+/kernel.bin
+/ltkernel.img

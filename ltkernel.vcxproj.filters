@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Fichiers sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Fichiers d%27en-tête">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Fichiers de ressources">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Fichiers sources\boot">
+      <UniqueIdentifier>{ba494ff0-2acf-4e03-95e4-bf944ae84abe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers sources\kernel">
+      <UniqueIdentifier>{6b87fb3e-3289-40e2-95fc-f128c56d2fe8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers sources\kernel\debug">
+      <UniqueIdentifier>{4bd20a59-01a7-4e1f-bd23-aa7a34bad32c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers sources\kernel\drivers">
+      <UniqueIdentifier>{68abec57-fd5c-4b85-81a4-ea621f9d3adc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers sources\kernel\init">
+      <UniqueIdentifier>{34d52b08-4624-4287-a2ac-de439e6a7a09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers sources\kernel\lib">
+      <UniqueIdentifier>{1c28ef88-c4d6-4eb1-b534-c2c09c97b874}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile" />
+    <None Include="boot\bootsect.asm">
+      <Filter>Fichiers sources\boot</Filter>
+    </None>
+    <None Include="boot\Makefile">
+      <Filter>Fichiers sources\boot</Filter>
+    </None>
+    <None Include="boot\utils.asm">
+      <Filter>Fichiers sources\boot</Filter>
+    </None>
+    <None Include="kernel\Makefile">
+      <Filter>Fichiers sources\kernel</Filter>
+    </None>
+    <None Include="kernel\task_switch.asm">
+      <Filter>Fichiers sources\kernel</Filter>
+    </None>
+    <None Include="kernel\init\gdt_loader.asm">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </None>
+    <None Include="kernel\init\idt_loader.asm">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </None>
+    <None Include="kernel\init\int.asm">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </None>
+    <None Include="kernel\init\pic.asm">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="kernel\kernel.c">
+      <Filter>Fichiers sources\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\logger.c">
+      <Filter>Fichiers sources\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\debug\debug.c">
+      <Filter>Fichiers sources\kernel\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\drivers\screen.c">
+      <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\drivers\serial.c">
+      <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\init\gdt.c">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\init\idt.c">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\init\isr.c">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\lib\memory.c">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\lib\stdio.c">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\lib\stdlib.c">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="kernel\logger.h">
+      <Filter>Fichiers sources\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\debug\debug.h">
+      <Filter>Fichiers sources\kernel\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\drivers\kbmap.h">
+      <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\drivers\proc_io.h">
+      <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\drivers\screen.h">
+      <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\drivers\serial.h">
+      <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\init\gdt.h">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\init\idt.h">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\init\isr.h">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\lib\memory.h">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\lib\stdio.h">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\lib\stdlib.h">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\lib\types.h">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

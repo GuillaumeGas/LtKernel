@@ -1,10 +1,11 @@
 OBJ=kernel
-CC=gcc -Wall -m32 -g -fno-stack-protector -fno-pie
+CC=i686-elf-gcc -ffreestanding -nostdlib -Wall -m32 -g -fno-stack-protector -fno-pie
+LD=i686-elf-ld
 
 all: $(OBJ) 
 
 kernel: kernel.o idt.o idt_loader.o int.o isr.o gdt.o pic.o gdt_loader.o screen.o serial.o memory.o stdio.o stdlib.o task_switch.o debug.o logger.o
-	ld -m elf_i386 --oformat binary -Ttext 1000 $^ -o $@
+	$(LD) -m elf_i386 --oformat binary -Ttext 1000 $^ -o $@
 
 debug.o: debug/debug.c
 	$(CC) -c $^
