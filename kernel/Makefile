@@ -53,4 +53,5 @@ task_switch.o: task_switch.asm
 	$(CC) -c $^
 
 clean:
-	rm -f $(OBJ) *.o
+	del *.o
+	del kernel

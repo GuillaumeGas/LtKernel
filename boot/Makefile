@@ -7,3 +7,4 @@ bootsect: bootsect.asm
 
 clean:
 	del *.o
+	del bootsect
