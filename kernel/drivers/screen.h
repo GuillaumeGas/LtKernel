@@ -1,7 +1,7 @@
 #ifndef __DEF_SCREEN__
 #define __DEF_SCREEN__
 
-#include "../lib/types.h"
+#include <kernel/lib/types.h>
 
 /**
    The text mode video screen is mapped to the physical address 0xB8000.

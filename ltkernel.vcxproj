@@ -91,6 +91,7 @@
     <None Include="kernel\init\idt_loader.asm" />
     <None Include="kernel\init\int.asm" />
     <None Include="kernel\init\pic.asm" />
+    <None Include="kernel\init\vmm_loader.asm" />
     <None Include="kernel\Makefile" />
     <None Include="kernel\task_switch.asm" />
     <None Include="Makefile" />
@@ -102,6 +103,7 @@
     <ClCompile Include="kernel\init\gdt.c" />
     <ClCompile Include="kernel\init\idt.c" />
     <ClCompile Include="kernel\init\isr.c" />
+    <ClCompile Include="kernel\init\vmm.c" />
     <ClCompile Include="kernel\kernel.c" />
     <ClCompile Include="kernel\lib\memory.c" />
     <ClCompile Include="kernel\lib\stdio.c" />
@@ -117,6 +119,7 @@
     <ClInclude Include="kernel\init\gdt.h" />
     <ClInclude Include="kernel\init\idt.h" />
     <ClInclude Include="kernel\init\isr.h" />
+    <ClInclude Include="kernel\init\vmm.h" />
     <ClInclude Include="kernel\lib\memory.h" />
     <ClInclude Include="kernel\lib\stdio.h" />
     <ClInclude Include="kernel\lib\stdlib.h" />

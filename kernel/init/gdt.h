@@ -1,5 +1,4 @@
-#ifndef __DEF_GDT__
-#define __DEF_GDT__
+#pragma once
 
 /*
   La Gdt est stockée à l'adresse 0 de la RAM.
@@ -73,6 +72,4 @@ struct tss g_tss;
 extern struct gdt g_gdt;
 extern struct gdt_descriptor g_gdt_descriptor[];
 extern struct tss g_tss;
-#endif
-
 #endif

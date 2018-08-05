@@ -1,10 +1,10 @@
 OBJ=kernel
-CC=i686-elf-gcc -ffreestanding -nostdlib -Wall -m32 -g -fno-stack-protector -fno-pie
+CC=i686-elf-gcc -ffreestanding -nostdlib -Wall -m32 -g -fno-stack-protector -fno-pie -I ../
 LD=i686-elf-ld
 
 all: $(OBJ) 
 
-kernel: kernel.o idt.o idt_loader.o int.o isr.o gdt.o pic.o gdt_loader.o screen.o serial.o memory.o stdio.o stdlib.o task_switch.o debug.o logger.o
+kernel: kernel.o idt.o idt_loader.o int.o isr.o gdt.o pic.o gdt_loader.o vmm.o vmm_loader.o screen.o serial.o memory.o stdio.o stdlib.o task_switch.o debug.o logger.o
 	$(LD) -m elf_i386 --oformat binary -Ttext 1000 $^ -o $@
 
 debug.o: debug/debug.c
@@ -40,6 +40,12 @@ gdt.o: init/gdt.c
 pic.o: init/pic.asm
 	nasm -f elf -o $@ $^
 
+vmm.o: init/vmm.c
+	$(CC) -c $^
+
+vmm_loader.o: init/vmm_loader.asm
+	nasm -f elf -o $@ $^
+
 screen.o: drivers/screen.c
 	$(CC) -c $^
 
@@ -53,5 +59,4 @@ task_switch.o: task_switch.asm
 	$(CC) -c $^
 
 clean:
-	del *.o
-	del kernel
+	rm -f $(OBJ) *.o

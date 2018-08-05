@@ -1,5 +1,6 @@
-#ifndef __DEF_KB_MAP__
-#define __DEF_KB_MAP__
+#pragma once
+
+#include <kernel/lib/types.h>
 
 uchar kbdmap[] = {
     0x1B, 0x1B, 0x1B, 0x1B,	/*      esc     (0x01)  */
@@ -100,5 +101,3 @@ uchar kbdmap[] = {
     0xFF, 0xFF, 0xFF, 0xFF,	/*      (0x60)  */
     0xFF, 0xFF, 0xFF, 0xFF	/*      (0x61)  */
 };
-
-#endif

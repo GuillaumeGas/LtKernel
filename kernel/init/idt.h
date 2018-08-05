@@ -1,5 +1,4 @@
-#ifndef __DEF_IDT__
-#define __DEF_IDT__
+#pragma once
 
 #define IDT_SIZE 255
 #define IDT_ADDR 0x800
@@ -63,6 +62,4 @@ struct idt_descriptor g_idt_descriptor[IDT_SIZE];
 #else
 extern struct idt g_idt;
 extern struct idt_descriptor g_idt_descriptor[];
-#endif
-
 #endif

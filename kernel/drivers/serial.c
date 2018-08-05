@@ -1,5 +1,6 @@
+#include <kernel/drivers/proc_io.h>
+
 #include "serial.h"
-#include "proc_io.h"
 
 static int received_data ();
 static int is_transmit_empty ();

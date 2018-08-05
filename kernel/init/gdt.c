@@ -1,6 +1,7 @@
-#include "../lib/memory.h"
-#include "../lib/stdio.h"
-#include "../drivers/screen.h"
+#include <kernel/lib/memory.h>
+#include <kernel/lib/stdio.h>
+#include <kernel/lib/types.h>
+#include <kernel/drivers/screen.h>
 
 #define __GDT__
 #include "gdt.h"

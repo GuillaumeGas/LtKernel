@@ -1,40 +1,40 @@
 #include "debug.h"
 
-#include "../drivers/screen.h"
-#include "../init/gdt.h"
-#include "../lib/stdio.h"
-#include "../lib/stdlib.h"
+#include <kernel/drivers/screen.h>
+#include <kernel/init/gdt.h>
+#include <kernel/lib/stdio.h>
+#include <kernel/lib/stdlib.h>
 
-void kdump ()
+void kdump()
 {
-    sc_clear ();
-    sc_setBackground (BLUE);
+	sc_clear();
+	sc_setBackground(BLUE);
 
-    sc_setColorEx (BLUE, RED, 0, 1);
-    kprint (">> Debug breakpoint\n\n");
-    
-    sc_setColorEx (BLUE, WHITE, 0, 1);
+	sc_setColorEx(BLUE, RED, 0, 1);
+	kprint(">> Debug breakpoint\n\n");
 
-    print_gdt ();
-    kprint ("\n");
-    print_tss ();
-    
-    pause ();
+	sc_setColorEx(BLUE, WHITE, 0, 1);
+
+	print_gdt();
+	kprint("\n");
+	print_tss();
+
+	pause();
 }
 
-void panic (const char * str)
+void panic(const char * str)
 {
-    sc_clear ();
-    sc_setBackground (BLUE);
+	sc_clear();
+	sc_setBackground(BLUE);
 
-    sc_setColorEx (BLUE, RED, 0, 1);
-    kprint (">> %s\n\n", str);
-    
-    sc_setColorEx (BLUE, WHITE, 0, 1);
+	sc_setColorEx(BLUE, RED, 0, 1);
+	kprint(">> %s\n\n", str);
 
-    print_gdt ();
-    kprint ("\n");
-    print_tss ();
-    
-    /* pause (); */
+	sc_setColorEx(BLUE, WHITE, 0, 1);
+
+	print_gdt();
+	kprint("\n");
+	print_tss();
+
+	/* pause (); */
 }

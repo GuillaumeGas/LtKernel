@@ -8,3 +8,4 @@ kernel_bin
 /kernel/kernel
 /kernel.bin
 /ltkernel.img
+/log.txt
