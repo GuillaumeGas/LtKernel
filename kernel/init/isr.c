@@ -31,7 +31,7 @@ void general_protection_fault_isr(void) { sc_setColor(RED); panic("[Fault] Gener
 void page_fault_isr(u32 code)
 {
 	u32 * eip = 0;
-	u32 * cr2 = 0;
+	u32 cr2 = 0;
 	asm("mov 56(%%ebp), %%eax; mov %%eax, %0" : "=m" (eip));
 	asm("mov %%cr2, %%eax; mov %%eax, %0" : "=m" (cr2));
 
@@ -43,23 +43,23 @@ void page_fault_isr(u32 code)
 
 	sc_setColorEx(BLUE, WHITE, 0, 1);
 
-	/* u8 p = (code & 1); */
-	/* u8 wr = (code & 2); */
-	/* u8 us = (code & 4); */
-	/* u8 rsvd = (code & 8); */
-	/* u8 id = (code & 16); */
+	u8 p = (code & 1);
+	u8 wr = (code & 2);
+	u8 us = (code & 4);
+	u8 rsvd = (code & 8);
+	u8 id = (code & 16);
 
-	/* kprint ("Error code : %x (%b)\n", code, code); */
-	/* kprint (" - P : %d (%s)\n", p ? 1 : 0, p ? "protection violation" : "non-present page"); */
-	/* kprint (" - W/R : %d (%s)\n", wr ? 1 : 0, wr ? "write access" : "read access"); */
-	/* kprint (" - U/S : %d (%s)\n", us ? 1 : 0, us ? "user mode" : "supervisor mode"); */
-	/* kprint (" - RSVD : %d (%s)\n", rsvd ? 1 : 0, rsvd ? "one or more page directory entries contain reserved bits which are set to 1" : "PSE or PAE flags in CR4 are set to 1"); */
-	/* kprint (" - I/D : %d (%s)\n\n", id ? 1 : 0, id ? "instruction fetch (applies when the No-Execute bit is supported and enabled" : "-"); */
+	kprint ("Error code : %x (%b)\n", code, code);
+	kprint (" - P : %d (%s)\n", p ? 1 : 0, p ? "protection violation" : "non-present page");
+	kprint (" - W/R : %d (%s)\n", wr ? 1 : 0, wr ? "write access" : "read access");
+	kprint (" - U/S : %d (%s)\n", us ? 1 : 0, us ? "user mode" : "supervisor mode");
+	kprint (" - RSVD : %d (%s)\n", rsvd ? 1 : 0, rsvd ? "one or more page directory entries contain reserved bits which are set to 1" : "PSE or PAE flags in CR4 are set to 1");
+	kprint (" - I/D : %d (%s)\n\n", id ? 1 : 0, id ? "instruction fetch (applies when the No-Execute bit is supported and enabled" : "-");
 
-	kprint("EIP : %x, CR2 : %x\n\n", eip, cr2);
+	/*kprint("EIP : %x, CR2 : %x\n\n", eip, cr2);
 	print_gdt();
 	kprint("\n");
-	print_tss();
+	print_tss();*/
 
 	pause();
 
@@ -93,10 +93,10 @@ void clock_isr(void)
 	if (tic % 100 == 0) {
 		sec++;
 		tic = 0;
+#ifdef CLOCK_DEBUG
 		if (sec % 2 == 0)
 			kprint(".");
-		/* else */
-		/*     kprint ("tac"); */
+#endif
 	}
 }
 
@@ -161,22 +161,11 @@ void com1_isr()
 void syscall_isr(int syscall_number)
 {
 	char * message = NULL;
-	u8 ds_selector = 0;
-	struct gdt_descriptor * user_ds_seg_desc = NULL;
-	u32 user_seg_base_addr = 0;
 
 	switch (syscall_number) {
 	case 1:
 		// On va chercher le param qu'on a passe dans ebx, sauvegarde sur la pile
 		asm("mov 44(%%ebp), %%eax; mov %%eax, %0" : "=m" (message));
-		// On va chercher le selecteur de segment de donnees utilisateur sur la pile
-		asm("mov 24(%%ebp), %%ax; mov %%ax, %0" : "=m" (ds_selector));
-
-		ds_selector &= 0xF8; // on modifie le champ RPL (Requested Privilege Level) avant utilisation
-		user_ds_seg_desc = get_gdt_descriptor(ds_selector);
-		user_seg_base_addr = (u32)get_base_addr(user_ds_seg_desc);
-
-		message += user_seg_base_addr;
 
 		kprint(message);
 		break;

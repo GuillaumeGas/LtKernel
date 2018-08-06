@@ -1,5 +1,5 @@
 OBJ=kernel
-CC=C:\Users\ggas\Documents\prog\ghost-i686-elf-tools\bin\i686-elf-gcc.exe -ffreestanding -nostdlib -Wall -m32 -g -fno-stack-protector -fno-pie -I ../
+CC=i686-elf-gcc.exe -ffreestanding -nostdlib -Wall -m32 -g -fno-stack-protector -fno-pie -I ../
 LD=i686-elf-ld
 
 all: $(OBJ) 
@@ -55,7 +55,7 @@ serial.o: drivers/serial.c
 task_manager.o: user/task_manager.c
 	$(CC) -c $^
 
-task_switcher.o: task_switcher.asm
+task_switcher.o: user/task_switcher.asm
 	nasm -f elf -o $@ $^
 
 .o: .c 

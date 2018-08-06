@@ -23,14 +23,14 @@ switch_task:
 
 	cli
 	push 0x23
-	push 0x10000
+	push 0x400A00
 	pushf
 	pop eax
 	or eax, 0x200
 	and eax, 0xFFFFBFFF
 	push eax
 	push 0x1B
-	push 0x10000
+	push 0x400000
 
 	mov eax, g_tss
 	mov dword [eax+4], 0x20000
