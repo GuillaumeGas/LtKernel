@@ -22,8 +22,8 @@ void init_gdt ()
     init_gdt_descriptor (0, 0, 0, 0, &g_gdt_descriptor[0]);
     init_gdt_descriptor (0, 0xFFFFF, 0x9B, 0x0D, &g_gdt_descriptor[1]);
     init_gdt_descriptor (0, 0xFFFFF, 0x93, 0x0D, &g_gdt_descriptor[2]);
-    init_gdt_descriptor (0x30000, 0xFFFFF, 0xFF, 0x0F, &g_gdt_descriptor[3]);
-    init_gdt_descriptor (0x30000, 0xFFFFF, 0xF3, 0x0F, &g_gdt_descriptor[4]);
+    init_gdt_descriptor (0, 0xFFFFF, 0xFF, 0x0F, &g_gdt_descriptor[3]);
+    init_gdt_descriptor (0, 0xFFFFF, 0xF3, 0x0F, &g_gdt_descriptor[4]);
     init_gdt_descriptor ((u32)&g_tss, (u32) (sizeof (struct tss)), 0xE9, 0, &g_gdt_descriptor[5]);
 
     g_gdt.limit = GDT_SIZE * sizeof (struct gdt_descriptor);

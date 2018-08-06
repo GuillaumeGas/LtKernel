@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -68,6 +68,7 @@
     <NMakeBuildCommandLine>C:\MinGW\bin\mingw32-make.exe all</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>C:\MinGW\bin\mingw32-make.exe clean</NMakeCleanCommandLine>
     <NMakeIncludeSearchPath>C:\Users\Guillaume\Documents\Visual Studio 2017\Projects\ltkernel;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <IncludePath>C:\Users\ggas\Documents\prog\c\ltkernel;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NMakeOutput>ltkernel.exe</NMakeOutput>
@@ -93,7 +94,7 @@
     <None Include="kernel\init\pic.asm" />
     <None Include="kernel\init\vmm_loader.asm" />
     <None Include="kernel\Makefile" />
-    <None Include="kernel\task_switch.asm" />
+    <None Include="kernel\user\task_switcher.asm" />
     <None Include="Makefile" />
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +110,7 @@
     <ClCompile Include="kernel\lib\stdio.c" />
     <ClCompile Include="kernel\lib\stdlib.c" />
     <ClCompile Include="kernel\logger.c" />
+    <ClCompile Include="kernel\user\task_manager.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\debug\debug.h" />
@@ -125,6 +127,7 @@
     <ClInclude Include="kernel\lib\stdlib.h" />
     <ClInclude Include="kernel\lib\types.h" />
     <ClInclude Include="kernel\logger.h" />
+    <ClInclude Include="kernel\user\task_manager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

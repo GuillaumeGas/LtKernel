@@ -1,6 +1,7 @@
 #include <kernel/lib/types.h>
 #include <kernel/lib/memory.h>
 #include <kernel/lib/stdio.h>
+#include <kernel/lib/stdlib.h>
 #include <kernel/init/gdt.h>
 #include <kernel/init/idt.h>
 #include <kernel/init/vmm.h>
@@ -8,9 +9,9 @@
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
 #include <kernel/logger.h>
+#include <kernel/user/task_manager.h>
 
 void kmain(void);
-void task_switch(void);
 
 void _start(void)
 {
@@ -74,12 +75,17 @@ void kmain(void)
 	kprint("Hello from LtKernel !\n");
 	sc_setColor(WHITE);
 
-	/*kprint ("Starting new task...\n");
-	mmcopy ((u8*)test_task, (u8*)0x40000, 100);*/
+	{
+		struct page_directory_entry * pd = NULL;
 
-	/* asm ("int $3"); */
+		// On copie la tâche utilisateur en 0x100000 
+		//  (rappel : on est en noyau, l'adresse virtuelle 0x1000000 équivaut à la même en physique étant donné le mapping effectué)
+		kprint("Starting new task...\n");
+		mmcopy((u8*)test_task, (u8*)USER_TASK_P_ADDR, 100);
 
-	//task_switch ();
+		pd = create_task();
+		switch_task(pd);
+	}
 
 	while (1);
 }

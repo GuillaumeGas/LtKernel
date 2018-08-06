@@ -3,13 +3,8 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/memory.h>
 
+#define __VMM__
 #include "vmm.h"
-
-static void set_page_directory_entry(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags);
-static void set_page_directory_entryEx(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags, u8 global, u8 avail);
-static void set_page_table_entry(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags);
-static void set_page_table_entryEx(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail);
-static void * get_free_page();
 
 extern void _init_vmm(struct page_directory_entry * pd0_addr);
 
@@ -28,8 +23,6 @@ static u8 mem_bitmap[MEM_BITMAP_SIZE];
 */
 void init_vmm()
 {
-	struct page_directory_entry * pd = NULL;
-	struct page_table_entry * pt = NULL;
 	unsigned int index = 0;
 	int page = 0;
 
@@ -45,21 +38,28 @@ void init_vmm()
 		set_page_used(page);
 
 	// On cherche une page pour stocker un répertoire de pages ainsi que pour une table de pages
-	pd = (struct page_directory_entry*)get_free_page();
-	pt = (struct page_table_entry*)get_free_page();
+	kernel_pd = (struct page_directory_entry*)get_free_page();
+	kernel_pt = (struct page_table_entry*)get_free_page();
+
+	// On met à 0 le répertoire de pages
+	init_pages_directory(kernel_pd);
 
 	// Initialisation de l'entrée du répertoire du page concernant le noyau
-	set_page_directory_entry(pd, (u32)pt, IN_MEMORY | WRITEABLE);
-
-	// On met à 0 le reste du répertoire de pages
-	for (index = 1; index < NB_PAGES_TABLE_PER_DIRECTORY; index++)
-		set_page_directory_entry(&(pd[index]), 0, EMPTY);
+	set_page_directory_entry(kernel_pd, (u32)kernel_pt, IN_MEMORY | WRITEABLE);
 
 	// Mapping simple : l'adresse virtuelle 0 == adresse physique 0...
 	for (index = 0; index < NB_PAGES_PER_TABLE; index++)
-		set_page_table_entry(&(pt[index]), (index * PAGE_SIZE), IN_MEMORY | WRITEABLE);
+		set_page_table_entry(&(kernel_pt[index]), (index * PAGE_SIZE), IN_MEMORY | WRITEABLE);
 
-	_init_vmm(pd);
+	_init_vmm(kernel_pd);
+}
+
+void init_pages_directory(struct page_directory_entry * first_pd)
+{
+	unsigned int index = 0;
+
+	for (; index < NB_PAGES_TABLE_PER_DIRECTORY; index++)
+		set_page_directory_entry(&(first_pd[index]), 0, EMPTY);
 }
 
 /*
@@ -67,7 +67,7 @@ void init_vmm()
 
 	Si le flag PAGE_SIZE_4KO et 4MO sont à 1, 4MO l'emporte
 */
-static void set_page_directory_entry(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags)
+void set_page_directory_entry(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags)
 {
 	u32 * pd_addr = (u32*)pd;
 	(*pd_addr) = EMPTY_PAGE_TABLE;
@@ -91,7 +91,7 @@ static void set_page_directory_entry(struct page_directory_entry * pd, u32 pt_ad
 
 	Permet de définir le champ de gestion du cache et le champ librement utilisable
 */
-static void set_page_directory_entryEx(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags, u8 global, u8 avail)
+void set_page_directory_entryEx(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags, u8 global, u8 avail)
 {
 	if (!FlagOn(EMPTY, flags))
 	{
@@ -108,7 +108,7 @@ static void set_page_directory_entryEx(struct page_directory_entry * pd, u32 pt_
 	Fait appel à la fonction d'initialisation d'un répertoire de pages car leur structure
 	 est identique.
 */
-static void set_page_table_entry(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags)
+void set_page_table_entry(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags)
 {
 	if (!FlagOn(EMPTY, flags))
 		pt->written = FlagOn(WRITTEN, flags);
@@ -124,7 +124,7 @@ static void set_page_table_entry(struct page_table_entry * pt, u32 page_addr, PT
 
 	Permet de définir le champ de gestion du cache et le champ librement utilisable
 */
-static void set_page_table_entryEx(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail)
+void set_page_table_entryEx(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail)
 {
 	if (!FlagOn(EMPTY, flags))
 		pt->written = FlagOn(WRITTEN, flags);
@@ -135,7 +135,7 @@ static void set_page_table_entryEx(struct page_table_entry * pt, u32 page_addr, 
 /*
 	Va chercher dans le bitmap une page de disponible et renvoie son adresse physique
 */
-static void * get_free_page()
+void * get_free_page()
 {
 	unsigned int index = 0;
 
