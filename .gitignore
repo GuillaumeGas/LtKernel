@@ -9,3 +9,7 @@ kernel_bin
 /kernel.bin
 /ltkernel.img
 /log.txt
+/.vs/ltkernel/v14
+/x64/Debug
+/ltkernel.VC.db
+/ltkernel.VC.VC.opendb

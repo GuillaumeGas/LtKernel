@@ -31,6 +31,9 @@
     <Filter Include="Fichiers sources\kernel\lib">
       <UniqueIdentifier>{1c28ef88-c4d6-4eb1-b534-c2c09c97b874}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers sources\kernel\user">
+      <UniqueIdentifier>{bcb0687d-4a2e-4eb6-a80e-dcdee957047e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
@@ -44,9 +47,6 @@
       <Filter>Fichiers sources\boot</Filter>
     </None>
     <None Include="kernel\Makefile">
-      <Filter>Fichiers sources\kernel</Filter>
-    </None>
-    <None Include="kernel\task_switch.asm">
       <Filter>Fichiers sources\kernel</Filter>
     </None>
     <None Include="kernel\init\gdt_loader.asm">
@@ -63,6 +63,9 @@
     </None>
     <None Include="kernel\init\vmm_loader.asm">
       <Filter>Fichiers sources\kernel\init</Filter>
+    </None>
+    <None Include="kernel\user\task_switcher.asm">
+      <Filter>Fichiers sources\kernel\user</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -101,6 +104,9 @@
     </ClCompile>
     <ClCompile Include="kernel\init\vmm.c">
       <Filter>Fichiers sources\kernel\init</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\user\task_manager.c">
+      <Filter>Fichiers sources\kernel\user</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -145,6 +151,9 @@
     </ClInclude>
     <ClInclude Include="kernel\init\vmm.h">
       <Filter>Fichiers sources\kernel\init</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\user\task_manager.h">
+      <Filter>Fichiers sources\kernel\user</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

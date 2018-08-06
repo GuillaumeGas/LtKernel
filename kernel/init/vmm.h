@@ -63,3 +63,18 @@ struct page_table_entry
 };
 
 void init_vmm();
+
+void init_pages_directory(struct page_directory_entry * first_pd);
+void set_page_directory_entry(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags);
+void set_page_directory_entryEx(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags, u8 global, u8 avail);
+void set_page_table_entry(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags);
+void set_page_table_entryEx(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail);
+void * get_free_page();
+
+#ifdef __VMM__
+struct page_directory_entry * kernel_pd = NULL;
+struct page_table_entry * kernel_pt = NULL;
+#else
+extern struct page_directory_entry * kernel_pd;
+extern struct page_table_entry * kernel_pt;
+#endif
