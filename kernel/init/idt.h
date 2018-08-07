@@ -1,7 +1,21 @@
 #pragma once
 
+#include <kernel/lib/types.h>
+
 #define IDT_SIZE 255
 #define IDT_ADDR 0x800
+
+#define TASK_GATE 0x5
+#define INT_GATE 0xE
+#define TRAP_GATE 0xF
+#define USER_DPL (0x3 << 5)
+#define KERNEL_DPL 0
+#define PRESENT (1 << 7)
+
+#define CPU_GATE     INT_GATE | PRESENT | KERNEL_DPL
+#define SYSCALL_GATE TRAP_GATE | PRESENT | USER_DPL
+
+typedef u16 GATE_ATTR;
 
 /*
   -- IDT --

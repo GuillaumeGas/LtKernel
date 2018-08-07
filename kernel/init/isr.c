@@ -9,6 +9,8 @@
 
 #include "gdt.h"
 
+#define CLOCK_DEBUG
+
 void divided_by_zero_isr(void) { sc_setColor(RED); panic("[Fault] Divided by zero"); sc_setColor(WHITE); }
 void debug_isr(void) { sc_setColor(RED); panic("[Fault/Trap] Debug"); sc_setColor(WHITE); }
 void non_maskable_int_isr(void) { sc_setColor(RED); panic("[Interrupt] Non-maskable Interrupt"); sc_setColor(WHITE); }
