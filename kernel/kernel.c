@@ -77,14 +77,11 @@ void kmain(void)
 	{
 		struct page_directory_entry * pd = NULL;
 
-		// On copie la tâche utilisateur en 0x100000 
-		//  (rappel : on est en noyau, l'adresse virtuelle 0x1000000 équivaut à la même en physique étant donné le mapping effectué)
+		sc_setColor(WHITE);
 		kprint("> Starting new task...\n\n");
 		sc_setColor(RED);
 		
-		mmcopy((u8*)test_task, (u8*)USER_TASK_P_ADDR, 100);
-
-		pd = create_task();
+		pd = create_task(test_task, 100);
 		switch_task(pd);
 	}
 
