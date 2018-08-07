@@ -9,7 +9,7 @@
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
 #include <kernel/logger.h>
-#include <kernel/user/task_manager.h>
+#include <kernel/user/process_manager.h>
 
 void kmain(void);
 
@@ -68,11 +68,11 @@ void kmain(void)
 	kprint("[Kernel] GDT loaded\n");
 	kprint("[Kernel] Serial port COM1 initialized\n");
 
-	sti();
-	kprint("[Kernel] Interrupts enabled\n");
-
 	init_vmm();
-	kprint("[Kernel] Paging enabled\n\n");
+	kprint("[Kernel] Paging enabled\n");
+
+	init_process_manager();
+	kprint("[Kernel] Process manager initialized\n\n");
 
 	{
 		struct page_directory_entry * pd = NULL;
@@ -81,9 +81,10 @@ void kmain(void)
 		kprint("> Starting new task...\n\n");
 		sc_setColor(RED);
 		
-		pd = create_task(test_task, 100);
-		switch_task(pd);
+		create_process(test_task, 100);
 	}
+
+	sti();
 
 	while (1);
 }

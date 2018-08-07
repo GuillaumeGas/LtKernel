@@ -4,7 +4,7 @@ LD=i686-elf-ld
 
 all: $(OBJ) 
 
-kernel: kernel.o idt.o idt_loader.o int.o isr.o gdt.o pic.o gdt_loader.o vmm.o vmm_loader.o screen.o serial.o memory.o stdio.o stdlib.o task_manager.o task_switcher.o debug.o logger.o
+kernel: kernel.o idt.o idt_loader.o int.o isr.o gdt.o pic.o gdt_loader.o vmm.o vmm_loader.o screen.o serial.o memory.o stdio.o stdlib.o process_manager.o process_starter.o debug.o logger.o scheduler.o
 	$(LD) -m elf_i386 --oformat binary -Ttext 1000 $^ -o $@
 
 debug.o: debug/debug.c
@@ -52,11 +52,14 @@ screen.o: drivers/screen.c
 serial.o: drivers/serial.c
 	$(CC) -c $^
 
-task_manager.o: user/task_manager.c
+process_manager.o: user/process_manager.c
 	$(CC) -c $^
 
-task_switcher.o: user/task_switcher.asm
+process_starter.o: user/process_starter.asm
 	nasm -f elf -o $@ $^
+
+scheduler.o: scheduler.c
+	$(CC) -c $^
 
 .o: .c 
 	$(CC) -c $^

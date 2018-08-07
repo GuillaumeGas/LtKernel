@@ -94,7 +94,7 @@
     <None Include="kernel\init\pic.asm" />
     <None Include="kernel\init\vmm_loader.asm" />
     <None Include="kernel\Makefile" />
-    <None Include="kernel\user\task_switcher.asm" />
+    <None Include="kernel\user\process_starter.asm" />
     <None Include="Makefile" />
   </ItemGroup>
   <ItemGroup>
@@ -110,7 +110,8 @@
     <ClCompile Include="kernel\lib\stdio.c" />
     <ClCompile Include="kernel\lib\stdlib.c" />
     <ClCompile Include="kernel\logger.c" />
-    <ClCompile Include="kernel\user\task_manager.c" />
+    <ClCompile Include="kernel\scheduler.c" />
+    <ClCompile Include="kernel\user\process_manager.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\debug\debug.h" />
@@ -127,7 +128,8 @@
     <ClInclude Include="kernel\lib\stdlib.h" />
     <ClInclude Include="kernel\lib\types.h" />
     <ClInclude Include="kernel\logger.h" />
-    <ClInclude Include="kernel\user\task_manager.h" />
+    <ClInclude Include="kernel\scheduler.h" />
+    <ClInclude Include="kernel\user\process_manager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

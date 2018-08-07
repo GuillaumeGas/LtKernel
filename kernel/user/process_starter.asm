@@ -1,7 +1,7 @@
 [BITS 32]
 
 extern g_tss
-global switch_task
+global _start_process
 
     ;; on désactive les interruptions pendant la commutation de tâche (commutation software)
     ;; on utilise le mécanisme utilisé par le proc quand il termine l'exécution d'une interruption
@@ -13,7 +13,7 @@ global switch_task
     ;; On modifie également l'EFLAGS afin de désactiver le bit NT (Nested Task) et donc la commutation hardware
     ;; ainsi que le bit IF afin d'autoriser les interrupts une fois dans la tâche utilisateur.
 	
-switch_task:
+_start_process:
 	push ebp
 	mov ebp, esp
 

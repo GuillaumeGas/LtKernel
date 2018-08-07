@@ -6,10 +6,11 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/debug/debug.h>
+#include <kernel/scheduler.h>
 
 #include "gdt.h"
 
-#define CLOCK_DEBUG
+//#define CLOCK_DEBUG
 
 void divided_by_zero_isr(void) { sc_setColor(RED); panic("[Fault] Divided by zero"); sc_setColor(WHITE); }
 void debug_isr(void) { sc_setColor(RED); panic("[Fault/Trap] Debug"); sc_setColor(WHITE); }
@@ -100,6 +101,7 @@ void clock_isr(void)
 			kprint(".");
 #endif
 	}
+	schedule();
 }
 
 void keyboard_isr(void)
