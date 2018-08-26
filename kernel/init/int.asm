@@ -99,11 +99,12 @@ global _asm_syscall_isr
 	iret
 %endmacro
 
-;; %macro  GET_EXC_CODE 0
-;; 	mov eax, [ebp+52]
-;; 	push eax
-;; %endmacro
-	
+global get_cr2
+
+get_cr2:
+	mov cr2, eax
+	ret
+
 ;;; Processor exceptions & faults
 _asm_divided_by_zero_isr:
 	INT_PROLOG

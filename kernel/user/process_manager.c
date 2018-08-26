@@ -61,6 +61,11 @@ void create_process(u8 * task_addr, unsigned int size)
 		new_process = &g_process_list[g_nb_process];
 		new_process->pid = g_nb_process;
 		new_process->pd = pd;
+		new_process->regs.ss = USER_STACK_SEG_SELECTOR;
+		new_process->regs.esp = USER_STACK_START_ADDR;
+		new_process->regs.cs = USER_CODE_SEG_SELECTOR;
+		new_process->regs.eip = USER_TASK_V_ADDR;
+		new_process->regs.eflags = 0x200 & 0xFFFFBFFF;
 
 		g_nb_process++;
 	}
@@ -80,9 +85,13 @@ void start_process(int pid)
 
 		kprint("[Process Manager] : starting process [%d] !\n", g_current_process->pid);
 
-		_start_process(g_current_process->pd);
+		_start_process(
+			g_current_process->pd, 
+			g_current_process->regs.ss, 
+			g_current_process->regs.esp, 
+			g_current_process->regs.eflags,
+			g_current_process->regs.cs, 
+			g_current_process->regs.eip
+		);
 	}
 }
-
-void switch_process(int pid)
-{}

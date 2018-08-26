@@ -8,6 +8,7 @@
 #define TASK_GATE 0x5
 #define INT_GATE 0xE
 #define TRAP_GATE 0xF
+
 #define USER_DPL (0x3 << 5)
 #define KERNEL_DPL 0
 #define PRESENT (1 << 7)

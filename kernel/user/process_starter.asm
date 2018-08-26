@@ -16,25 +16,27 @@ global _start_process
 _start_process:
 	push ebp
 	mov ebp, esp
+	
+	cli
 
 	mov eax, [ebp+8]
 	mov cr3, eax
-	xor eax, eax
 
-	cli
-	push 0x23
-	push 0x400A00
-	pushf
-	pop eax
-	or eax, 0x200
-	and eax, 0xFFFFBFFF
+	; ss
+	mov eax, [ebp+12]
 	push eax
-	push 0x1B
-	push 0x400000
-
-	mov eax, g_tss
-	mov dword [eax+4], 0x20000
-	mov word [eax+8], 0x10
+	; esp
+	mov eax, [ebp+16]
+	push eax
+	; eflags
+	mov eax, [ebp+20]
+	push eax
+	; cs
+	mov eax, [ebp+24]
+	push eax
+	; eip
+	mov eax, [ebp+28]
+	push eax
 
 	mov ax, 0x23
 	mov ds, ax

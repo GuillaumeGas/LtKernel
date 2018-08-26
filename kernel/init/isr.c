@@ -12,6 +12,8 @@
 
 //#define CLOCK_DEBUG
 
+u32 get_cr2();
+
 void divided_by_zero_isr(void) { sc_setColor(RED); panic("[Fault] Divided by zero"); sc_setColor(WHITE); }
 void debug_isr(void) { sc_setColor(RED); panic("[Fault/Trap] Debug"); sc_setColor(WHITE); }
 void non_maskable_int_isr(void) { sc_setColor(RED); panic("[Interrupt] Non-maskable Interrupt"); sc_setColor(WHITE); }
@@ -36,7 +38,9 @@ void page_fault_isr(u32 code)
 	u32 * eip = 0;
 	u32 cr2 = 0;
 	asm("mov 56(%%ebp), %%eax; mov %%eax, %0" : "=m" (eip));
-	asm("mov %%cr2, %%eax; mov %%eax, %0" : "=m" (cr2));
+	//asm("mov %%cr2, %%eax; mov %%eax, %0" : "=m" (cr2) : );
+
+	cr2 = get_cr2();
 
 	sc_clear();
 	sc_setBackground(BLUE);
@@ -58,6 +62,7 @@ void page_fault_isr(u32 code)
 	kprint (" - U/S : %d (%s)\n", us ? 1 : 0, us ? "user mode" : "supervisor mode");
 	kprint (" - RSVD : %d (%s)\n", rsvd ? 1 : 0, rsvd ? "one or more page directory entries contain reserved bits which are set to 1" : "PSE or PAE flags in CR4 are set to 1");
 	kprint (" - I/D : %d (%s)\n\n", id ? 1 : 0, id ? "instruction fetch (applies when the No-Execute bit is supported and enabled" : "-");
+	kprint("Linear address : %x\n", cr2);
 
 	/*kprint("EIP : %x, CR2 : %x\n\n", eip, cr2);
 	print_gdt();

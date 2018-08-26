@@ -37,10 +37,7 @@ void test_task()
 	str[4] = 'o';
 	str[5] = ' ';
 	str[6] = '!';
-	//str[7] = 'o';
-	//str[8] = 'r';
-	//str[9] = 'l';
-	//str[10] = 'd';
+	str[7] = '\0';
 	asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
 	while (1) {}
 }
