@@ -5,9 +5,14 @@ Petit noyau à but éducatif
 
 **Le bootloader** charge le noyau en **0x1000**.
 
+**La mémoire** (**paginée**) est organisée de cette manière :
+ - Les premières pages sont réservées au noyau, la mémoire virtuelle **map le noyau** telle que l'addr Vir 0 == l'addr Phy 0, etc.. (**de 0x0 à 0x20000**)
+ - Les pages à partir de **0xA0000** jusqu'à **0x100000** sont réservées pour le **hardware**
+ - Un **bitmap** permet de déterminer quelles pages sont libres 
+
 Le noyau décrit les **segments** suivant :
  - Segments code et de donnees noyau sur la même plage, couvrent toute la RAM
- - Segments code et de donnees utilisateur sur la même plage à partir de **0x30000**
+ - Segments code et de donnees utilisateur sur la même plage
  - Segment TSS (structure utilisee pour la commutation de tâche)
  
 La **pile noyau** est en **0x20000**.
