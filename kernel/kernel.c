@@ -72,8 +72,6 @@ void kmain(void)
 	kprint("[Kernel] Process manager initialized\n\n");
 
 	{
-		struct page_directory_entry * pd = NULL;
-
 		sc_setColor(WHITE);
 		kprint("> Starting new task...\n\n");
 		sc_setColor(RED);

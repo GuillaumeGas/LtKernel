@@ -91,7 +91,18 @@ void start_process(int pid)
 			g_current_process->regs.esp, 
 			g_current_process->regs.eflags,
 			g_current_process->regs.cs, 
-			g_current_process->regs.eip
+			g_current_process->regs.eip,
+			g_current_process->regs.eax,
+			g_current_process->regs.ecx,
+			g_current_process->regs.edx,
+			g_current_process->regs.ebx,
+			g_current_process->regs.ebp,
+			g_current_process->regs.esi,
+			g_current_process->regs.edi,
+			g_current_process->regs.ds,
+			g_current_process->regs.es,
+			g_current_process->regs.fs,
+			g_current_process->regs.gs
 		);
 	}
 }

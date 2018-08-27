@@ -14,29 +14,48 @@ global _start_process
     ;; ainsi que le bit IF afin d'autoriser les interrupts une fois dans la tâche utilisateur.
 	
 _start_process:
+	cli
+
 	push ebp
 	mov ebp, esp
-	
-	cli
 
 	mov eax, [ebp+8]
 	mov cr3, eax
 
 	; ss
-	mov eax, [ebp+12]
-	push eax
+	push dword [ebp+12]
 	; esp
-	mov eax, [ebp+16]
-	push eax
+	push dword [ebp+16]
 	; eflags
-	mov eax, [ebp+20]
-	push eax
+	push dword [ebp+20]
 	; cs
-	mov eax, [ebp+24]
-	push eax
+	push dword [ebp+24]
 	; eip
-	mov eax, [ebp+28]
-	push eax
+	push dword [ebp+28]
+
+	push dword [ebp+32]
+	push dword [ebp+36]
+	push dword [ebp+40]
+	push dword [ebp+44]
+	push dword [ebp+48]
+	push dword [ebp+52]
+	push dword [ebp+56]
+	push dword [ebp+60]
+	push dword [ebp+64]
+	push dword [ebp+68]
+	push dword [ebp+72]
+
+	pop gs
+	pop fs
+	pop es
+	pop ds
+	pop edi
+	pop esi
+	pop ebp
+	pop ebx
+	pop edx
+	pop ecx
+	pop eax
 
 	mov ax, 0x23
 	mov ds, ax

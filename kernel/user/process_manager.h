@@ -45,7 +45,8 @@ extern unsigned int g_nb_process;
 #endif
 
 void init_process_manager();
-void create_task(u8 * task_addr, int size);
+void create_process(u8 * task_addr, unsigned int size);
 void start_process(int pid);
 
-void _start_process(struct page_directory_entry * pd, u32 ss, u32 esp, u32 eflags, u32 cs, u32 eip);
+void _start_process(struct page_directory_entry * pd, u32 ss, u32 esp, u32 eflags, u32 cs, u32 eip,
+	u32 eax, u32 ecx, u32 edx, u32 ebx, u32 ebp, u32 esi, u32 edi, u32 ds, u32 es, u32 fs, u32 gs);

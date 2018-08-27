@@ -175,13 +175,6 @@ extern kprint
 	_format db "CR2 : %x", 10, 0
 _asm_page_fault_isr:
 	INT_PROLOG
-	;; GET_EXC_CODE
-
-	mov eax, cr2
-	push eax
-	push _format
-	call kprint
-	
 	call page_fault_isr
 	INT_EPILOG
 
