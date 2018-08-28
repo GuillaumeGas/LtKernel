@@ -42,6 +42,19 @@ void test_task()
 	while (1) {}
 }
 
+void test_task2()
+{
+	char * str = (char*)0x400B00;
+	str[0] = 'T';
+	str[1] = 'a';
+	str[2] = 's';
+	str[3] = 'k';
+	str[4] = '2';
+	str[5] = '\0';
+	asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
+	while (1) {}
+}
+
 void kmain(void)
 {
 	init_logger(LOG_SCREEN);
@@ -73,10 +86,11 @@ void kmain(void)
 
 	{
 		sc_setColor(WHITE);
-		kprint("> Starting new task...\n\n");
+		kprint("> Starting new task 0...\n\n");
 		sc_setColor(RED);
 		
 		create_process(test_task, 100);
+		create_process(test_task2, 100);
 	}
 
 	sti();

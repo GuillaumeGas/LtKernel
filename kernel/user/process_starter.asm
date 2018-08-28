@@ -12,38 +12,43 @@ global _start_process
     ;; dans les descripteurs de segments utilisateur dans la gdt
     ;; On modifie également l'EFLAGS afin de désactiver le bit NT (Nested Task) et donc la commutation hardware
     ;; ainsi que le bit IF afin d'autoriser les interrupts une fois dans la tâche utilisateur.
-	
+
 _start_process:
 	cli
 
 	push ebp
-	mov ebp, esp
+	mov esi, esp
 
-	mov eax, [ebp+8]
+	mov eax, [esi+8]
 	mov cr3, eax
 
 	; ss
-	push dword [ebp+12]
+	push dword [esi+12]
 	; esp
-	push dword [ebp+16]
+	push dword [esi+16]
 	; eflags
-	push dword [ebp+20]
+	; push dword [esi+20]
+	pushf
+	pop eax
+	or eax, 0x200
+	and eax, 0xFFFFBFFF
+	push eax
 	; cs
-	push dword [ebp+24]
+	push dword [esi+24]
 	; eip
-	push dword [ebp+28]
+	push dword [esi+28]
 
-	push dword [ebp+32]
-	push dword [ebp+36]
-	push dword [ebp+40]
-	push dword [ebp+44]
-	push dword [ebp+48]
-	push dword [ebp+52]
-	push dword [ebp+56]
-	push dword [ebp+60]
-	push dword [ebp+64]
-	push dword [ebp+68]
-	push dword [ebp+72]
+	push dword [esi+32]
+	push dword [esi+36]
+	push dword [esi+40]
+	push dword [esi+44]
+	push dword [esi+48]
+	push dword [esi+52]
+	push dword [esi+56]
+	push dword [esi+60]
+	push dword [esi+64]
+	push dword [esi+68]
+	push dword [esi+72]
 
 	pop gs
 	pop fs
@@ -60,4 +65,8 @@ _start_process:
 	mov ax, 0x23
 	mov ds, ax
 	
+	; enleve le mask du PIC
+	mov al, 0x20
+	out 0x20, al
+
 	iret

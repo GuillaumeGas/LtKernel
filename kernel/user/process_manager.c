@@ -83,8 +83,6 @@ void start_process(int pid)
 		g_current_process = &g_process_list[pid];
 		g_current_process->start_execution_time = g_clock;
 
-		kprint("[Process Manager] : starting process [%d] !\n", g_current_process->pid);
-
 		_start_process(
 			g_current_process->pd, 
 			g_current_process->regs.ss, 
