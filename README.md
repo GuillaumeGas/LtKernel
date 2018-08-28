@@ -30,3 +30,5 @@ La **pile noyau** est en **0x20000**.
  - sinon on ne fait rien
 
 **L'appel système** implémenté permet d'afficher une chaîne depuis une tâche utilisateur. La commutation de tâche est effectuée en utilisant le fonctionnement de l'instruction iret.
+
+Un **logger** permet de rediriger l'affichage de texte soit vers **l'écran** soit vers le **port série** (**COM 1**)
