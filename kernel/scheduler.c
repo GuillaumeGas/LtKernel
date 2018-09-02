@@ -12,22 +12,17 @@ void schedule()
 	{
 		g_current_process = &g_process_list[0];
 
-		kprint("[Scheduler] starting process process %d\n", g_current_process->pid);
-
 		start_process(g_process_list[0].pid);
 	}
-	else if (g_current_process != NULL && (g_clock++) % 1000 == 0)
+	else if (g_current_process != NULL)
 	{
 		u32 * stack_ptr = NULL;
 
-		kprint("[Scheduler] switching to process %d\n", g_process_list[(g_current_process->pid + 1) % g_nb_process].pid);
-
-		// Tous les registres ont été push sur la pile, soit par le proc via l'interruption, soit par les push et le pushad dans int.asm
+		// Tous les registres ont été push sur la pile, par le proc via l'interruption et par les push et le pushad dans int.asm
 		// On récupère le pointeur de pile stocké dans ebp afin de récupérer les registres qui nous intéressent.
 		asm("mov (%%ebp), %%eax; mov %%eax, %0" : "=m" (stack_ptr) : );
 
-		g_current_process->regs.ss = stack_ptr[18];
-		g_current_process->regs.esp = stack_ptr[17];
+		
 		g_current_process->regs.eflags = stack_ptr[16];
 		g_current_process->regs.cs = stack_ptr[15];
 		g_current_process->regs.eip = stack_ptr[14];
@@ -43,7 +38,18 @@ void schedule()
 		g_current_process->regs.fs = stack_ptr[3];
 		g_current_process->regs.gs = stack_ptr[2];
 
-		g_tss.esp0 = (u32)(stack_ptr + 19);
+		if (g_current_process->regs.cs != K_CODE_SEG_SELECTOR)
+		{
+			g_current_process->regs.ss = stack_ptr[18];
+			g_current_process->regs.esp = stack_ptr[17];
+		}
+		else
+		{
+			g_current_process->regs.ss = g_tss.ss0;
+			g_current_process->regs.esp = &stack_ptr[17];
+		}
+
+		g_current_process->kstack_esp0 = g_tss.esp0;
 
 		start_process((g_current_process->pid + 1) % g_nb_process);
 	}

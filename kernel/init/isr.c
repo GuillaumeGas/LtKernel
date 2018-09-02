@@ -8,6 +8,8 @@
 #include <kernel/debug/debug.h>
 #include <kernel/scheduler.h>
 
+#include <kernel/drivers/proc_io.h>
+
 #include "gdt.h"
 
 //#define CLOCK_DEBUG
@@ -175,7 +177,6 @@ void syscall_isr(int syscall_number)
 	case 1:
 		// On va chercher le param qu'on a passe dans ebx, sauvegarde sur la pile
 		asm("mov 44(%%ebp), %%eax; mov %%eax, %0" : "=m" (message));
-
 		kprint(message);
 		break;
 	default:

@@ -1,4 +1,5 @@
 #include <kernel/init/vmm.h>
+#include <kernel/init/gdt.h>
 #include <kernel/lib/memory.h>
 #include <kernel/scheduler.h>
 #include <kernel/lib/stdio.h>
@@ -43,6 +44,7 @@ void create_process(u8 * task_addr, unsigned int size)
 
 		// récupération d'une page pour y stocker le code à exécuter
 		u8 * new_task_addr = (u8*)get_free_page();
+		u32 * kernel_stack = (u32*)get_free_page();
 
 		kprint("[Process Manager] : create_process() !\n");
 
@@ -66,6 +68,7 @@ void create_process(u8 * task_addr, unsigned int size)
 		new_process->regs.cs = USER_CODE_SEG_SELECTOR;
 		new_process->regs.eip = USER_TASK_V_ADDR;
 		new_process->regs.eflags = 0x200 & 0xFFFFBFFF;
+		new_process->kstack_esp0 = kernel_stack + PAGE_SIZE;
 
 		g_nb_process++;
 	}
@@ -82,6 +85,10 @@ void start_process(int pid)
 	{
 		g_current_process = &g_process_list[pid];
 		g_current_process->start_execution_time = g_clock;
+
+		//kprint("Process %d\n", g_current_process->pid);
+
+		g_tss.esp0 = (u32)g_current_process->kstack_esp0;
 
 		_start_process(
 			g_current_process->pd, 
@@ -100,7 +107,8 @@ void start_process(int pid)
 			g_current_process->regs.ds,
 			g_current_process->regs.es,
 			g_current_process->regs.fs,
-			g_current_process->regs.gs
+			g_current_process->regs.gs,
+			g_current_process->regs.cs == K_CODE_SEG_SELECTOR ? KERNEL : USER
 		);
 	}
 }

@@ -1,7 +1,12 @@
 [BITS 32]
 
+%define KERNEL_MODE 0
+%define USER_MODE 1
+
 extern g_tss
 global _start_process
+
+; Commentaires à revoir !
 
     ;; on désactive les interruptions pendant la commutation de tâche (commutation software)
     ;; on utilise le mécanisme utilisé par le proc quand il termine l'exécution d'une interruption
@@ -22,6 +27,20 @@ _start_process:
 	mov eax, [esi+8]
 	mov cr3, eax
 
+	mov eax, [esi+76]
+	cmp eax, KERNEL_MODE
+	jne user_mode
+
+kernel_mode:
+	; eflags
+	push dword [esi+20]
+	; cs
+	push dword [esi+24]
+	; eip
+	push dword [esi+28]
+	jmp next
+
+user_mode:
 	; ss
 	push dword [esi+12]
 	; esp
@@ -37,7 +56,8 @@ _start_process:
 	push dword [esi+24]
 	; eip
 	push dword [esi+28]
-
+	
+next:
 	push dword [esi+32]
 	push dword [esi+36]
 	push dword [esi+40]

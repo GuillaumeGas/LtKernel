@@ -30,29 +30,41 @@ void _start(void)
 void test_task()
 {
 	char * str = (char*)0x400B00;
-	str[0] = 'H';
-	str[1] = 'e';
-	str[2] = 'l';
-	str[3] = 'l';
-	str[4] = 'o';
-	str[5] = ' ';
-	str[6] = '!';
-	str[7] = '\0';
-	asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
-	while (1) {}
+	int i = 0;
+
+	str[0] = 'T';
+	str[1] = 'a';
+	str[2] = 's';
+	str[3] = 'k';
+	str[4] = '1';
+	str[5] = '\n';
+	str[6] = '\0';
+
+	while (1)
+	{
+		for (i = 0; i < 1000000; i++);
+		asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
+	}
 }
 
 void test_task2()
 {
 	char * str = (char*)0x400B00;
+	int i = 0;
+
 	str[0] = 'T';
 	str[1] = 'a';
 	str[2] = 's';
 	str[3] = 'k';
 	str[4] = '2';
-	str[5] = '\0';
-	asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
-	while (1) {}
+	str[5] = '\n';
+	str[6] = '\0';
+
+	while (1)
+	{
+		for (i = 0; i < 1000000; i++);
+		asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
+	}
 }
 
 void kmain(void)
@@ -89,8 +101,8 @@ void kmain(void)
 		kprint("> Starting new task 0...\n\n");
 		sc_setColor(RED);
 		
-		create_process(test_task, 100);
-		create_process(test_task2, 100);
+		create_process(test_task, 500);
+		create_process(test_task2, 500);
 	}
 
 	sti();

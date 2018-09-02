@@ -23,6 +23,7 @@ struct process
 	int pid;
 	unsigned int start_execution_time;
 	struct page_directory_entry * pd;
+	u32 * kstack_esp0;
 	
 	struct
 	{
@@ -33,6 +34,9 @@ struct process
 		u32 cr3;
 	} regs;
 };
+
+enum ExecMode { KERNEL, USER };
+typedef enum ExecMode ExecMode;
 
 #ifdef __PROCESS_MANAGER__
 struct process * g_current_process = NULL;
@@ -49,4 +53,5 @@ void create_process(u8 * task_addr, unsigned int size);
 void start_process(int pid);
 
 void _start_process(struct page_directory_entry * pd, u32 ss, u32 esp, u32 eflags, u32 cs, u32 eip,
-	u32 eax, u32 ecx, u32 edx, u32 ebx, u32 ebp, u32 esi, u32 edi, u32 ds, u32 es, u32 fs, u32 gs);
+	u32 eax, u32 ecx, u32 edx, u32 ebx, u32 ebp, u32 esi, u32 edi, u32 ds, u32 es, u32 fs, u32 gs,
+	ExecMode execMode);

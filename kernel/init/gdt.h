@@ -16,6 +16,7 @@
 #define GDT_ADDR 0x0
 #define GDT_SIZE 6
 
+#define K_CODE_SEG_SELECTOR 0x08
 #define TSS_SEG_SELECTOR 0x28
 
 struct gdt_descriptor
