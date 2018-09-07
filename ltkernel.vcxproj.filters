@@ -93,23 +93,23 @@
     <ClCompile Include="kernel\init\isr.c">
       <Filter>Fichiers sources\kernel\init</Filter>
     </ClCompile>
-    <ClCompile Include="kernel\lib\memory.c">
-      <Filter>Fichiers sources\kernel\lib</Filter>
-    </ClCompile>
     <ClCompile Include="kernel\lib\stdio.c">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClCompile>
     <ClCompile Include="kernel\lib\stdlib.c">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClCompile>
-    <ClCompile Include="kernel\init\vmm.c">
-      <Filter>Fichiers sources\kernel\init</Filter>
-    </ClCompile>
     <ClCompile Include="kernel\scheduler.c">
       <Filter>Fichiers sources\kernel</Filter>
     </ClCompile>
     <ClCompile Include="kernel\user\process_manager.c">
       <Filter>Fichiers sources\kernel\user</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\init\memory.c">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\lib\kmalloc.c">
+      <Filter>Fichiers sources\kernel\lib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -140,9 +140,6 @@
     <ClInclude Include="kernel\init\isr.h">
       <Filter>Fichiers sources\kernel\init</Filter>
     </ClInclude>
-    <ClInclude Include="kernel\lib\memory.h">
-      <Filter>Fichiers sources\kernel\lib</Filter>
-    </ClInclude>
     <ClInclude Include="kernel\lib\stdio.h">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClInclude>
@@ -152,14 +149,17 @@
     <ClInclude Include="kernel\lib\types.h">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClInclude>
-    <ClInclude Include="kernel\init\vmm.h">
-      <Filter>Fichiers sources\kernel\init</Filter>
-    </ClInclude>
     <ClInclude Include="kernel\scheduler.h">
       <Filter>Fichiers sources\kernel</Filter>
     </ClInclude>
     <ClInclude Include="kernel\user\process_manager.h">
       <Filter>Fichiers sources\kernel\user</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\init\memory.h">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\lib\kmalloc.h">
+      <Filter>Fichiers sources\kernel\lib</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

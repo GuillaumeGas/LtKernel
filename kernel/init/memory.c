@@ -1,10 +1,9 @@
 #include <kernel/lib/types.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
-#include <kernel/lib/memory.h>
 
-#define __VMM__
-#include "vmm.h"
+#define __MEMORY__
+#include "memory.h"
 
 extern void _init_vmm(struct page_directory_entry * pd0_addr);
 
@@ -30,16 +29,16 @@ void init_vmm()
 	mmset(mem_bitmap, 0, RAM_MAXPAGE / 8);
 
 	// Réserve les pages du noyau
-	for (page = PAGE(0); page < PAGE(0x20000); page++)
+	for (page = PAGE(0); page < PAGE(0x800000); page++)
 		set_page_used(page);
 
-	// Réserve les pages pour le hardware
-	for (page = PAGE(0xA0000); page < PAGE(0x100000); page++)
-		set_page_used(page);
+	init_heap();
+	init_page_heap();
 
-	// On cherche une page pour stocker un répertoire de pages ainsi que pour une table de pages
-	kernel_pd = (struct page_directory_entry*)get_free_page();
-	kernel_pt = (struct page_table_entry*)get_free_page();
+	// L'adresse du répertoire de pages du noyau est fixe
+	kernel_pd = (struct page_directory_entry*)PD0_ADDR;
+	// On va allouer une page pour y stocker une table de pages
+	kernel_pt = (struct page_table_entry*)palloc();
 
 	// On met à 0 le répertoire de pages
 	init_pages_directory(kernel_pd);
@@ -161,4 +160,15 @@ void * get_free_page()
 	}
 
 	return (void*)(-1);
+}
+
+/*
+Initialise le tas avec un un bloc (taille d'une page)
+*/
+void init_heap()
+{
+	g_heap = (struct mem_block*)HEAP_BASE_ADDR;
+	g_last_heap_block = g_heap;
+
+	ksbrk(1);
 }
