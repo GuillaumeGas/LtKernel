@@ -1,10 +1,10 @@
 #include <kernel/lib/types.h>
-#include <kernel/lib/memory.h>
+#include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/init/gdt.h>
 #include <kernel/init/idt.h>
-#include <kernel/init/vmm.h>
+#include <kernel/init/memory.h>
 #include <kernel/drivers/proc_io.h>
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
