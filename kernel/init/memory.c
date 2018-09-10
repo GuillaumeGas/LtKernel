@@ -1,6 +1,7 @@
 #include <kernel/lib/types.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
+#include <kernel/lib/kmalloc.h>
 
 #define __MEMORY__
 #include "memory.h"
@@ -29,28 +30,39 @@ void init_vmm()
 	mmset(mem_bitmap, 0, RAM_MAXPAGE / 8);
 
 	// Réserve les pages du noyau
-	for (page = PAGE(0); page < PAGE(0x800000); page++)
+	for (page = PAGE(0); page < PAGE(KERNEL_P_LIMIT_ADDR); page++)
 		set_page_used(page);
 
 	init_heap();
 	init_page_heap();
 
 	// L'adresse du répertoire de pages du noyau est fixe
-	kernel_pd = (struct page_directory_entry*)PD0_ADDR;
+	g_kernel_pd = (struct page_directory_entry*)PD0_ADDR;
 	// On va allouer une page pour y stocker une table de pages
-	kernel_pt = (struct page_table_entry*)palloc();
+	g_kernel_pt = (struct page_table_entry*)PT0_ADDR;
 
 	// On met à 0 le répertoire de pages
-	init_pages_directory(kernel_pd);
+	init_pages_directory(g_kernel_pd);
 
-	// Initialisation de l'entrée du répertoire du page concernant le noyau
-	set_page_directory_entry(kernel_pd, (u32)kernel_pt, IN_MEMORY | WRITEABLE);
+	// Le noyau aura accès à toute la mémoire !!!!!!!!!!
+	{
+		struct page_table_entry * tmp = g_kernel_pt;
+		int i = 0;
+		
+		for (; i < 1024; i++)
+		{
+			struct page_table_entry * current_pt = g_kernel_pt + (i * PAGE_SIZE);
 
-	// Mapping simple : l'adresse virtuelle 0 == adresse physique 0...
-	for (index = 0; index < NB_PAGES_PER_TABLE; index++)
-		set_page_table_entry(&(kernel_pt[index]), (index * PAGE_SIZE), IN_MEMORY | WRITEABLE);
+			// Initialisation de l'entrée du répertoire du page concernant le noyau
+			set_page_directory_entry(&(g_kernel_pd[i]), (u32)current_pt, IN_MEMORY | WRITEABLE);
 
-	_init_vmm(kernel_pd);
+			// Mapping simple : l'adresse v addr == p addr
+			for (index = 0; index < NB_PAGES_PER_TABLE; index++)
+				set_page_table_entry(&(current_pt[index]), ((index * PAGE_SIZE) + (i * NB_PAGES_PER_TABLE * PAGE_SIZE)), IN_MEMORY | WRITEABLE);
+		}
+	}
+
+	_init_vmm(g_kernel_pd);
 }
 
 void init_pages_directory(struct page_directory_entry * first_pd)
@@ -171,4 +183,34 @@ void init_heap()
 	g_last_heap_block = g_heap;
 
 	ksbrk(1);
+}
+
+/*
+	Initialise le tas de pages
+*/
+void init_page_heap()
+{
+	struct mem_pblock * tmp = NULL;
+	struct mem_pblock * prev = NULL;
+
+	g_page_heap = (struct mem_pblock *)kmalloc(sizeof(struct mem_pblock));
+	g_page_heap->available = BLOCK_FREE;
+	g_page_heap->next = NULL;
+	g_page_heap->page_addr = PAGE_HEAP_BASE_ADDR;
+	g_page_heap->prev = NULL;
+
+	tmp = g_page_heap;
+
+	while (tmp->page_addr < PAGE_HEAP_LIMIT_ADDR)
+	{
+		tmp->next = (struct mem_pblock *)kmalloc(sizeof(struct mem_pblock));
+
+		prev = tmp;
+		tmp = tmp->next;
+
+		tmp->page_addr = prev->page_addr + PAGE_SIZE;
+		tmp->available = BLOCK_FREE;
+		tmp->prev = prev;
+		tmp->next = NULL;
+	}
 }

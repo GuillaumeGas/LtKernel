@@ -1,5 +1,5 @@
 #include <kernel/lib/types.h>
-#include <kernel/lib/memory.h>
+#include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 
 #define __IDT__

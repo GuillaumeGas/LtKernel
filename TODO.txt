@@ -1,0 +1,51 @@
+# HEAP
+
+- Init le tas : 
+  - implem sbrk qui va étendre le tas en ajoutant un bloc suplémentaire (et en créer un premier si on init)
+  - implem init_heap qui fait appel à sbrk(1)
+
+- Appel init_heap dans vmm
+
+# KMALLOC
+
+- Implem kmalloc
+- Implem kfree
+
+# LIST
+
+- Implem un type de liste chaînée utile au heap de pages
+
+# HEAP DE PAGES
+
+- Implem équivalent à sbrk ?
+- Implem palloc
+- Implem pfree
+- Jouer avec répertoire et table de pages ou pas encore ?
+
+NOTE :
+
+L'ensemble du noyau occupe 8Mo, donc on commence par rendre occupé toutes les pages entre l'addr p 0x0 et 0x800000.
+
+----------------------- 0x401000
+Tables de pages (4ko)
+----------------------- 0x400000
+Code Noyau
+----------      (4Mo)
+Hardware/Pile noyau/Répertoire de pages/GDT/IDT
+-----------------------
+
+On place le répertoire de page à l'adresse 0x1000.
+Sa première entrée va mapper la première page : 0x0, c'est la partie purement noyau 
+  - regroupe IDT/GDT, 
+  - répertoire de page du noyau, 
+  - pile noyau (0xa0000),
+  - hardware jusqu'à 0x100000
+Sa seconde entrée va mapper la seconde page, qui va contenir les tables de page du noyau.
+
+Le tas de pages est placé en mémoire virtuelle en 0x800000
+Le tas est placée en mémoire virtuelle en 0x10000000.
+
+On l'utilise pour créer la liste chaînée de tables de pages dispo.
+
+------------------------
+QUESTION : cool d'avoir un page heap ? Si on se base là dessus pour les process, ça veut dire qu'on ne peut avoir que 2048 process ?

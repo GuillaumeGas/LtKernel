@@ -37,10 +37,13 @@ struct mem_block * ksbrk(int n)
 			if (new_page == NULL)
 				panic(MEMORY_FULL);
 
-			pd_add_page(new_page, (u32)(new_block_v_addr + (i * DEFAULT_BLOCK_SIZE)));
+			if (i == 0)
+				pd_add_page(new_page, (u32)(new_block_v_addr + DEFAULT_BLOCK_SIZE_WITH_HEADER));
+			else
+				pd_add_page(new_page, (u32)(new_block_v_addr + (i * DEFAULT_BLOCK_SIZE)));
 		}
 
-		new_block_v_addr->size = n * DEFAULT_BLOCK_SIZE;
+		new_block_v_addr->size = (n * DEFAULT_BLOCK_SIZE);
 		new_block_v_addr->state = BLOCK_FREE;
 		mmset(&(new_block_v_addr->data), new_block_v_addr->size, 0);
 
@@ -125,6 +128,38 @@ static void _kdefrag()
 		else
 		{
 			block += block->size + BLOCK_HEADER_SIZE;
+		}
+	}
+}
+
+void * page_alloc()
+{
+	struct mem_pblock * block = g_page_heap;
+
+	while (block != NULL)
+	{
+		if (block->available == BLOCK_FREE)
+		{
+			block->available = BLOCK_USED;
+			return (void *)block->page_addr;
+		}
+
+		block = block->next;
+	}
+
+	return NULL;
+}
+
+void page_free(void * ptr)
+{
+	struct mem_pblock * block = g_page_heap;
+
+	while (block != NULL)
+	{
+		if ((u32)(block->page_addr) == ptr)
+		{
+			block->available = BLOCK_FREE;
+			block = NULL;
 		}
 	}
 }

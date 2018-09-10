@@ -1,8 +1,8 @@
-#include <kernel/init/vmm.h>
+#include <kernel/init/memory.h>
 #include <kernel/init/gdt.h>
-#include <kernel/lib/memory.h>
 #include <kernel/scheduler.h>
 #include <kernel/lib/stdio.h>
+#include <kernel/lib/stdlib.h>
 
 #define __PROCESS_MANAGER__
 #include "process_manager.h"
@@ -52,7 +52,7 @@ void create_process(u8 * task_addr, unsigned int size)
 		mmcopy(task_addr, new_task_addr, size);
 
 		init_pages_directory(pd);
-		set_page_directory_entry(pd, (u32)kernel_pt, IN_MEMORY | WRITEABLE);
+		set_page_directory_entry(pd, (u32)g_kernel_pt, IN_MEMORY | WRITEABLE);
 
 		for (; index < NB_PAGES_PER_TABLE; index++)
 			set_page_table_entry(&(pt[index]), 0, EMPTY);

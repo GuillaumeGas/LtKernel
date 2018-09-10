@@ -1,4 +1,4 @@
-#include <kernel/lib/memory.h>
+#include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/types.h>
 #include <kernel/drivers/screen.h>
