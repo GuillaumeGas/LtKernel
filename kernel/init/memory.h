@@ -3,7 +3,7 @@
 #include <kernel/lib/types.h>
 
 #define KERNEL_STACK_P_ADDR 0xA0000
-#define KERNEL_P_LIMIT_ADDR 0x401000
+#define KERNEL_P_LIMIT_ADDR 0x800000
 
 #define PAGING_FLAG 0x80000000 // CR0 - bit 31
 
@@ -107,6 +107,8 @@ void set_page_directory_entryEx(struct page_directory_entry * pd, u32 pt_addr, P
 void set_page_table_entry(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags);
 void set_page_table_entryEx(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail);
 void * get_free_page();
+
+struct page_directory_entry * create_process_pd();
 
 #ifdef __MEMORY__
 struct page_directory_entry * g_kernel_pd = NULL;

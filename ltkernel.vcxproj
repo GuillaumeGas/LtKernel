@@ -107,6 +107,7 @@
     <ClCompile Include="kernel\init\memory.c" />
     <ClCompile Include="kernel\kernel.c" />
     <ClCompile Include="kernel\lib\kmalloc.c" />
+    <ClCompile Include="kernel\lib\list.c" />
     <ClCompile Include="kernel\lib\stdio.c" />
     <ClCompile Include="kernel\lib\stdlib.c" />
     <ClCompile Include="kernel\logger.c" />
@@ -124,6 +125,7 @@
     <ClInclude Include="kernel\init\isr.h" />
     <ClInclude Include="kernel\init\memory.h" />
     <ClInclude Include="kernel\lib\kmalloc.h" />
+    <ClInclude Include="kernel\lib\list.h" />
     <ClInclude Include="kernel\lib\stdio.h" />
     <ClInclude Include="kernel\lib\stdlib.h" />
     <ClInclude Include="kernel\lib\types.h" />

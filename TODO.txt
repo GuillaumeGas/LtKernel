@@ -26,8 +26,8 @@ NOTE :
 
 L'ensemble du noyau occupe 8Mo, donc on commence par rendre occupé toutes les pages entre l'addr p 0x0 et 0x800000.
 
------------------------ 0x401000
-Tables de pages (4ko)
+----------------------- 0x800000
+Tables de pages (1024 * (1024 * 32) = 1 048 571 = 0x100000, (nombre entrées répertoire) * (t'aille d'une table de pages))
 ----------------------- 0x400000
 Code Noyau
 ----------      (4Mo)
@@ -48,4 +48,22 @@ Le tas est placée en mémoire virtuelle en 0x10000000.
 On l'utilise pour créer la liste chaînée de tables de pages dispo.
 
 ------------------------
-QUESTION : cool d'avoir un page heap ? Si on se base là dessus pour les process, ça veut dire qu'on ne peut avoir que 2048 process ?
+QUESTION : 
+ - cool d'avoir un page heap ? Si on se base là dessus pour les process, ça veut dire qu'on ne peut avoir que 2048 process ? Surtout qu'on ne va pas y stocker que des pd, mais aussi pile noyau...
+ - ptet pas besoin de tout allouer dès le début ?
+ 
+TODO : 
+ - nettoyer memory.c/h, renommer defines...
+
+------------------------
+
+# Processus :
+
+ - pid
+ - répertoire de pages -> les premières entrées vont pointer sur celles de pd0, la suite sera init pour le user, voir en dessous
+ - mapping tel que 0x0-0x40000000 pour le noyau (1Go), la suite pour l'utilisateur
+ - une pile utilisateur à 0xE0000000 (on va chercher une page dispo, on la map dans la mem v de l'utilisateur)
+ - une pile noyau (appel à page_alloc())
+ - code utilisateur à 0x40000000
+ 
+[!!] : Penser à la mise à jour du TLB !
