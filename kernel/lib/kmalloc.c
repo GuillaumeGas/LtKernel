@@ -43,7 +43,7 @@ struct mem_block * ksbrk(int n)
 				pd_add_page(new_page, (u32)(new_block_v_addr + (i * DEFAULT_BLOCK_SIZE)));
 		}
 
-		new_block_v_addr->size = (n * DEFAULT_BLOCK_SIZE);
+		new_block_v_addr->size = (n * DEFAULT_BLOCK_SIZE_WITH_HEADER) - BLOCK_HEADER_SIZE;
 		new_block_v_addr->state = BLOCK_FREE;
 		mmset(&(new_block_v_addr->data), new_block_v_addr->size, 0);
 
