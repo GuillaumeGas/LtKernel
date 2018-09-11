@@ -214,3 +214,19 @@ void init_page_heap()
 		tmp->next = NULL;
 	}
 }
+
+struct page_directory_entry * create_process_pd()
+{
+	struct page_directory_entry * pd = (struct page_directory_entry *)page_alloc();
+	unsigned int i = 0;
+
+	// On veut que le premier Go de mémoire virtuelle soit pour le noyau : 1024 / 4 = 256 (1024 = nombre d'entrées dans un répertoire de pages)
+	// On vérifie:  256 * 1024 * 4096 = 1Go
+	for (; i < 256; i++)
+		pd[i] = g_kernel_pd[i];
+
+	for (i = 256; i < NB_PAGES_TABLE_PER_DIRECTORY; i++)
+		set_page_directory_entry(&(pd[i]), 0, EMPTY);
+
+	return pd;
+}

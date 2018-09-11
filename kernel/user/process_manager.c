@@ -3,20 +3,14 @@
 #include <kernel/scheduler.h>
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
+#include <kernel/lib/kmalloc.h>
 
 #define __PROCESS_MANAGER__
 #include "process_manager.h"
 
 void init_process_manager()
 {
-	unsigned int index = 0;
-
-	for (; index < NB_MAX_PROCESS; index++)
-	{
-		g_process_list[index].pid = -1;
-		g_process_list[index].pd = NULL;
-		g_process_list[index].start_execution_time = 0;
-	}
+	list_create(&g_process_list);
 }
 
 /*
@@ -37,38 +31,48 @@ void create_process(u8 * task_addr, unsigned int size)
 	}
 	else
 	{
-		struct page_directory_entry * pd = (struct page_directory_entry*)get_free_page();
-		struct page_table_entry * pt = (struct page_table_entry*)get_free_page();
+		struct page_directory_entry * user_pd = NULL;
 		struct process * new_process = NULL;
+		u8 * v_user_code_ptr = NULL;
+		u32 * kernel_stack = NULL;
+		u32 * user_stack = NULL;
+		unsigned int count = 0;
 		unsigned int index = 0;
 
-		// récupération d'une page pour y stocker le code à exécuter
-		u8 * new_task_addr = (u8*)get_free_page();
-		u32 * kernel_stack = (u32*)get_free_page();
+		user_pd = create_process_pd();
 
-		kprint("[Process Manager] : create_process() !\n");
+		v_user_code_ptr = (u8 *)USER_TASK_V_ADDR;
 
-		// copie de la tâche dans la zone réservée à la tâche utilisateur
-		mmcopy(task_addr, new_task_addr, size);
+		while (count < size)
+		{
+			u8 * p_new_code_page = (u8 *)get_free_page();
 
-		init_pages_directory(pd);
-		set_page_directory_entry(pd, (u32)g_kernel_pt, IN_MEMORY | WRITEABLE);
+			if ((size - count) < PAGE_SIZE)
+				mmcopy(task_addr + count, p_new_code_page, size - count);
+			else
+				mmcopy(task_addr + count, p_new_code_page, PAGE_SIZE);
 
-		for (; index < NB_PAGES_PER_TABLE; index++)
-			set_page_table_entry(&(pt[index]), 0, EMPTY);
+			add_page(user_pd, p_new_code_page, v_user_code_ptr);
+			v_user_code_ptr += PAGE_SIZE;
+			count += PAGE_SIZE;
+		}
 
-		set_page_directory_entry(&pd[USER_TASK_V_ADDR >> 22], (u32)pt, IN_MEMORY | WRITEABLE | NON_PRIVILEGED_ACCESS);
-		set_page_table_entry(pt, (u32)new_task_addr, IN_MEMORY | WRITEABLE | NON_PRIVILEGED_ACCESS);
+		kernel_stack = (u32*)page_alloc();
+		
+		user_stack = (u32*)get_free_page();
+		add_page(user_pd, user_stack, USER_STACK_V_ADDR);
 
-		new_process = &g_process_list[g_nb_process];
+		new_process = (struct process *)kmalloc(sizeof(struct process));
 		new_process->pid = g_nb_process;
-		new_process->pd = pd;
+		new_process->pd = user_pd;
 		new_process->regs.ss = USER_STACK_SEG_SELECTOR;
-		new_process->regs.esp = USER_STACK_START_ADDR;
+		new_process->regs.esp = USER_STACK_V_ADDR;
 		new_process->regs.cs = USER_CODE_SEG_SELECTOR;
 		new_process->regs.eip = USER_TASK_V_ADDR;
 		new_process->regs.eflags = 0x200 & 0xFFFFBFFF;
 		new_process->kstack_esp0 = kernel_stack + PAGE_SIZE;
+
+		list_push(&g_process_list, (void*)new_process);
 
 		g_nb_process++;
 	}
@@ -83,10 +87,8 @@ void start_process(int pid)
 	}
 	else
 	{
-		g_current_process = &g_process_list[pid];
+		g_current_process = list_get(&g_process_list, pid);
 		g_current_process->start_execution_time = g_clock;
-
-		//kprint("Process %d\n", g_current_process->pid);
 
 		g_tss.esp0 = (u32)g_current_process->kstack_esp0;
 

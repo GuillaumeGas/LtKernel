@@ -3,11 +3,12 @@
 #include <kernel/init/memory.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/types.h>
+#include <kernel/lib/list.h>
 
 #define USER_TASK_P_ADDR 0x100000
-#define USER_TASK_V_ADDR 0x400000
+#define USER_TASK_V_ADDR 0x40000000
 
-#define USER_STACK_START_ADDR 0x400A00
+#define USER_STACK_V_ADDR 0xE0000000
 
 // Sélecteurs de segment de code et de pile d'une tâche utilisateur
 // Les bits RPL (niveau de privilège) sont à '11' afin de permettre le passage en niveau de privilèges utilisateur
@@ -40,11 +41,11 @@ typedef enum ExecMode ExecMode;
 
 #ifdef __PROCESS_MANAGER__
 struct process * g_current_process = NULL;
-struct process g_process_list[NB_MAX_PROCESS];
+List g_process_list;
 unsigned int g_nb_process = 0;
 #else
 extern struct process * g_current_process;
-extern struct process g_process_list[];
+extern List g_process_list;
 extern unsigned int g_nb_process;
 #endif
 

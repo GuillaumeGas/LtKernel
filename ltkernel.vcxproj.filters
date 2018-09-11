@@ -111,6 +111,9 @@
     <ClCompile Include="kernel\lib\kmalloc.c">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClCompile>
+    <ClCompile Include="kernel\lib\list.c">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\logger.h">
@@ -159,6 +162,9 @@
       <Filter>Fichiers sources\kernel\init</Filter>
     </ClInclude>
     <ClInclude Include="kernel\lib\kmalloc.h">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\lib\list.h">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClInclude>
   </ItemGroup>
