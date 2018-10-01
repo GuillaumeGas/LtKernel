@@ -12,6 +12,12 @@ void panic(PanicType type)
 	case MEMORY_FULL:
 		kprint("MEMORY_FULL\n");
 		break;
+	case VIRTUAL_MEMORY_FULL:
+		kprint("VIRTUAL_MEMORY_FULL\n");
+		break;
+	case PAGE_TABLE_NOTE_FOUND:
+		kprint("PAGE_TABLE_NOTE_FOUND\n");
+		break;
 	default:
 		kprint("Unknown Type\n");
 	}

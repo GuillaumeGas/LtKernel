@@ -8,7 +8,8 @@ struct list_elem
 };
 typedef struct list_elem List;
 
-void list_create(List * list);
+List * list_create();
 void list_destroy(List * list);
 void list_push(List * list, void * data);
 void * list_get(List * list, unsigned int index);
+void * list_top(List * list);

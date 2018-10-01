@@ -1,10 +1,11 @@
+#define __MEMORY__
+#include "memory.h"
+
 #include <kernel/lib/types.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/kmalloc.h>
-
-#define __MEMORY__
-#include "memory.h"
+#include <kernel/lib/panic.h>
 
 extern void _init_vmm(struct page_directory_entry * pd0_addr);
 
@@ -13,7 +14,6 @@ static u8 mem_bitmap[MEM_BITMAP_SIZE];
 
 #define set_page_used(page) mem_bitmap[((u32)page) / 8] |= (1 << (((u32)page) % 8))
 #define set_page_unused(addr) mem_bitmap[((u32)addr / PAGE_SIZE) / 8] &= ~(1 << (((u32)addr / PAGE_SIZE) % 8))
-#define PAGE(addr) (addr) >> 12
 
 /*
 	Initialisation simple de la mémoire virtuelle :
@@ -37,21 +37,20 @@ void init_vmm()
 	init_page_heap();
 
 	// L'adresse du répertoire de pages du noyau est fixe
-	g_kernel_pd = (struct page_directory_entry*)PD0_ADDR;
+	g_kernel_pd = (PageDirectoryEntry *)PD0_ADDR;
 	// On va allouer une page pour y stocker une table de pages
-	g_kernel_pt = (struct page_table_entry*)PT0_ADDR;
+	g_kernel_pt = (PageTableEntry *)PT0_ADDR;
 
 	// On met à 0 le répertoire de pages
-	init_pages_directory(g_kernel_pd);
+	init_clean_pages_directory(g_kernel_pd);
 
 	// Le noyau aura accès à toute la mémoire !!!!!!!!!!
 	{
-		struct page_table_entry * tmp = g_kernel_pt;
 		int i = 0;
 		
 		for (; i < 1024; i++)
 		{
-			struct page_table_entry * current_pt = g_kernel_pt + (i * PAGE_SIZE);
+			PageTableEntry * current_pt = g_kernel_pt + (i * PAGE_SIZE);
 
 			// Initialisation de l'entrée du répertoire du page concernant le noyau
 			set_page_directory_entry(&(g_kernel_pd[i]), (u32)current_pt, IN_MEMORY | WRITEABLE);
@@ -62,10 +61,13 @@ void init_vmm()
 		}
 	}
 
+	// Trick pour accéder au contenu du répertoire et des tables de pages : la dernière entrée pointe sur l'adresse du répertoire.
+	set_page_directory_entry(&(g_kernel_pd[1023]), (u32)g_kernel_pd, IN_MEMORY | WRITEABLE);
+
 	_init_vmm(g_kernel_pd);
 }
 
-void init_pages_directory(struct page_directory_entry * first_pd)
+void init_clean_pages_directory(PageDirectoryEntry * first_pd)
 {
 	unsigned int index = 0;
 
@@ -73,12 +75,20 @@ void init_pages_directory(struct page_directory_entry * first_pd)
 		set_page_directory_entry(&(first_pd[index]), 0, EMPTY);
 }
 
+void init_clean_pages_table(PageTableEntry * first_pt)
+{
+	unsigned int index = 0;
+
+	for (; index < NB_PAGES_PER_TABLE; index++)
+		set_page_table_entry(&(first_pt[index]), 0, EMPTY);
+}
+
 /*
 	Initialise un répertoire de pages
 
 	Si le flag PAGE_SIZE_4KO et 4MO sont à 1, 4MO l'emporte
 */
-void set_page_directory_entry(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags)
+void set_page_directory_entry(PageDirectoryEntry * pd, u32 pt_addr, PD_FLAG flags)
 {
 	u32 * pd_addr = (u32*)pd;
 	(*pd_addr) = EMPTY_PAGE_TABLE;
@@ -102,7 +112,7 @@ void set_page_directory_entry(struct page_directory_entry * pd, u32 pt_addr, PD_
 
 	Permet de définir le champ de gestion du cache et le champ librement utilisable
 */
-void set_page_directory_entryEx(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags, u8 global, u8 avail)
+void set_page_directory_entryEx(PageDirectoryEntry * pd, u32 pt_addr, PD_FLAG flags, u8 global, u8 avail)
 {
 	if (!FlagOn(EMPTY, flags))
 	{
@@ -119,12 +129,12 @@ void set_page_directory_entryEx(struct page_directory_entry * pd, u32 pt_addr, P
 	Fait appel à la fonction d'initialisation d'un répertoire de pages car leur structure
 	 est identique.
 */
-void set_page_table_entry(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags)
+void set_page_table_entry(PageTableEntry * pt, u32 page_addr, PT_FLAG flags)
 {
 	if (!FlagOn(EMPTY, flags))
 		pt->written = FlagOn(WRITTEN, flags);
 
-	set_page_directory_entry((struct page_directory_entry*)pt, page_addr, flags);
+	set_page_directory_entry((PageDirectoryEntry *)pt, page_addr, flags);
 }
 
 /*
@@ -135,12 +145,12 @@ void set_page_table_entry(struct page_table_entry * pt, u32 page_addr, PT_FLAG f
 
 	Permet de définir le champ de gestion du cache et le champ librement utilisable
 */
-void set_page_table_entryEx(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail)
+void set_page_table_entryEx(PageTableEntry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail)
 {
 	if (!FlagOn(EMPTY, flags))
 		pt->written = FlagOn(WRITTEN, flags);
 
-	set_page_directory_entryEx((struct page_directory_entry*)pt, page_addr, flags, global, avail);
+	set_page_directory_entryEx((PageDirectoryEntry *)pt, page_addr, flags, global, avail);
 }
 
 /*
@@ -174,12 +184,107 @@ void * get_free_page()
 	return (void*)(-1);
 }
 
+void release_page(void * p_addr)
+{
+	set_page_unused(p_addr);
+}
+
+
+/*
+	Récupère une adresse physique à partir d'une adresse virtuelle
+*/
+void * get_p_addr(void * v_addr)
+{
+	u32 * pde = NULL;
+	u32 * pte = NULL;
+
+	// Rappel d'une adresse v : [ offset dir (10 bits) | offset table (10 bits) | offset p (12 bits) ]
+
+	// Les 10 premiers bits de l'adresse v représente un offset dans le répertoire, on les récupère avec le masque 0xFFC00000 et on décale
+	// On fait un OU avec 0xFFFFF000 pour que les premiers bits soient à 1, le trick nous permet de retomber sur l'adresse du répertoire qu'on ne connait pas
+	//  (la dernière entrée pointe sur le répertoire lui-même, puis avec les bits suivant aussi à 1, on se retrouve sur la dernière entrée du répertoire 
+	//   qui pointe à nouveau sur le début du répertoire). Là, il ajoute l'offset qu'on a foutu à la fin de l'adresse.)
+	// Ceci nous permet juste de vérifier si la table qui nous intéresse est en mémoire ou non.
+	pde = (u32 *)(0xFFFFF000 | (((u32)v_addr & 0xFFC00000) >> 20));
+
+	if ((*pde & IN_MEMORY))
+	{
+		// On récupère maintenant un pointeur sur l'entrée de la table afin de savoir si la page en question est en mémoire.
+		// On a encore le trick (0xFFC00000) qui nous permet de pointer sur le début du répertoire dans un premier temps
+		// Ensuite, au lieu d'utiliser les 10 prochains bits comme un offset sur la table de page, ce sera sur le répertoire afin de pointer sur la bonne table
+		// Les derniers bits, au lieu de représenter un offset physique, représente l'offset dans la table de page, afin de pointer sur l'entrée qui nous intéresse
+		// et vérifier qu'elle est bien en mémoire (on a donc les deux dernières info grace au masque ainsi qu'au décallage de 10 bits (ça ne devrait pas être 12 d'ailleurs ??)
+		pte = (u32 *)(0xFFC00000 | (((u32)v_addr & 0xFFFFF000) >> 10));
+		if ((*pte & IN_MEMORY))
+			// On termine en faisant ce que fait le CPU, prendre ce qui est pointé par l'entrée de la table et ajouter l'offset (les 12 derniers bits de l'adresse v).
+			return (void *)((*pte & 0xFFFFF000) + ((((u32)v_addr)) & 0x00000FFF));
+	}
+
+	return (void *)NULL;
+}
+
+/*
+	Met à jour l'espace d'adressage du noyau
+*/
+void pd0_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags)
+{
+	u32 * pde = NULL;
+	u32 * pte = NULL;
+
+	if (v_addr > (u8 *)USER_TASK_V_ADDR)
+	{
+		kprint("ERROR: pd0_add_page(): %p is not in kernel space !\n", v_addr);
+		return;
+	}
+
+	// On vérifie que la page est bien présente (voir get_p_addr pour mieux comprendre l'algo)
+	pde = (u32 *)(0xFFFFF000 | PD_OFFSET((u32)v_addr));
+	if (!FlagOn(*pde, IN_MEMORY))
+		panic(PAGE_TABLE_NOTE_FOUND);
+
+	// Modification de l'entrée dans la table de pages
+	pte = (u32 *)(0xFFC00000 | (((u32)v_addr & 0xFFFFF000) >> 10));
+	*pte = ((u32)p_addr) | (IN_MEMORY | WRITEABLE | flags);
+}
+
+/*
+	Met à jour le répertoire de pages passé en paramètre
+
+	[!] L'adresse du répertoire de pages doit avoir été renseigné dans le registre cr3 au préalable !
+*/
+void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd)
+{
+	u32 * pde = NULL; // adresse virtuelle de l'entrée du répertoire de pages
+	u32 * pte = NULL; // adresse virtuelle de l'entrée de la table de pages
+	u32 * pt = NULL;  // adresse virtuelle de la table de pages
+
+	// On vérifie que la page est bien présente (voir get_p_addr pour mieux comprendre l'algo)
+	pde = (u32 *)(0xFFFFF000 | PD_OFFSET((u32)v_addr));
+
+	if (!FlagOn(*pde, IN_MEMORY))
+	{
+		Page new_page = page_alloc();
+		pt = (u32 *)new_page.v_addr;
+
+		// On ajoute la nouvelle page au répertoire de pages
+		set_page_directory_entry((PageDirectoryEntry *)pde, (u32)new_page.p_addr, IN_MEMORY | WRITEABLE | flags);
+
+		init_clean_pages_table((PageTableEntry *)pt);
+
+		// On ajoute la nouvelle page à la liste de pages associée à ce répertoire (pour plus facilement libérer la mémoire après)
+		list_push(pd.page_table_list, new_page.v_addr);
+	}
+
+	pte = (u32 *) ((0xFFC00000 | (PD_OFFSET((u32)v_addr) << 10)));
+	set_page_table_entry((PageTableEntry *)pte, (u32)p_addr, (IN_MEMORY | WRITEABLE | flags));
+}
+
 /*
 Initialise le tas avec un un bloc (taille d'une page)
 */
 void init_heap()
 {
-	g_heap = (struct mem_block*)HEAP_BASE_ADDR;
+	g_heap = (MemBlock *)HEAP_BASE_ADDR;
 	g_last_heap_block = g_heap;
 
 	ksbrk(1);
@@ -193,40 +298,47 @@ void init_page_heap()
 	struct mem_pblock * tmp = NULL;
 	struct mem_pblock * prev = NULL;
 
-	g_page_heap = (struct mem_pblock *)kmalloc(sizeof(struct mem_pblock));
+	g_page_heap = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
 	g_page_heap->available = BLOCK_FREE;
 	g_page_heap->next = NULL;
-	g_page_heap->page_addr = PAGE_HEAP_BASE_ADDR;
+	g_page_heap->v_page_addr = (u32 *)PAGE_HEAP_BASE_ADDR;
 	g_page_heap->prev = NULL;
 
 	tmp = g_page_heap;
 
-	while (tmp->page_addr < PAGE_HEAP_LIMIT_ADDR)
+	while (tmp->v_page_addr < (u32 *)PAGE_HEAP_LIMIT_ADDR)
 	{
-		tmp->next = (struct mem_pblock *)kmalloc(sizeof(struct mem_pblock));
+		tmp->next = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
 
 		prev = tmp;
 		tmp = tmp->next;
 
-		tmp->page_addr = prev->page_addr + PAGE_SIZE;
+		tmp->v_page_addr = prev->v_page_addr + PAGE_SIZE;
 		tmp->available = BLOCK_FREE;
 		tmp->prev = prev;
 		tmp->next = NULL;
 	}
 }
 
-struct page_directory_entry * create_process_pd()
+PageDirectory create_process_pd()
 {
-	struct page_directory_entry * pd = (struct page_directory_entry *)page_alloc();
+	Page pd_page = page_alloc();
+	PageDirectory pd = { 0 };
+	PageDirectoryEntry * pd_entry = (PageDirectoryEntry *)pd_page.p_addr;
 	unsigned int i = 0;
 
 	// On veut que le premier Go de mémoire virtuelle soit pour le noyau : 1024 / 4 = 256 (1024 = nombre d'entrées dans un répertoire de pages)
 	// On vérifie:  256 * 1024 * 4096 = 1Go
 	for (; i < 256; i++)
-		pd[i] = g_kernel_pd[i];
+		pd_entry[i] = g_kernel_pd[i];
 
 	for (i = 256; i < NB_PAGES_TABLE_PER_DIRECTORY; i++)
-		set_page_directory_entry(&(pd[i]), 0, EMPTY);
+		set_page_directory_entry(&(pd_entry[i]), 0, EMPTY);
+
+	set_page_directory_entry(&(pd_entry[1023]), (u32)pd_entry, IN_MEMORY | WRITEABLE);
+
+	pd.pd_entry = pd_entry;
+	pd.page_table_list = list_create();
 
 	return pd;
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <kernel/lib/types.h>
+
 #define FlagOn(a, b) ((a & b) != 0)
 #define NULL 0
 

@@ -1,9 +1,22 @@
 #pragma once
 
 #include <kernel/lib/types.h>
+#include <kernel/lib/list.h>
+#include <kernel/lib/stdlib.h>
 
 #define KERNEL_STACK_P_ADDR 0xA0000
 #define KERNEL_P_LIMIT_ADDR 0x800000
+
+#define USER_TASK_P_ADDR 0x100000
+#define USER_TASK_V_ADDR 0x40000000
+
+#define USER_STACK_V_ADDR 0xE0000000
+
+// Sélecteurs de segment de code et de pile d'une tâche utilisateur
+// Les bits RPL (niveau de privilège) sont à '11' afin de permettre le passage en niveau de privilèges utilisateur
+// lors de l'exécution de l'instruction iret (voir process_starter.asm et le fonctionnement de iret)
+#define USER_CODE_SEG_SELECTOR 0x1B
+#define USER_STACK_SEG_SELECTOR 0x23
 
 #define PAGING_FLAG 0x80000000 // CR0 - bit 31
 
@@ -34,7 +47,11 @@
 #define BLOCK_FREE 0
 #define BLOCK_USED 1
 
+#define PAGE(addr) (addr) >> 12
+#define PD_OFFSET(addr) (addr & 0xFFC00000) >> 20 // c'est pas plutôt >> 22 ?
+#define PT_OFFSET(addr) (addr & 0x003FF000) >> 10 // >> 12 ?
 
+// TODO : séparer les flags, on sait plus quel flag appartient à quel type...
 enum PD_FLAG
 {
 	EMPTY = 0,
@@ -66,6 +83,7 @@ struct page_directory_entry
 	u32 avail : 3;
 	u32 page_table_addr : 20;
 };
+typedef struct page_directory_entry PageDirectoryEntry;
 
 struct page_table_entry
 {
@@ -81,6 +99,21 @@ struct page_table_entry
 	u32 avail : 3;
 	u32 page_addr : 20;
 };
+typedef struct page_table_entry PageTableEntry;
+
+struct page_directory
+{
+	PageDirectoryEntry * pd_entry;
+	List * page_table_list;
+};
+typedef struct page_directory PageDirectory;
+
+struct page
+{
+	u32 * p_addr;
+	u32 * v_addr;
+};
+typedef struct page Page;
 
 struct mem_block
 {
@@ -88,42 +121,50 @@ struct mem_block
 	unsigned int state : 1;
 	void * data;
 };
+typedef struct mem_block MemBlock;
 
 struct mem_pblock
 {
 	u8 available;
-	u32 * page_addr;
+	u32 * v_page_addr;
 	struct mem_pblock * prev;
 	struct mem_pblock * next;
 };
+typedef struct mem_pblock MemPageBlock;
 
 void init_vmm();
 void init_heap();
 void init_page_heap();
 
-void init_pages_directory(struct page_directory_entry * first_pd);
-void set_page_directory_entry(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags);
-void set_page_directory_entryEx(struct page_directory_entry * pd, u32 pt_addr, PD_FLAG flags, u8 global, u8 avail);
-void set_page_table_entry(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags);
-void set_page_table_entryEx(struct page_table_entry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail);
+void init_clean_pages_directory(PageDirectoryEntry * first_pd);
+void init_clean_pages_table(PageTableEntry * first_pt);
+void set_page_directory_entry(PageDirectoryEntry * pde, u32 pt_addr, PD_FLAG flags);
+void set_page_directory_entryEx(PageDirectoryEntry * pde, u32 pt_addr, PD_FLAG flags, u8 global, u8 avail);
+void set_page_table_entry(PageTableEntry * pt, u32 page_addr, PT_FLAG flags);
+void set_page_table_entryEx(PageTableEntry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail);
 void * get_free_page();
+void release_page(void * p_addr);
+void * get_p_addr(void * v_addr);
 
-struct page_directory_entry * create_process_pd();
+void pd0_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags);
+void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd);
+
+PageDirectory create_process_pd();
 
 #ifdef __MEMORY__
-struct page_directory_entry * g_kernel_pd = NULL;
-struct page_table_entry * g_kernel_pt = NULL;
+PageDirectoryEntry * g_kernel_pd = NULL;
+PageTableEntry * g_kernel_pt = NULL;
 
-struct mem_block * g_heap = NULL;
-struct mem_block * g_last_heap_block = NULL;
+MemBlock * g_heap = NULL;
+MemBlock * g_last_heap_block = NULL;
 
-struct mem_pblock * g_page_heap = NULL;
+MemPageBlock * g_page_heap = NULL;
 #else
-extern struct page_directory_entry * g_kernel_pd;
-extern struct page_table_entry * g_kernel_pt;
+extern PageDirectoryEntry * g_kernel_pd;
+extern PageTableEntry * g_kernel_pt;
 
-extern struct mem_block * g_heap;
-extern struct mem_block * g_last_heap_block;
+extern MemBlock * g_heap;
+extern MemBlock * g_last_heap_block;
 
-extern struct mem_pblock * g_page_heap;
+extern MemPageBlock * g_page_heap;
 #endif

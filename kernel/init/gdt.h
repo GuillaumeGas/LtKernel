@@ -29,12 +29,14 @@ struct gdt_descriptor
     u8 flags : 4;      //  to store two differents informations
     u8 base24_31;
 } __attribute__ ((packed)); // means we don't want data alignment
+typedef struct gdt_descriptor GdtDescriptor;
 
 struct gdt
 {
     u16 limit; // gdt size
     u32 base;  // gdt location
 } __attribute__ ((packed));
+typedef struct gdt Gdt;
 
 struct tss
 {
@@ -56,6 +58,7 @@ struct tss
     u16    ldt_selector, __ldt_sel_unused;
     u16    debug_flag, io_map;
 } __attribute__ ((packed));
+typedef struct tss Tss;
 
 void init_gdt ();
 struct gdt_descriptor * get_gdt_descriptor (u8 selector);
@@ -66,11 +69,11 @@ void print_gdt_descriptor (struct gdt_descriptor * entry);
 void print_tss ();
 
 #ifdef __GDT__
-struct gdt g_gdt;
-struct gdt_descriptor g_gdt_descriptor[GDT_SIZE];
-struct tss g_tss;
+Gdt g_gdt;
+GdtDescriptor g_gdt_descriptor[GDT_SIZE];
+Tss g_tss;
 #else
-extern struct gdt g_gdt;
-extern struct gdt_descriptor g_gdt_descriptor[];
-extern struct tss g_tss;
+extern Gdt g_gdt;
+extern GdtDescriptor g_gdt_descriptor[];
+extern Tss g_tss;
 #endif

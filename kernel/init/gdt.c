@@ -6,16 +6,16 @@
 #define __GDT__
 #include "gdt.h"
 
-void load_gdt (const struct gdt * gdt_ptr);
+void load_gdt (const Gdt * gdt_ptr);
 void load_tss (const u16 tss_selector);
 
-static void init_gdt_descriptor (u32 base, u32 limit, u8 access, u8 flags, struct gdt_descriptor * desc);
+static void init_gdt_descriptor (u32 base, u32 limit, u8 access, u8 flags, GdtDescriptor * desc);
 static void init_tss ();
 
 void init_gdt ()
 {
-    mmset ((u8*)GDT_ADDR, 0, (u32) (GDT_SIZE * sizeof (struct gdt_descriptor)));
-    mmset ((u8*)&g_tss, 0, (u32) (sizeof (struct tss)));
+    mmset ((u8*)GDT_ADDR, 0, (u32) (GDT_SIZE * sizeof (GdtDescriptor)));
+    mmset ((u8*)&g_tss, 0, (u32) (sizeof (Tss)));
 
     init_tss ();
     
@@ -24,9 +24,9 @@ void init_gdt ()
     init_gdt_descriptor (0, 0xFFFFF, 0x93, 0x0D, &g_gdt_descriptor[2]);
     init_gdt_descriptor (0, 0xFFFFF, 0xFF, 0x0F, &g_gdt_descriptor[3]);
     init_gdt_descriptor (0, 0xFFFFF, 0xF3, 0x0F, &g_gdt_descriptor[4]);
-    init_gdt_descriptor ((u32)&g_tss, (u32) (sizeof (struct tss)), 0xE9, 0, &g_gdt_descriptor[5]);
+    init_gdt_descriptor ((u32)&g_tss, (u32) (sizeof (Tss)), 0xE9, 0, &g_gdt_descriptor[5]);
 
-    g_gdt.limit = GDT_SIZE * sizeof (struct gdt_descriptor);
+    g_gdt.limit = GDT_SIZE * sizeof (GdtDescriptor);
     g_gdt.base = GDT_ADDR;
 
     mmcopy ((u8*) g_gdt_descriptor, (u8*) g_gdt.base, g_gdt.limit);
@@ -35,7 +35,7 @@ void init_gdt ()
     load_tss (TSS_SEG_SELECTOR);
 }
 
-static void init_gdt_descriptor (u32 base, u32 limit, u8 access, u8 flags, struct gdt_descriptor * desc)
+static void init_gdt_descriptor (u32 base, u32 limit, u8 access, u8 flags, GdtDescriptor * desc)
 {
     desc->limit0_15 = (limit & 0xFFFF);
     desc->base0_15 = (base & 0xFFFF);
@@ -52,14 +52,14 @@ static void init_tss ()
     g_tss.io_map = 0x00;
 }
 
-struct gdt_descriptor * get_gdt_descriptor (u8 selector)
+GdtDescriptor * get_gdt_descriptor(u8 selector)
 {
-    if (selector <= ((GDT_SIZE - 1) * sizeof (struct gdt_descriptor)))
-	return (struct gdt_descriptor*) selector;
-    return (struct gdt_descriptor*) 0;
+	if (selector <= ((GDT_SIZE - 1) * sizeof(GdtDescriptor)))
+		return (GdtDescriptor *) selector;
+	return (GdtDescriptor *) 0;
 }
 
-u32 get_base_addr (struct gdt_descriptor * desc)
+u32 get_base_addr (GdtDescriptor * desc)
 {
     u32 addr = desc->base0_15;
     addr |= (desc->base16_23 << 16);
@@ -70,16 +70,16 @@ u32 get_base_addr (struct gdt_descriptor * desc)
 void print_gdt ()
 {
     int i = 1;
-    struct gdt_descriptor * gdt_desc = (struct gdt_descriptor*)0;
+    GdtDescriptor * gdt_desc = (GdtDescriptor *)0;
 
-    kprint (">> GDT (base : %x, limit : %x)\n\n", GDT_ADDR, GDT_ADDR + (GDT_SIZE * sizeof (struct gdt_descriptor)));
+    kprint (">> GDT (base : %x, limit : %x)\n\n", GDT_ADDR, GDT_ADDR + (GDT_SIZE * sizeof (GdtDescriptor)));
 
     // On n'affiche pas la ligne vide
     for (; i < GDT_SIZE; i++)
 	print_gdt_descriptor (&gdt_desc[i]);
 }
 
-void print_gdt_descriptor (struct gdt_descriptor * gdt_desc)
+void print_gdt_descriptor (GdtDescriptor * gdt_desc)
 {
     u32 base = 0x0;
     u32 limit = 0x0;
@@ -96,7 +96,7 @@ void print_gdt_descriptor (struct gdt_descriptor * gdt_desc)
 
 void print_tss ()
 {
-    kprint (">> TSS (base : %x, limit : %x)\n\n", (int)&g_tss, (int)(&g_tss) + sizeof (struct tss));
+    kprint (">> TSS (base : %x, limit : %x)\n\n", (int)&g_tss, (int)(&g_tss) + sizeof (Tss));
 
     kprint (" esp0 : %x | ss0 : %x\n", g_tss.esp0, g_tss.ss0);
     kprint (" esp1 : %x | ss1 : %x\n", g_tss.esp1, g_tss.ss1);

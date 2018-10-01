@@ -3,13 +3,18 @@
 #include <kernel/lib/kmalloc.h>
 #include <kernel/lib/stdlib.h>
 
-void list_create(List * list)
+List * list_create()
 {
+	struct list_elem * list = (struct list_elem *)kmalloc(sizeof (struct list_elem));
+	
 	if (list == NULL)
-		return;
-	list->data = NULL;
-	list->next = NULL;
+		return NULL;
+	
 	list->prev = NULL;
+	list->next = NULL;
+	list->data = NULL;
+	
+	return list;
 }
 
 void list_destroy(List * list)
@@ -44,10 +49,14 @@ void list_push(List * list, void * data)
 		while (elem->next != NULL);
 
 		elem->next = (struct list_elem *)kmalloc(sizeof(struct list_elem));
-		elem->next->prev = elem;
-		elem = elem->next;
-		elem->data = data;
-		elem->next = NULL;
+		
+		if (elem->next != NULL)
+		{
+			elem->next->prev = elem;
+			elem = elem->next;
+			elem->data = data;
+			elem->next = NULL;
+		}
 	}
 }
 
@@ -63,6 +72,14 @@ void * list_get(List * list, unsigned int index)
 		list = list->next;
 		index--;
 	}
+
+	return list->data;
+}
+
+void * list_top(List * list)
+{
+	if (list == NULL)
+		return NULL;
 
 	return list->data;
 }

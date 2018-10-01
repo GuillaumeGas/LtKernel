@@ -8,11 +8,10 @@
 
 void schedule()
 {
-	if (g_current_process == NULL && g_process_list[0].pid != -1)
+	if (g_current_process == NULL && list_top(g_process_list) != NULL)
 	{
-		g_current_process = &g_process_list[0];
-
-		start_process(g_process_list[0].pid);
+		g_current_process = (Process *)list_top(g_process_list);
+		start_process(g_current_process->pid);
 	}
 	else if (g_current_process != NULL)
 	{
@@ -46,10 +45,10 @@ void schedule()
 		else
 		{
 			g_current_process->regs.ss = g_tss.ss0;
-			g_current_process->regs.esp = &stack_ptr[17];
+			g_current_process->regs.esp = (u32)(&stack_ptr[17]);
 		}
 
-		g_current_process->kstack_esp0 = g_tss.esp0;
+		g_current_process->kstack_esp0 = (u32 *)(g_tss.esp0);
 
 		start_process((g_current_process->pid + 1) % g_nb_process);
 	}

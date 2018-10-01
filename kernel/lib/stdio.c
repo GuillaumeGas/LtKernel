@@ -118,6 +118,7 @@ void kprint(const char * format, ...)
 					printInt(va_arg(ap, int), 10);
 					break;
 				case 'x':
+				case 'p':
 					printStr("0x");
 					printInt(va_arg(ap, int), 16);
 					break;

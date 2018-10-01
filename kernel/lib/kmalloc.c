@@ -2,8 +2,8 @@
 #include <kernel/lib/panic.h>
 #include <kernel/lib/stdlib.h>
 
-static void * _kmalloc(struct mem_block * block, unsigned int size);
-static void _splitBlock(struct mem_block * block, unsigned int size);
+static void * _kmalloc(MemBlock * block, int size);
+static void _splitBlock(MemBlock * block, int size);
 static void _kdefrag();
 
 /*
@@ -16,9 +16,10 @@ Les nouveaux bloques sont initialisés
 struct mem_block * ksbrk(int n)
 {
 	// +1 car on prend en compte la taille du bloque pointé par g_heap
-	if ((g_last_heap_block + ((n + 1) * DEFAULT_BLOCK_SIZE) + (BLOCK_HEADER_SIZE * 2)) >= HEAP_LIMIT_ADDR)
+	if (((u32)g_last_heap_block + ((n + 1) * DEFAULT_BLOCK_SIZE) + (BLOCK_HEADER_SIZE * 2)) >= HEAP_LIMIT_ADDR)
 	{
-		panic("HEAP_LIMIT\n");
+		panic(HEAP_LIMIT);
+		return NULL;
 	}
 	else
 	{
@@ -32,20 +33,20 @@ struct mem_block * ksbrk(int n)
 
 		for (; i < n; i++)
 		{
-			u32 * new_page = (u32*)get_free_page();
+			u8 * new_page = (u8*)get_free_page();
 
 			if (new_page == NULL)
 				panic(MEMORY_FULL);
 
 			if (i == 0)
-				pd_add_page(new_page, (u32)(new_block_v_addr + DEFAULT_BLOCK_SIZE_WITH_HEADER));
+				pd0_add_page(new_page, (u8 *)(new_block_v_addr + DEFAULT_BLOCK_SIZE_WITH_HEADER), IN_MEMORY | WRITEABLE);
 			else
-				pd_add_page(new_page, (u32)(new_block_v_addr + (i * DEFAULT_BLOCK_SIZE)));
+				pd0_add_page(new_page, (u8 *)(new_block_v_addr + (i * DEFAULT_BLOCK_SIZE)), IN_MEMORY | WRITEABLE);
 		}
 
-		new_block_v_addr->size = (n * DEFAULT_BLOCK_SIZE);
+		new_block_v_addr->size = (n * DEFAULT_BLOCK_SIZE_WITH_HEADER) - BLOCK_HEADER_SIZE;
 		new_block_v_addr->state = BLOCK_FREE;
-		mmset(&(new_block_v_addr->data), new_block_v_addr->size, 0);
+		mmset((u8 *)(&(new_block_v_addr->data)), new_block_v_addr->size, 0);
 
 		return new_block_v_addr;
 	}
@@ -63,12 +64,12 @@ void * kmalloc(int size)
 
 void kfree(void * ptr)
 {
-	struct mem_block * block = (struct mem_block*)((int)ptr - sizeof(int));
+	MemBlock * block = (MemBlock*)((int)ptr - sizeof(int));
 	block->state = BLOCK_FREE;
-	mmset(&(block->data), block->size, 0);
+	mmset((u8 *)(&(block->data)), block->size, 0);
 }
 
-static void * _kmalloc(struct mem_block * block, int size)
+static void * _kmalloc(MemBlock * block, int size)
 {
 	void * res_ptr = NULL;
 
@@ -121,7 +122,7 @@ static void _kdefrag()
 		if (block->state == BLOCK_FREE && next->state == BLOCK_FREE)
 		{
 			block->size += next->size + BLOCK_HEADER_SIZE;
-			mmset(&(block->data), 0, block->size);
+			mmset((u8 *)(&(block->data)), 0, block->size);
 			if (next == g_last_heap_block)
 				g_last_heap_block = block;
 		}
@@ -132,22 +133,31 @@ static void _kdefrag()
 	}
 }
 
-void * page_alloc()
+Page page_alloc()
 {
+	Page newPage = {0};
 	struct mem_pblock * block = g_page_heap;
+
+	newPage.p_addr = (u32 *)get_free_page();
+	
+	if (newPage.p_addr == NULL)
+		panic(MEMORY_FULL);
 
 	while (block != NULL)
 	{
 		if (block->available == BLOCK_FREE)
 		{
 			block->available = BLOCK_USED;
-			return (void *)block->page_addr;
+			newPage.v_addr = block->v_page_addr;
 		}
 
 		block = block->next;
 	}
 
-	return NULL;
+	if (newPage.v_addr == NULL)
+		panic(VIRTUAL_MEMORY_FULL);
+
+	return newPage;
 }
 
 void page_free(void * ptr)
@@ -156,10 +166,11 @@ void page_free(void * ptr)
 
 	while (block != NULL)
 	{
-		if ((u32)(block->page_addr) == ptr)
+		if (block->v_page_addr == ptr)
 		{
 			block->available = BLOCK_FREE;
 			block = NULL;
+			release_page(get_p_addr(ptr));
 		}
 	}
 }

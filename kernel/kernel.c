@@ -90,22 +90,22 @@ void kmain(void)
 	kprint("[Kernel] GDT loaded\n");
 	kprint("[Kernel] Serial port COM1 initialized\n");
 
-	init_vmm();
+	//init_vmm();
 	kprint("[Kernel] Paging enabled\n");
 
-	init_process_manager();
-	kprint("[Kernel] Process manager initialized\n\n");
+	//init_process_manager();
+	//kprint("[Kernel] Process manager initialized\n\n");
 
-	{
-		sc_setColor(WHITE);
-		kprint("> Starting new task 0...\n\n");
-		sc_setColor(RED);
-		
-		create_process(test_task, 500);
-		create_process(test_task2, 500);
-	}
+	//{
+	//	sc_setColor(WHITE);
+	//	kprint("> Starting new task 0...\n\n");
+	//	sc_setColor(RED);
+	//	
+	//	/*create_process(test_task, 500);
+	//	create_process(test_task2, 500);*/
+	//}
 
-	sti();
+	//sti();
 
 	while (1);
 }
