@@ -4,10 +4,11 @@
 #include <kernel/lib/list.h>
 #include <kernel/lib/stdlib.h>
 
-#define KERNEL_STACK_P_ADDR 0xA0000
-#define KERNEL_P_LIMIT_ADDR 0x800000
+#define KERNEL_STACK_P_ADDR 0x300000 // tmp... on devrait pouvoir mettre 0x400000
+#define KERNEL_P_BASE_ADDR  0x10000
+#define KERNEL_P_LIMIT_ADDR 0xA0000 // tmp
 
-#define USER_TASK_P_ADDR 0x100000
+//#define USER_TASK_P_ADDR 0x100000 // ne devrait plus être utilisée
 #define USER_TASK_V_ADDR 0x40000000
 
 #define USER_STACK_V_ADDR 0xE0000000

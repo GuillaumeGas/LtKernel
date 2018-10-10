@@ -85,9 +85,9 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="boot\bootsect.asm" />
     <None Include="boot\Makefile" />
-    <None Include="boot\utils.asm" />
+    <None Include="boot\stageOne\bootsect.asm" />
+    <None Include="boot\stageTwo\stageTwo.asm" />
     <None Include="kernel\init\gdt_loader.asm" />
     <None Include="kernel\init\idt_loader.asm" />
     <None Include="kernel\init\int.asm" />

@@ -16,7 +16,7 @@ clean:
 	rm -f $(OBJ) *.o
 
 kernel: $(ROOT) $(DEBUG) $(DRIVERS) $(INIT) $(LIB) $(USER)
-	$(LD) -m elf_i386 --oformat binary -Ttext 1000 $^ -o $@
+	$(LD) -m elf_i386 --oformat binary -Ttext 100000 $^ -o $@
 
 # GENERAL STUFF
 .o: .c 

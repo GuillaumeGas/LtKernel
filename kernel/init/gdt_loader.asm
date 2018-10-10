@@ -38,7 +38,7 @@ load_tss:
 	ltr ax
 
 	mov eax, g_tss
-	mov ebx, 0x20000
+	mov ebx, 0x300000
 	mov dword [eax+4], ebx
 	mov word [eax+8], ss
 

@@ -32,6 +32,7 @@ void init_gdt ()
     mmcopy ((u8*) g_gdt_descriptor, (u8*) g_gdt.base, g_gdt.limit);
 
     load_gdt (&g_gdt);
+
     load_tss (TSS_SEG_SELECTOR);
 }
 

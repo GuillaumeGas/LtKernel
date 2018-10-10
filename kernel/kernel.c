@@ -17,11 +17,13 @@ void _start(void)
 {
 	cli();
 
+	while (1);
+
 	init_gdt();
 
 	asm("movw $0x10, %ax \n \
          movw %ax, %ss \n \
-         movl $0x20000, %esp");
+         movl $0x300000, %esp");
 
 	kmain();
 }
@@ -91,7 +93,7 @@ void kmain(void)
 	kprint("[Kernel] Serial port COM1 initialized\n");
 
 	//init_vmm();
-	kprint("[Kernel] Paging enabled\n");
+	//kprint("[Kernel] Paging enabled\n");
 
 	//init_process_manager();
 	//kprint("[Kernel] Process manager initialized\n\n");
