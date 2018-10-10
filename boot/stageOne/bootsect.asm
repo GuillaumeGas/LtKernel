@@ -111,6 +111,9 @@ initGdt:
 
 	;; ###### LOADS STAGE 2 & KERNEL ######
 loadStage2AndKernel:
+	push bp
+	mov bp, sp
+
 	mov si, loadStage2Msg
 	call print
 
@@ -136,8 +139,14 @@ loadStage2AndKernel:
 	mov si, okMsg
 	call print
 
+	leave
+	ret
+
 	;; ###### PROTECTED MODE ######
 switchToProtectedMode:
+	push bp
+	mov bp, sp
+
 	mov si, protectedModeMsg
 	call print
 
@@ -153,6 +162,9 @@ switchToProtectedMode:
 	;; because of the documentation...
 	jmp next
 next:
+
+	leave
+	ret
 
 	;; Variables
 	loadGdtMsg db "[STAGE 1] Loading GDT...", 0
