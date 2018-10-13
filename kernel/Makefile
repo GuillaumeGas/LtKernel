@@ -16,7 +16,7 @@ all: $(OBJ)
 clean:
 	rm -f $(OBJ) *.o
 
-kernel: $(ROOT) $(DEBUG) $(DRIVERS) $(INIT) $(LIB) $(USER)
+kernel: $(BOOT) $(ROOT) $(DEBUG) $(DRIVERS) $(INIT) $(LIB) $(USER)
 	$(LD) -m elf_i386 -T linker.ld $^ -o $@
 
 # GENERAL STUFF
