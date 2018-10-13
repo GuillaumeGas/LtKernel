@@ -1,9 +1,8 @@
 ENTRY(_start)
-OUTPUT(binary)
 
 SECTIONS
 {
-    . = 0x1000000;
+    . = 0x100000;
 
     .text ALIGN(4K):
     {
