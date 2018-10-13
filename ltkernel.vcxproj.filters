@@ -34,12 +34,6 @@
     <Filter Include="Fichiers sources\kernel\user">
       <UniqueIdentifier>{bcb0687d-4a2e-4eb6-a80e-dcdee957047e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Fichiers sources\boot\stageOne">
-      <UniqueIdentifier>{778f6a1d-fed9-463c-98e9-8f966ce1796f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Fichiers sources\boot\stageTwo">
-      <UniqueIdentifier>{c80c8d04-5ef3-493a-974c-4cb502525c6e}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
@@ -67,11 +61,11 @@
     <None Include="kernel\user\process_starter.asm">
       <Filter>Fichiers sources\kernel\user</Filter>
     </None>
-    <None Include="boot\stageOne\bootsect.asm">
-      <Filter>Fichiers sources\boot\stageTwo</Filter>
+    <None Include="boot\bootsector.asm">
+      <Filter>Fichiers sources\boot</Filter>
     </None>
-    <None Include="boot\stageTwo\stageTwo.asm">
-      <Filter>Fichiers sources\boot\stageOne</Filter>
+    <None Include="kernel\linker.ld">
+      <Filter>Fichiers sources\kernel</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

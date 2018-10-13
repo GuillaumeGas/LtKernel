@@ -1,13 +1,9 @@
-OBJ=bootsectStageOne bootsectStageTwo
+OBJ=bootsector.o
 
 all: $(OBJ) 
 
-bootsectStageOne: stageOne/bootsect.asm
-	nasm -f bin -o $@ $^
-
-bootsectStageTwo: stageTwo/stageTwo.asm
-	nasm -f bin -o $@ $^
+bootsector.o: bootsector.asm
+	nasm -f elf -o $@ $^
 
 clean:
-	rm -f bootsectStageOne
-	rm -f bootsectStageTwo
+	rm -f bootsector.o

@@ -13,11 +13,22 @@
 
 void kmain(void);
 
-void _start(void)
+struct mb_partial_info {
+	unsigned long flags;
+	unsigned long low_mem;
+	unsigned long high_mem;
+	unsigned long boot_device;
+	unsigned long cmdline;
+};
+
+void start_kmain(struct mb_partial_info * mbi)
 {
-	cli();
+	kprint("Grub example kernel is loaded...\n");
+	kprint("RAM detected : %x (lower), %x (upper)\n", mbi->low_mem, mbi->high_mem);
+	kprint("Done.\n");
 
 	while (1);
+	/*cli();
 
 	init_gdt();
 
@@ -25,7 +36,7 @@ void _start(void)
          movw %ax, %ss \n \
          movl $0x300000, %esp");
 
-	kmain();
+	kmain();*/
 }
 
 // Test utilisateur (CPL 3)

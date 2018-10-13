@@ -85,14 +85,14 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="boot\bootsector.asm" />
     <None Include="boot\Makefile" />
-    <None Include="boot\stageOne\bootsect.asm" />
-    <None Include="boot\stageTwo\stageTwo.asm" />
     <None Include="kernel\init\gdt_loader.asm" />
     <None Include="kernel\init\idt_loader.asm" />
     <None Include="kernel\init\int.asm" />
     <None Include="kernel\init\pic.asm" />
     <None Include="kernel\init\vmm_loader.asm" />
+    <None Include="kernel\linker.ld" />
     <None Include="kernel\Makefile" />
     <None Include="kernel\user\process_starter.asm" />
     <None Include="Makefile" />
