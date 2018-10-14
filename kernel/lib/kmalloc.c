@@ -1,36 +1,34 @@
 #include <kernel/kernel.h>
 #include <kernel/init/vmm.h>
+#include <kernel/init/heap.h>
 #include <kernel/lib/panic.h>
 #include <kernel/lib/stdlib.h>
+#include <kernel/lib/stdio.h>
 
 static void * _kmalloc(MemBlock * block, int size);
 static void _splitBlock(MemBlock * block, int size);
 static void _kdefrag();
 
 /*
-Agrandi le tas
+	Agrandi le tas
 
-Va chercher n pages en mémoire
-Les ajoute ces pages à l'espace d'adressage du noyau
-Les nouveaux bloques sont initialisés
+	Va chercher n pages en mémoire
+	Les ajoute ces pages à l'espace d'adressage du noyau
+	Les nouveaux bloques sont initialisés
 */
-struct mem_block * ksbrk(int n)
+MemBlock * ksbrk(int n)
 {
-	// +1 car on prend en compte la taille du bloque pointé par g_heap
-	if (((u32)g_last_heap_block + ((n + 1) * DEFAULT_BLOCK_SIZE) + (BLOCK_HEADER_SIZE * 2)) >= g_kernelInfo.heapLimit_v)
+	// On ne doit pas dépasser la limite de l'espace réservé au tas
+	if ((u32)g_heap + (n * PAGE_SIZE) > g_kernelInfo.heapLimit_v)
 	{
 		panic(HEAP_LIMIT);
 		return NULL;
 	}
 	else
 	{
-		struct mem_block * new_block_v_addr = g_heap;
-		int i = 0;
-
-		if (new_block_v_addr->size != 0)
-			new_block_v_addr = g_last_heap_block + g_last_heap_block->size + BLOCK_HEADER_SIZE;
-
-		g_last_heap_block = new_block_v_addr;
+		unsigned int i = 0;
+		MemBlock * newBlock = g_heap;
+		u32 heap = (u32)g_heap;
 
 		for (; i < n; i++)
 		{
@@ -39,26 +37,32 @@ struct mem_block * ksbrk(int n)
 			if (new_page == NULL)
 				panic(MEMORY_FULL);
 
-			if (i == 0)
-				pd0_add_page(new_page, (u8 *)(new_block_v_addr + DEFAULT_BLOCK_SIZE_WITH_HEADER), IN_MEMORY | WRITEABLE);
-			else
-				pd0_add_page(new_page, (u8 *)(new_block_v_addr + (i * DEFAULT_BLOCK_SIZE)), IN_MEMORY | WRITEABLE);
+			pd0_add_page((u8 *)g_heap, new_page, IN_MEMORY | WRITEABLE);
+
+			heap += PAGE_SIZE;
 		}
+		g_heap = (MemBlock *)heap;
 
-		new_block_v_addr->size = (n * DEFAULT_BLOCK_SIZE_WITH_HEADER) - BLOCK_HEADER_SIZE;
-		new_block_v_addr->state = BLOCK_FREE;
-		mmset((u8 *)(&(new_block_v_addr->data)), new_block_v_addr->size, 0);
+		//kprint("Addr : %x, target : %x\n", (u32)newBlock, ((u32)newBlock + (u32)BLOCK_HEADER_SIZE));
+		//kprint("g_heap : %x\n", (u32)heap);
+		
+		//while(1);
 
-		return new_block_v_addr;
+		newBlock->size = n * PAGE_SIZE;
+		//newBlock->state = BLOCK_FREE;
+		while (1);	
+
+		/*mmset((u8 *)(&(newBlock->data)), newBlock->size - BLOCK_HEADER_SIZE, 0);
+		mmset((u8 *)(newBlock + BLOCK_HEADER_SIZE), newBlock->size - BLOCK_HEADER_SIZE, 0);*/
+
+		return newBlock;
 	}
 }
 
 void * kmalloc(int size)
 {
 	void * res = NULL;
-	// size est la taille en octets désirée
-	// On travaille sur la taille totale d'un bloque, donc en ajoutant la taille du header
-	res = _kmalloc(g_heap, size);
+	res = _kmalloc((MemBlock*)g_kernelInfo.heapBase_v, size);
 	_kdefrag();
 	return res;
 }
@@ -67,14 +71,14 @@ void kfree(void * ptr)
 {
 	MemBlock * block = (MemBlock*)((int)ptr - sizeof(int));
 	block->state = BLOCK_FREE;
-	mmset((u8 *)(&(block->data)), block->size, 0);
+	mmset((u8 *)(&(block->data)), block->size - BLOCK_HEADER_SIZE, 0);
 }
 
 static void * _kmalloc(MemBlock * block, int size)
 {
 	void * res_ptr = NULL;
 
-	while (block <= g_last_heap_block && res_ptr == NULL)
+	while (block <= g_heap && res_ptr == NULL)
 	{
 		if (block->state == BLOCK_USED || size > block->size)
 		{
@@ -106,8 +110,8 @@ static void _splitBlock(struct mem_block * block, int size)
 	second_block->size = block->size - size - BLOCK_HEADER_SIZE;
 	second_block->state = BLOCK_FREE;
 
-	if (block == g_last_heap_block)
-		g_last_heap_block = second_block;
+	if (block == g_heap)
+		g_heap = second_block;
 
 	block->size = size;
 }
@@ -116,7 +120,7 @@ static void _kdefrag()
 {
 	struct mem_block * block = g_heap;
 
-	while (block < g_last_heap_block)
+	while (block < g_heap)
 	{
 		struct mem_block * next = block + block->size + BLOCK_HEADER_SIZE;
 
@@ -124,8 +128,8 @@ static void _kdefrag()
 		{
 			block->size += next->size + BLOCK_HEADER_SIZE;
 			mmset((u8 *)(&(block->data)), 0, block->size);
-			if (next == g_last_heap_block)
-				g_last_heap_block = block;
+			if (next == g_heap)
+				g_heap = block;
 		}
 		else
 		{

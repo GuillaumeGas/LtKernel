@@ -120,6 +120,9 @@
     <ClCompile Include="kernel\user\user_tests.c">
       <Filter>Fichiers sources\kernel\user</Filter>
     </ClCompile>
+    <ClCompile Include="kernel\init\heap.c">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\logger.h">
@@ -184,6 +187,9 @@
     </ClInclude>
     <ClInclude Include="kernel\user\user_tests.h">
       <Filter>Fichiers sources\kernel\user</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\init\heap.h">
+      <Filter>Fichiers sources\kernel\init</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

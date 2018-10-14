@@ -65,11 +65,11 @@ global _asm_com1_isr
 global _asm_syscall_isr
 
 %macro  SAVE_REGS 0
-        pushad
-        push ds
-        push es
-        push fs
-        push gs
+    pushad
+    push ds
+    push es
+    push fs
+    push gs
 	push ebx
 	mov bx, 0x10
 	mov ds, bx
@@ -77,11 +77,11 @@ global _asm_syscall_isr
 %endmacro
 
 %macro  RESTORE_REGS 0
-        pop gs
-        pop fs
-        pop es
-        pop ds
-        popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popad
 %endmacro
 
 %macro  EOI 0 		; EOI (End Of Interrupt)
@@ -171,9 +171,8 @@ _asm_general_protection_fault_isr:
 	call general_protection_fault_isr
 	INT_EPILOG
 
-extern kprint
-	_format db "CR2 : %x", 10, 0
 _asm_page_fault_isr:
+	
 	INT_PROLOG
 	call page_fault_isr
 	INT_EPILOG

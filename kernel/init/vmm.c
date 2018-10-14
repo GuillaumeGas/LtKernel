@@ -1,6 +1,3 @@
-#define __MEMORY__
-#include "vmm.h"
-
 #include <kernel/lib/types.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
@@ -8,6 +5,9 @@
 #include <kernel/lib/panic.h>
 #include <kernel/kernel.h>
 #include <kernel/multiboot.h>
+#include <kernel/init/heap.h>
+
+#include "vmm.h"
 
 extern void _init_vmm(PageDirectoryEntry * pd0_addr);
 
@@ -39,13 +39,29 @@ void init_vmm()
 	for (page = PAGE(0); page < PAGE(g_kernelInfo.kernelLimit_p); page++)
 		set_page_used(page);
 
-	//init_heap();
-	//init_page_heap();
-
 	// On met à 0 le répertoire de pages
 	init_clean_pages_directory(g_kernelInfo.pageDirectory_p.pd_entry);
+	//g_kernelInfo.pageDirectory_p.page_table_list = list_create();
 
-	// Identity mapping
+	// Initialise tous le répertoire de pages du noyau ainsi que toutes les tables de pages
+	{
+		unsigned int i = 0;
+		PageDirectoryEntry * pd = g_kernelInfo.pageDirectory_p.pd_entry;
+		PageTableEntry * pt = g_kernelInfo.pageTables_p;
+		for (; i < 1024; i++)
+		{
+			unsigned int j = 0;
+			set_page_directory_entry(&pd[i], (u32)pt, IN_MEMORY | WRITEABLE);
+			for (; j < 1024; j++)
+			{
+				set_page_table_entry(&pt[j], 0, IN_MEMORY | WRITEABLE);
+			}
+			set_page_table_entry(&pt[j - 1], (u32)&pt[0], IN_MEMORY | WRITEABLE);
+			pt = &pt[j];
+		}
+	}
+
+	// Identity mapping (v_addr == p_addr pour le noyau, donc entre 0x0 et 0x800000)
 	{
 		u32 index = 0;
 		PageTableEntry * kernelPt = g_kernelInfo.pageTables_p;
@@ -63,6 +79,9 @@ void init_vmm()
 	set_page_directory_entry(&(g_kernelInfo.pageDirectory_p.pd_entry[1023]), (u32)g_kernelInfo.pageDirectory_p.pd_entry, IN_MEMORY | WRITEABLE);
 
 	_init_vmm(g_kernelInfo.pageDirectory_p.pd_entry);
+
+	init_heap();
+	//init_page_heap();
 }
 
 void init_clean_pages_directory(PageDirectoryEntry * first_pd)
@@ -275,47 +294,6 @@ void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd)
 
 	pte = (u32 *) ((0xFFC00000 | (PD_OFFSET((u32)v_addr) << 10)));
 	set_page_table_entry((PageTableEntry *)pte, (u32)p_addr, (IN_MEMORY | WRITEABLE | flags));
-}
-
-/*
-Initialise le tas avec un un bloc (taille d'une page)
-*/
-void init_heap()
-{
-	g_heap = (MemBlock *)g_kernelInfo.heapBase_v;
-	g_last_heap_block = g_heap;
-
-	ksbrk(1);
-}
-
-/*
-	Initialise le tas de pages
-*/
-void init_page_heap()
-{
-	struct mem_pblock * tmp = NULL;
-	struct mem_pblock * prev = NULL;
-
-	g_page_heap = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
-	g_page_heap->available = BLOCK_FREE;
-	g_page_heap->next = NULL;
-	g_page_heap->v_page_addr = (u32 *)g_kernelInfo.pagesHeapBase_v;
-	g_page_heap->prev = NULL;
-
-	tmp = g_page_heap;
-
-	while (tmp->v_page_addr < (u32 *)g_kernelInfo.pagesHeapLimit_v)
-	{
-		tmp->next = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
-
-		prev = tmp;
-		tmp = tmp->next;
-
-		tmp->v_page_addr = prev->v_page_addr + PAGE_SIZE;
-		tmp->available = BLOCK_FREE;
-		tmp->prev = prev;
-		tmp->next = NULL;
-	}
 }
 
 PageDirectory create_process_pd()

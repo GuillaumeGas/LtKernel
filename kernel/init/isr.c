@@ -42,7 +42,7 @@ void page_fault_isr(u32 code)
 	asm("mov 56(%%ebp), %%eax; mov %%eax, %0" : "=m" (eip));
 	//asm("mov %%cr2, %%eax; mov %%eax, %0" : "=m" (cr2) : );
 
-	cr2 = get_cr2();
+	//cr2 = get_cr2();
 
 	sc_clear();
 	sc_setBackground(BLUE);

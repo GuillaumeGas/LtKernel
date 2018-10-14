@@ -105,6 +105,7 @@
     <ClCompile Include="kernel\drivers\screen.c" />
     <ClCompile Include="kernel\drivers\serial.c" />
     <ClCompile Include="kernel\init\gdt.c" />
+    <ClCompile Include="kernel\init\heap.c" />
     <ClCompile Include="kernel\init\idt.c" />
     <ClCompile Include="kernel\init\isr.c" />
     <ClCompile Include="kernel\init\vmm.c" />
@@ -126,6 +127,7 @@
     <ClInclude Include="kernel\drivers\screen.h" />
     <ClInclude Include="kernel\drivers\serial.h" />
     <ClInclude Include="kernel\init\gdt.h" />
+    <ClInclude Include="kernel\init\heap.h" />
     <ClInclude Include="kernel\init\idt.h" />
     <ClInclude Include="kernel\init\isr.h" />
     <ClInclude Include="kernel\init\vmm.h" />

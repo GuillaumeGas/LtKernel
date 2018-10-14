@@ -3,6 +3,7 @@
 #include <kernel/lib/types.h>
 #include <kernel/lib/list.h>
 #include <kernel/lib/stdlib.h>
+#include <kernel/init/heap.h>
 
 #define PAGE_SIZE 4096        // Taille d'une page
 #define RAM_MAXPAGE 0x100000  // Car on permet d'adresser 4Go de mémoire (0x100000 * 0x1000 = 4Go)
@@ -105,26 +106,7 @@ struct page
 };
 typedef struct page Page;
 
-struct mem_block
-{
-	unsigned int size : 31; // 31 bits pour la taille, 1 bit pour indiquer si le bloc est libre (0) ou non (1)
-	unsigned int state : 1;
-	void * data;
-};
-typedef struct mem_block MemBlock;
-
-struct mem_pblock
-{
-	u8 available;
-	u32 * v_page_addr;
-	struct mem_pblock * prev;
-	struct mem_pblock * next;
-};
-typedef struct mem_pblock MemPageBlock;
-
 void init_vmm();
-void init_heap();
-void init_page_heap();
 
 void init_clean_pages_directory(PageDirectoryEntry * first_pd);
 void init_clean_pages_table(PageTableEntry * first_pt);
@@ -140,18 +122,3 @@ void pd0_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags);
 void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd);
 
 PageDirectory create_process_pd();
-
-#ifdef __MEMORY__
-MemBlock * g_heap = NULL;
-MemBlock * g_last_heap_block = NULL;
-
-MemPageBlock * g_page_heap = NULL;
-#else
-extern PageDirectoryEntry * g_kernel_pd;
-extern PageTableEntry * g_kernel_pt;
-
-extern MemBlock * g_heap;
-extern MemBlock * g_last_heap_block;
-
-extern MemPageBlock * g_page_heap;
-#endif
