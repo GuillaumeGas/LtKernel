@@ -63,10 +63,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <NMakeOutput>ltkernel.iso</NMakeOutput>
+    <NMakeOutput>
+    </NMakeOutput>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeBuildCommandLine>C:\MinGW\bin\mingw32-make.exe all</NMakeBuildCommandLine>
-    <NMakeCleanCommandLine>C:\MinGW\bin\mingw32-make.exe clean</NMakeCleanCommandLine>
+    <NMakeBuildCommandLine>
+    </NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>
+    </NMakeCleanCommandLine>
     <NMakeIncludeSearchPath>C:\Users\Guillaume\Documents\Visual Studio 2017\Projects\ltkernel;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
     <IncludePath>C:\Users\ggas\Documents\prog\c\ltkernel;$(IncludePath)</IncludePath>
   </PropertyGroup>
@@ -108,6 +111,7 @@
     <ClCompile Include="kernel\kernel.c" />
     <ClCompile Include="kernel\lib\kmalloc.c" />
     <ClCompile Include="kernel\lib\list.c" />
+    <ClCompile Include="kernel\lib\panic.c" />
     <ClCompile Include="kernel\lib\stdio.c" />
     <ClCompile Include="kernel\lib\stdlib.c" />
     <ClCompile Include="kernel\logger.c" />
@@ -126,10 +130,12 @@
     <ClInclude Include="kernel\init\memory.h" />
     <ClInclude Include="kernel\lib\kmalloc.h" />
     <ClInclude Include="kernel\lib\list.h" />
+    <ClInclude Include="kernel\lib\panic.h" />
     <ClInclude Include="kernel\lib\stdio.h" />
     <ClInclude Include="kernel\lib\stdlib.h" />
     <ClInclude Include="kernel\lib\types.h" />
     <ClInclude Include="kernel\logger.h" />
+    <ClInclude Include="kernel\multiboot.h" />
     <ClInclude Include="kernel\scheduler.h" />
     <ClInclude Include="kernel\user\process_manager.h" />
   </ItemGroup>

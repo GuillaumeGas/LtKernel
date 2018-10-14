@@ -11,12 +11,13 @@ align 4
     dd CHECKSUM
 
 section .text
-extern start_kmain
+extern kmain
 global _start
 
 _start:
+		push eax
         push ebx
-        call start_kmain
+        call kmain
 
         cli ; stop interrupts
         hlt ; halt the CPU

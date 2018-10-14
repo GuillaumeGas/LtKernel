@@ -114,6 +114,9 @@
     <ClCompile Include="kernel\lib\list.c">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClCompile>
+    <ClCompile Include="kernel\lib\panic.c">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\logger.h">
@@ -165,6 +168,12 @@
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClInclude>
     <ClInclude Include="kernel\lib\list.h">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\multiboot.h">
+      <Filter>Fichiers sources\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\lib\panic.h">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClInclude>
   </ItemGroup>

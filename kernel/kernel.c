@@ -10,25 +10,14 @@
 #include <kernel/drivers/serial.h>
 #include <kernel/logger.h>
 #include <kernel/user/process_manager.h>
+#include <kernel/multiboot.h>
 
-void kmain(void);
+void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
+void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 
-struct mb_partial_info {
-	unsigned long flags;
-	unsigned long low_mem;
-	unsigned long high_mem;
-	unsigned long boot_device;
-	unsigned long cmdline;
-};
-
-void start_kmain(struct mb_partial_info * mbi)
+void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 {
-	kprint("Grub example kernel is loaded...\n");
-	kprint("RAM detected : %x (lower), %x (upper)\n", mbi->low_mem, mbi->high_mem);
-	kprint("Done.\n");
-
-	while (1);
-	/*cli();
+	cli();
 
 	init_gdt();
 
@@ -36,7 +25,7 @@ void start_kmain(struct mb_partial_info * mbi)
          movw %ax, %ss \n \
          movl $0x300000, %esp");
 
-	kmain();*/
+	kinit(mbi, multibootMagicNumber);
 }
 
 // Test utilisateur (CPL 3)
@@ -80,7 +69,7 @@ void test_task2()
 	}
 }
 
-void kmain(void)
+void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 {
 	init_logger(LOG_SCREEN);
 
@@ -88,8 +77,6 @@ void kmain(void)
 
 	sc_setColor(WHITE);
 	kprint("< ## LtKernel ## >\n\n");
-
-	sc_setColor(BLUE);
 
 	init_pic();
 	kprint("[Kernel] PIC loaded\n");
@@ -102,6 +89,8 @@ void kmain(void)
 
 	kprint("[Kernel] GDT loaded\n");
 	kprint("[Kernel] Serial port COM1 initialized\n");
+
+	CheckMultibootPartialInfo(mbi, multibootMagicNumber);
 
 	//init_vmm();
 	//kprint("[Kernel] Paging enabled\n");
@@ -121,4 +110,24 @@ void kmain(void)
 	//sti();
 
 	while (1);
+}
+
+/*
+	Vérifie la précense, et affiche si possible les infos du multiboot.
+	https://www.gnu.org/software/grub/manual/multiboot/html_node/Boot-information-format.html#Boot-information-format
+*/
+void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
+{
+	kprint("\n");
+
+	if (multibootMagicNumber != MULTIBOOT_HEADER_MAGIC)
+	{
+		kprint("Invalid magic number : %x\n", multibootMagicNumber);
+		asm("hlt");
+	}
+
+	if (FlagOn(mbi->flags, MEM_INFO))
+	{
+		kprint("[MULTIBOOT] RAM detected : %x (lower), %x (upper)\n\n", mbi->low_mem, mbi->high_mem);
+	}
 }

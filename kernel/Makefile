@@ -1,7 +1,7 @@
 OBJ=kernel
-CC=i686-elf-gcc.exe -ffreestanding -nostdlib -Wall -m32 -g -fno-stack-protector -fno-pie -I ../
-ASM=nasm -f elf
-LD=i686-elf-ld
+CC=gcc -ffreestanding -nostdlib -Wall -m32 -g -fno-stack-protector -fno-pie -I ../
+ASM=nasm -f elf32
+LD=ld
 
 BOOT=../boot/bootsector.o
 ROOT=kernel.o logger.o scheduler.o
@@ -17,7 +17,7 @@ clean:
 	rm -f $(OBJ) *.o
 
 kernel: $(BOOT) $(ROOT) $(DEBUG) $(DRIVERS) $(INIT) $(LIB) $(USER)
-	$(LD) -m elf_i386 -T linker.ld $^ -o $@
+	$(LD) -m elf_i386 -nostdlib -T linker.ld $^ -o $@
 
 # GENERAL STUFF
 .o: .c 
