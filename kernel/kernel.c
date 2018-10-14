@@ -4,16 +4,23 @@
 #include <kernel/lib/stdlib.h>
 #include <kernel/init/gdt.h>
 #include <kernel/init/idt.h>
-#include <kernel/init/memory.h>
+#include <kernel/init/vmm.h>
 #include <kernel/drivers/proc_io.h>
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
 #include <kernel/logger.h>
 #include <kernel/user/process_manager.h>
+#include <kernel/user/user_tests.h>
+
+#define __KERNEL__
+#include <kernel/kernel.h>
+
+#define __MULTIBOOT__
 #include <kernel/multiboot.h>
 
-void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
-void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
+static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
+static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
+static void InitKernelInfo();
 
 void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 {
@@ -28,48 +35,7 @@ void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	kinit(mbi, multibootMagicNumber);
 }
 
-// Test utilisateur (CPL 3)
-void test_task()
-{
-	char * str = (char*)0x400B00;
-	int i = 0;
-
-	str[0] = 'T';
-	str[1] = 'a';
-	str[2] = 's';
-	str[3] = 'k';
-	str[4] = '1';
-	str[5] = '\n';
-	str[6] = '\0';
-
-	while (1)
-	{
-		for (i = 0; i < 1000000; i++);
-		asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
-	}
-}
-
-void test_task2()
-{
-	char * str = (char*)0x400B00;
-	int i = 0;
-
-	str[0] = 'T';
-	str[1] = 'a';
-	str[2] = 's';
-	str[3] = 'k';
-	str[4] = '2';
-	str[5] = '\n';
-	str[6] = '\0';
-
-	while (1)
-	{
-		for (i = 0; i < 1000000; i++);
-		asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
-	}
-}
-
-void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
+static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 {
 	init_logger(LOG_SCREEN);
 
@@ -92,8 +58,11 @@ void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	CheckMultibootPartialInfo(mbi, multibootMagicNumber);
 
-	//init_vmm();
-	//kprint("[Kernel] Paging enabled\n");
+	InitKernelInfo();
+	kprint("[Kernel] Kernel info structure initialized\n");
+
+	init_vmm();
+	kprint("[Kernel] Paging enabled\n");
 
 	//init_process_manager();
 	//kprint("[Kernel] Process manager initialized\n\n");
@@ -107,7 +76,7 @@ void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	//	create_process(test_task2, 500);*/
 	//}
 
-	//sti();
+	sti();
 
 	while (1);
 }
@@ -116,12 +85,14 @@ void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	Vérifie la précense, et affiche si possible les infos du multiboot.
 	https://www.gnu.org/software/grub/manual/multiboot/html_node/Boot-information-format.html#Boot-information-format
 */
-void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
+static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 {
 	kprint("\n");
 
+	g_mbi = *mbi;
+
 	if (multibootMagicNumber != MULTIBOOT_HEADER_MAGIC)
-	{
+	{ 
 		kprint("Invalid magic number : %x\n", multibootMagicNumber);
 		asm("hlt");
 	}
@@ -130,4 +101,21 @@ void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNum
 	{
 		kprint("[MULTIBOOT] RAM detected : %x (lower), %x (upper)\n\n", mbi->low_mem, mbi->high_mem);
 	}
+	else
+	{
+		kprint("Missing MEM_INFO flag !\n");
+		asm("hlt");
+	}
+}
+
+static void InitKernelInfo()
+{
+	g_kernelInfo.pageDirectory_p.pd_entry = KERNEL_PAGE_DIR_P_ADDR;
+	g_kernelInfo.pageTables_p = (PageTableEntry *)KERNEL_PAGES_TABLE_P_ADDR;
+	g_kernelInfo.kernelLimit_p = KERNEL_LIMIT_P_ADDR;
+	g_kernelInfo.stackAddr_p = KERNEL_STACK_P_ADDR;
+	g_kernelInfo.pagesHeapBase_v = KERNEL_PAGES_HEAP_V_BASE_ADDR;
+	g_kernelInfo.pagesHeapLimit_v = KERNEL_PAGES_HEAP_V_LIMIT_ADDR;
+	g_kernelInfo.heapBase_v = KERNEL_HEAP_V_BASE_ADDR;
+	g_kernelInfo.heapLimit_v = KERNEL_HEAP_V_LIMIT_ADDR;
 }

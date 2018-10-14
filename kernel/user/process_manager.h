@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/init/memory.h>
+#include <kernel/init/vmm.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/types.h>
 #include <kernel/lib/list.h>

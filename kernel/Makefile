@@ -7,9 +7,9 @@ BOOT=../boot/bootsector.o
 ROOT=kernel.o logger.o scheduler.o
 DEBUG=debug.o
 DRIVERS=screen.o serial.o
-INIT=gdt.o gdt_loader.o idt.o idt_loader.o int.o isr.o memory.o pic.o vmm_loader.o
+INIT=gdt.o gdt_loader.o idt.o idt_loader.o int.o isr.o vmm.o pic.o vmm_loader.o
 LIB=kmalloc.o list.o stdio.o stdlib.o
-USER=process_manager.o process_starter.o
+USER=process_manager.o process_starter.o user_tests.o
 
 all: $(OBJ) 
 
@@ -60,7 +60,7 @@ int.o: init/int.asm
 isr.o: init/isr.c
 	$(CC) -c $^
 
-memory.o: init/memory.c
+vmm.o: init/vmm.c
 	$(CC) -c $^
 
 pic.o: init/pic.asm
@@ -88,3 +88,6 @@ process_manager.o: user/process_manager.c
 
 process_starter.o: user/process_starter.asm
 	$(ASM) -o $@ $^
+
+user_tests.o: user/user_tests.c
+	$(CC) -c $^

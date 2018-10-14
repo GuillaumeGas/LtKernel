@@ -107,7 +107,7 @@
     <ClCompile Include="kernel\init\gdt.c" />
     <ClCompile Include="kernel\init\idt.c" />
     <ClCompile Include="kernel\init\isr.c" />
-    <ClCompile Include="kernel\init\memory.c" />
+    <ClCompile Include="kernel\init\vmm.c" />
     <ClCompile Include="kernel\kernel.c" />
     <ClCompile Include="kernel\lib\kmalloc.c" />
     <ClCompile Include="kernel\lib\list.c" />
@@ -117,6 +117,7 @@
     <ClCompile Include="kernel\logger.c" />
     <ClCompile Include="kernel\scheduler.c" />
     <ClCompile Include="kernel\user\process_manager.c" />
+    <ClCompile Include="kernel\user\user_tests.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\debug\debug.h" />
@@ -127,7 +128,8 @@
     <ClInclude Include="kernel\init\gdt.h" />
     <ClInclude Include="kernel\init\idt.h" />
     <ClInclude Include="kernel\init\isr.h" />
-    <ClInclude Include="kernel\init\memory.h" />
+    <ClInclude Include="kernel\init\vmm.h" />
+    <ClInclude Include="kernel\kernel.h" />
     <ClInclude Include="kernel\lib\kmalloc.h" />
     <ClInclude Include="kernel\lib\list.h" />
     <ClInclude Include="kernel\lib\panic.h" />
@@ -138,6 +140,7 @@
     <ClInclude Include="kernel\multiboot.h" />
     <ClInclude Include="kernel\scheduler.h" />
     <ClInclude Include="kernel\user\process_manager.h" />
+    <ClInclude Include="kernel\user\user_tests.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

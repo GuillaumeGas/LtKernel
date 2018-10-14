@@ -12,7 +12,7 @@
 
 #include "gdt.h"
 
-//#define CLOCK_DEBUG
+#define CLOCK_DEBUG
 
 u32 get_cr2();
 

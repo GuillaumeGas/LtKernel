@@ -1,13 +1,15 @@
 #define __MEMORY__
-#include "memory.h"
+#include "vmm.h"
 
 #include <kernel/lib/types.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/kmalloc.h>
 #include <kernel/lib/panic.h>
+#include <kernel/kernel.h>
+#include <kernel/multiboot.h>
 
-extern void _init_vmm(struct page_directory_entry * pd0_addr);
+extern void _init_vmm(PageDirectoryEntry * pd0_addr);
 
 // Représente l'ensemble des pages disponibles ou non
 static u8 mem_bitmap[MEM_BITMAP_SIZE];
@@ -17,54 +19,50 @@ static u8 mem_bitmap[MEM_BITMAP_SIZE];
 
 /*
 	Initialisation simple de la mémoire virtuelle :
-	 - 4Mo allouables (1 entrée dans le répertoire de pages -- 1024 entrées dans la table des pages)
-	     1 * 1024 * 4ko = 4Mo
-     - addr virtuelle 0 == addr physique 0, etc...
+	 - Identity mapping pour le noyau
 */
 void init_vmm()
 {
-	unsigned int index = 0;
 	int page = 0;
+
+	// On calcul la dernière page
+	int lastPage = (g_mbi.high_mem * 1024) / PAGE_SIZE;
 
 	// Initialisation du bitmap à 0 : toutes les pages sont dispo
 	mmset(mem_bitmap, 0, RAM_MAXPAGE / 8);
 
+	// On bloque les pages inexistantes (si on a moins de 4Go de RAM en réalité)
+	for (page = lastPage / 8; page < RAM_MAXPAGE / 8; page++)
+		mem_bitmap[page] = 0xFF;
+
 	// Réserve les pages du noyau
-	for (page = PAGE(0); page < PAGE(KERNEL_P_LIMIT_ADDR); page++)
+	for (page = PAGE(0); page < PAGE(g_kernelInfo.kernelLimit_p); page++)
 		set_page_used(page);
 
-	init_heap();
-	init_page_heap();
-
-	// L'adresse du répertoire de pages du noyau est fixe
-	g_kernel_pd = (PageDirectoryEntry *)PD0_ADDR;
-	// On va allouer une page pour y stocker une table de pages
-	g_kernel_pt = (PageTableEntry *)PT0_ADDR;
+	//init_heap();
+	//init_page_heap();
 
 	// On met à 0 le répertoire de pages
-	init_clean_pages_directory(g_kernel_pd);
+	init_clean_pages_directory(g_kernelInfo.pageDirectory_p.pd_entry);
 
-	// Le noyau aura accès à toute la mémoire !!!!!!!!!!
+	// Identity mapping
 	{
-		int i = 0;
-		
-		for (; i < 1024; i++)
+		u32 index = 0;
+		PageTableEntry * kernelPt = g_kernelInfo.pageTables_p;
+
+		set_page_directory_entry(g_kernelInfo.pageDirectory_p.pd_entry, (u32)kernelPt, IN_MEMORY | WRITEABLE);
+
+		for (page = PAGE(0); page < PAGE(g_kernelInfo.kernelLimit_p); page++)
 		{
-			PageTableEntry * current_pt = g_kernel_pt + (i * PAGE_SIZE);
-
-			// Initialisation de l'entrée du répertoire du page concernant le noyau
-			set_page_directory_entry(&(g_kernel_pd[i]), (u32)current_pt, IN_MEMORY | WRITEABLE);
-
-			// Mapping simple : l'adresse v addr == p addr
-			for (index = 0; index < NB_PAGES_PER_TABLE; index++)
-				set_page_table_entry(&(current_pt[index]), ((index * PAGE_SIZE) + (i * NB_PAGES_PER_TABLE * PAGE_SIZE)), IN_MEMORY | WRITEABLE);
+			set_page_table_entry(&(kernelPt[index]), index * PAGE_SIZE, IN_MEMORY | WRITEABLE);
+			index++;
 		}
 	}
 
 	// Trick pour accéder au contenu du répertoire et des tables de pages : la dernière entrée pointe sur l'adresse du répertoire.
-	set_page_directory_entry(&(g_kernel_pd[1023]), (u32)g_kernel_pd, IN_MEMORY | WRITEABLE);
+	set_page_directory_entry(&(g_kernelInfo.pageDirectory_p.pd_entry[1023]), (u32)g_kernelInfo.pageDirectory_p.pd_entry, IN_MEMORY | WRITEABLE);
 
-	_init_vmm(g_kernel_pd);
+	_init_vmm(g_kernelInfo.pageDirectory_p.pd_entry);
 }
 
 void init_clean_pages_directory(PageDirectoryEntry * first_pd)
@@ -284,7 +282,7 @@ Initialise le tas avec un un bloc (taille d'une page)
 */
 void init_heap()
 {
-	g_heap = (MemBlock *)HEAP_BASE_ADDR;
+	g_heap = (MemBlock *)g_kernelInfo.heapBase_v;
 	g_last_heap_block = g_heap;
 
 	ksbrk(1);
@@ -301,12 +299,12 @@ void init_page_heap()
 	g_page_heap = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
 	g_page_heap->available = BLOCK_FREE;
 	g_page_heap->next = NULL;
-	g_page_heap->v_page_addr = (u32 *)PAGE_HEAP_BASE_ADDR;
+	g_page_heap->v_page_addr = (u32 *)g_kernelInfo.pagesHeapBase_v;
 	g_page_heap->prev = NULL;
 
 	tmp = g_page_heap;
 
-	while (tmp->v_page_addr < (u32 *)PAGE_HEAP_LIMIT_ADDR)
+	while (tmp->v_page_addr < (u32 *)g_kernelInfo.pagesHeapLimit_v)
 	{
 		tmp->next = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
 
@@ -324,13 +322,14 @@ PageDirectory create_process_pd()
 {
 	Page pd_page = page_alloc();
 	PageDirectory pd = { 0 };
+	PageDirectoryEntry * kernelPdEntry = (PageDirectoryEntry *)g_kernelInfo.pageDirectory_p.pd_entry;
 	PageDirectoryEntry * pd_entry = (PageDirectoryEntry *)pd_page.p_addr;
 	unsigned int i = 0;
 
 	// On veut que le premier Go de mémoire virtuelle soit pour le noyau : 1024 / 4 = 256 (1024 = nombre d'entrées dans un répertoire de pages)
 	// On vérifie:  256 * 1024 * 4096 = 1Go
 	for (; i < 256; i++)
-		pd_entry[i] = g_kernel_pd[i];
+		pd_entry[i] = kernelPdEntry[i];
 
 	for (i = 256; i < NB_PAGES_TABLE_PER_DIRECTORY; i++)
 		set_page_directory_entry(&(pd_entry[i]), 0, EMPTY);

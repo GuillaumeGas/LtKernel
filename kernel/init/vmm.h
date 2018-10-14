@@ -4,9 +4,9 @@
 #include <kernel/lib/list.h>
 #include <kernel/lib/stdlib.h>
 
-#define KERNEL_STACK_P_ADDR 0x300000 // tmp... on devrait pouvoir mettre 0x400000
-#define KERNEL_P_BASE_ADDR  0x10000
-#define KERNEL_P_LIMIT_ADDR 0xA0000 // tmp
+#define PAGE_SIZE 4096        // Taille d'une page
+#define RAM_MAXPAGE 0x100000  // Car on permet d'adresser 4Go de mémoire (0x100000 * 0x1000 = 4Go)
+
 
 //#define USER_TASK_P_ADDR 0x100000 // ne devrait plus être utilisée
 #define USER_TASK_V_ADDR 0x40000000
@@ -21,24 +21,13 @@
 
 #define PAGING_FLAG 0x80000000 // CR0 - bit 31
 
-#define PD0_ADDR 0x1000   // adresse 1er répertoire de pages
-#define PT0_ADDR 0x400000 // adresse table de pages du noyau
-
 #define NB_PAGES_TABLE_PER_DIRECTORY 1024
 #define EMPTY_PAGE_TABLE 0
 #define NB_PAGES_PER_TABLE 1024
-#define PAGE_SIZE 4096
-//#define RAM_MAXPAGE NB_PAGES_TABLE_PER_DIRECTORY * NB_PAGES_PER_TABLE
-#define RAM_MAXPAGE 0x10000
+
 #define MEM_BITMAP_SIZE RAM_MAXPAGE / 8
 
 // TODO : revoir organisation de la mémoire : ici on a un trou entre la table de pages du noyau et le tas de pages
-
-#define HEAP_BASE_ADDR  0x10000000
-#define HEAP_LIMIT_ADDR 0x40000000
-
-#define PAGE_HEAP_BASE_ADDR  0x800000
-#define PAGE_HEAP_LIMIT_ADDR 0x1000000
 
 #define BLOCK_HEADER_SIZE sizeof(int)
 #define DEFAULT_BLOCK_SIZE PAGE_SIZE - BLOCK_HEADER_SIZE
@@ -153,9 +142,6 @@ void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd);
 PageDirectory create_process_pd();
 
 #ifdef __MEMORY__
-PageDirectoryEntry * g_kernel_pd = NULL;
-PageTableEntry * g_kernel_pt = NULL;
-
 MemBlock * g_heap = NULL;
 MemBlock * g_last_heap_block = NULL;
 

@@ -26,3 +26,9 @@ enum MultibootFlag
 	VBE_INFO = 2048,
 	FRAMEBUFFER_INFO = 4096
 } typedef MultibootFlag;
+
+#ifdef __MULTIBOOT__
+MultibootPartialInfo g_mbi = { 0 };
+#else
+extern MultibootPartialInfo g_mbi;
+#endif

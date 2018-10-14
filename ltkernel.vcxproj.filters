@@ -105,9 +105,6 @@
     <ClCompile Include="kernel\user\process_manager.c">
       <Filter>Fichiers sources\kernel\user</Filter>
     </ClCompile>
-    <ClCompile Include="kernel\init\memory.c">
-      <Filter>Fichiers sources\kernel\init</Filter>
-    </ClCompile>
     <ClCompile Include="kernel\lib\kmalloc.c">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClCompile>
@@ -116,6 +113,12 @@
     </ClCompile>
     <ClCompile Include="kernel\lib\panic.c">
       <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\init\vmm.c">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\user\user_tests.c">
+      <Filter>Fichiers sources\kernel\user</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -161,9 +164,6 @@
     <ClInclude Include="kernel\user\process_manager.h">
       <Filter>Fichiers sources\kernel\user</Filter>
     </ClInclude>
-    <ClInclude Include="kernel\init\memory.h">
-      <Filter>Fichiers sources\kernel\init</Filter>
-    </ClInclude>
     <ClInclude Include="kernel\lib\kmalloc.h">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClInclude>
@@ -175,6 +175,15 @@
     </ClInclude>
     <ClInclude Include="kernel\lib\panic.h">
       <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\kernel.h">
+      <Filter>Fichiers sources\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\init\vmm.h">
+      <Filter>Fichiers sources\kernel\init</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\user\user_tests.h">
+      <Filter>Fichiers sources\kernel\user</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

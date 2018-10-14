@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/init/memory.h>
+#include <kernel/init/vmm.h>
 
 struct mem_block * ksbrk(int n);
 void * kmalloc(int size);

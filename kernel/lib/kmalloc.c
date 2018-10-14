@@ -1,4 +1,5 @@
-#include <kernel/init/memory.h>
+#include <kernel/kernel.h>
+#include <kernel/init/vmm.h>
 #include <kernel/lib/panic.h>
 #include <kernel/lib/stdlib.h>
 
@@ -16,7 +17,7 @@ Les nouveaux bloques sont initialisés
 struct mem_block * ksbrk(int n)
 {
 	// +1 car on prend en compte la taille du bloque pointé par g_heap
-	if (((u32)g_last_heap_block + ((n + 1) * DEFAULT_BLOCK_SIZE) + (BLOCK_HEADER_SIZE * 2)) >= HEAP_LIMIT_ADDR)
+	if (((u32)g_last_heap_block + ((n + 1) * DEFAULT_BLOCK_SIZE) + (BLOCK_HEADER_SIZE * 2)) >= g_kernelInfo.heapLimit_v)
 	{
 		panic(HEAP_LIMIT);
 		return NULL;
