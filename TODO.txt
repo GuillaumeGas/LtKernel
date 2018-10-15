@@ -1,27 +1,3 @@
-# HEAP
-
-- Init le tas : 
-  - implem sbrk qui va étendre le tas en ajoutant un bloc suplémentaire (et en créer un premier si on init)
-  - implem init_heap qui fait appel à sbrk(1)
-
-- Appel init_heap dans vmm
-
-# KMALLOC
-
-- Implem kmalloc
-- Implem kfree
-
-# LIST
-
-- Implem un type de liste chaînée utile au heap de pages
-
-# HEAP DE PAGES
-
-- Implem équivalent à sbrk ?
-- Implem palloc
-- Implem pfree
-- Jouer avec répertoire et table de pages ou pas encore ?
-
 NOTE :
 
 L'ensemble du noyau occupe 8Mo, donc on commence par rendre occupé toutes les pages entre l'addr p 0x0 et 0x800000.
