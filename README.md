@@ -1,21 +1,42 @@
 # LtKernel
 Petit noyau à but éducatif
 
-# Structure actuelle
+# Organisation de la mémoire
 
-**Le bootloader** charge le noyau en **0x1000**.
+**Le bootloader** charge le noyau en **0x100000**.
 
-**La mémoire** (**paginée**) est organisée de cette manière :
- - Les premières pages sont réservées au noyau, la mémoire virtuelle **map le noyau** telle que l'addr Vir 0 == l'addr Phy 0, etc.. (**de 0x0 à 0x20000**)
- - Les pages à partir de **0xA0000** jusqu'à **0x100000** sont réservées pour le **hardware**
- - Un **bitmap** permet de déterminer quelles pages sont libres 
+**La mémoire physique** est organisée de cette manière :
+
+ | Debut | Fin | Utilisation |
+ | --- | --- | --- |
+ | 0x0 | 0x1000 | GDT/IDT |
+ | 0x1000 | 0x2000 | Répertoire de pages du noyau |
+ | 0x2000 | 0xA0000 | Pile noyau |
+ | 0xA0000 | 0x100000 | Hardware |
+ | 0x100000 | 0x400000 | Code Noyau |
+ | 0x400000 | 0x800000 | Tables de pages du noyau |
+ 
+**La mémoire virtuelle** est organisée de cette manière :
+
+ | Debut | Fin | Utilisation |
+ | --- | --- | --- |
+ | 0x0 | 0x800000 | "Identity mapping" pour le noyau *(v_addr == p_addr)* |
+ | 0x800000 | 0x1000000 | "Heap" de pages |
+ | 0x1000000 | 0x10000000 | *Libre* |
+ | 0x10000000 | 0x40000000 | "Heap" noyau |
+ | 0x40000000 | 0xE0000000 | Espace libre utilisateur (code, données...) |
+ | 0xE0000000 | ... | Pile Utilisateur |
+ 
+En résumer, **1Go** pour le noyau et **3Go** pour le monde utilisateur.
+ 
+# Autres détails techniques
+ 
+Concernant la **pagination**, pages de **4ko**, utilisation d'un **bitmap** pour savoir quelles pages sont libres/utilisées.
 
 Le noyau décrit les **segments** suivant :
  - Segments code et de donnees noyau sur la même plage, couvrent toute la RAM
  - Segments code et de donnees utilisateur sur la même plage
  - Segment TSS (structure utilisee pour la commutation de tâche)
- 
-La **pile noyau** est en **0x20000**.
 
 **L'IDT** comprend 255 entrées :
  - Les 35 premières utilisées pour les **exceptions du CPU**
