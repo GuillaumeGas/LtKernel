@@ -12,7 +12,7 @@
 
 #include "gdt.h"
 
-#define CLOCK_DEBUG
+//#define CLOCK_DEBUG
 
 u32 get_cr2();
 
@@ -87,7 +87,6 @@ void machine_check_isr(void) { sc_setColor(RED); panic("[Abort] Machine check");
 void simd_floating_point_isr(void) { sc_setColor(RED); panic("[Fault] SIMD Floating-point exception"); sc_setColor(WHITE); }
 void virtualization_isr(void) { sc_setColor(RED); panic("[Fault] Virtualization exception"); sc_setColor(WHITE); }
 void security_isr(void) { sc_setColor(RED); panic("[!] Security exception"); sc_setColor(WHITE); }
-void triple_fault_isr(void) { sc_setColor(RED); panic("[!] Triple fault"); sc_setColor(WHITE); }
 
 
 void default_isr(void)

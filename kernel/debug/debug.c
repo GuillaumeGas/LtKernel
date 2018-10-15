@@ -32,9 +32,9 @@ void panic(const char * str)
 
 	sc_setColorEx(BLUE, WHITE, 0, 1);
 
-	print_gdt();
+	/*print_gdt();
 	kprint("\n");
-	print_tss();
-
-	/* pause (); */
+	print_tss();*/
+	//asm("hlt");
+	pause ();
 }

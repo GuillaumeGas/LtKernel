@@ -21,7 +21,6 @@ extern machine_check_isr
 extern simd_floating_point_isr
 extern virtualization_isr
 extern security_isr
-extern triple_fault_isr
 
 ;;; Hardware interruptions
 extern default_isr
@@ -53,7 +52,6 @@ global _asm_machine_check_isr
 global _asm_simd_floating_point_isr
 global _asm_virtualization_isr
 global _asm_security_isr
-global _asm_triple_fault_isr	
 
 ;;; Hardware interruptions
 global _asm_default_isr
@@ -207,11 +205,6 @@ _asm_security_isr:
 	call security_isr
 	INT_EPILOG
 
-_asm_triple_fault_isr:
-	INT_PROLOG
-	call triple_fault_isr
-	INT_EPILOG
-	
 _asm_default_isr:
 	INT_PROLOG
 	call default_isr

@@ -25,7 +25,6 @@ void _asm_machine_check_isr(void);
 void _asm_simd_floating_point_isr(void);
 void _asm_virtualization_isr(void);
 void _asm_security_isr(void);
-void _asm_triple_fault_isr(void);
 
 void _asm_default_isr(void);
 void _asm_clock_isr(void);
@@ -59,18 +58,17 @@ void init_idt()
 	init_idt_descriptor((u32)_asm_invalid_opcode_isr, 0x8, CPU_GATE, &g_idt_descriptor[6]);
 	init_idt_descriptor((u32)_asm_device_not_available_isr, 0x8, CPU_GATE, &g_idt_descriptor[7]);
 	init_idt_descriptor((u32)_asm_double_fault_isr, 0x8, CPU_GATE, &g_idt_descriptor[8]);
-	init_idt_descriptor((u32)_asm_invalid_tss_isr, 0x8, CPU_GATE, &g_idt_descriptor[9]);
-	init_idt_descriptor((u32)_asm_segment_not_present_isr, 0x8, CPU_GATE, &g_idt_descriptor[10]);
-	init_idt_descriptor((u32)_asm_stack_segment_fault_isr, 0x8, CPU_GATE, &g_idt_descriptor[11]);
-	init_idt_descriptor((u32)_asm_general_protection_fault_isr, 0x8, CPU_GATE, &g_idt_descriptor[12]);
-	init_idt_descriptor((u32)_asm_page_fault_isr, 0x8, CPU_GATE, &g_idt_descriptor[13]);
-	init_idt_descriptor((u32)_asm_x87_floating_point_isr, 0x8, CPU_GATE, &g_idt_descriptor[14]);
-	init_idt_descriptor((u32)_asm_alignment_check_isr, 0x8, CPU_GATE, &g_idt_descriptor[15]);
-	init_idt_descriptor((u32)_asm_machine_check_isr, 0x8, CPU_GATE, &g_idt_descriptor[16]);
-	init_idt_descriptor((u32)_asm_simd_floating_point_isr, 0x8, CPU_GATE, &g_idt_descriptor[17]);
-	init_idt_descriptor((u32)_asm_virtualization_isr, 0x8, CPU_GATE, &g_idt_descriptor[18]);
-	init_idt_descriptor((u32)_asm_security_isr, 0x8, CPU_GATE, &g_idt_descriptor[19]);
-	init_idt_descriptor((u32)_asm_triple_fault_isr, 0x8, CPU_GATE, &g_idt_descriptor[20]);
+	init_idt_descriptor((u32)_asm_invalid_tss_isr, 0x8, CPU_GATE, &g_idt_descriptor[10]);
+	init_idt_descriptor((u32)_asm_segment_not_present_isr, 0x8, CPU_GATE, &g_idt_descriptor[11]);
+	init_idt_descriptor((u32)_asm_stack_segment_fault_isr, 0x8, CPU_GATE, &g_idt_descriptor[12]);
+	init_idt_descriptor((u32)_asm_general_protection_fault_isr, 0x8, CPU_GATE, &g_idt_descriptor[13]);
+	init_idt_descriptor((u32)_asm_page_fault_isr, 0x8, CPU_GATE, &g_idt_descriptor[14]);
+	init_idt_descriptor((u32)_asm_x87_floating_point_isr, 0x8, CPU_GATE, &g_idt_descriptor[16]);
+	init_idt_descriptor((u32)_asm_alignment_check_isr, 0x8, CPU_GATE, &g_idt_descriptor[17]);
+	init_idt_descriptor((u32)_asm_machine_check_isr, 0x8, CPU_GATE, &g_idt_descriptor[18]);
+	init_idt_descriptor((u32)_asm_simd_floating_point_isr, 0x8, CPU_GATE, &g_idt_descriptor[19]);
+	init_idt_descriptor((u32)_asm_virtualization_isr, 0x8, CPU_GATE, &g_idt_descriptor[20]);
+	init_idt_descriptor((u32)_asm_security_isr, 0x8, CPU_GATE, &g_idt_descriptor[30]);
 
 	// premier segment (code), offset 0x8 dans la gdt
 	// 0x9C00, segment en mémoire, privilège super utilisateur

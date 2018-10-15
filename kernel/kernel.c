@@ -2,15 +2,20 @@
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
+#include <kernel/lib/kmalloc.h>
+
 #include <kernel/init/gdt.h>
 #include <kernel/init/idt.h>
 #include <kernel/init/vmm.h>
+
 #include <kernel/drivers/proc_io.h>
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
-#include <kernel/logger.h>
+
 #include <kernel/user/process_manager.h>
 #include <kernel/user/user_tests.h>
+
+#include <kernel/logger.h>
 
 #define __KERNEL__
 #include <kernel/kernel.h>
@@ -30,7 +35,7 @@ void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	asm("movw $0x10, %ax \n \
          movw %ax, %ss \n \
-         movl $0x300000, %esp");
+         movl $0xA0000, %esp");
 
 	kinit(mbi, multibootMagicNumber);
 }
@@ -78,6 +83,27 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	sti();
 
+	//dumpHeap();
+
+	char * c = (char *)kmalloc(6);
+
+	//dumpHeap();
+
+	kprint("addr : %x\n", c);
+
+	c[0] = 't';
+	c[1] = 'e';
+	c[2] = 's';
+	c[3] = 't';
+	c[4] = '\n';
+	c[5] = '\0';
+
+	kprint(c);
+
+	kfree(c);
+
+	//dumpHeap();
+
 	while (1);
 }
 
@@ -110,7 +136,7 @@ static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootM
 
 static void InitKernelInfo()
 {
-	g_kernelInfo.pageDirectory_p.pd_entry = KERNEL_PAGE_DIR_P_ADDR;
+	g_kernelInfo.pageDirectory_p.pd_entry = (PageDirectoryEntry *)KERNEL_PAGE_DIR_P_ADDR;
 	g_kernelInfo.pageTables_p = (PageTableEntry *)KERNEL_PAGES_TABLE_P_ADDR;
 	g_kernelInfo.kernelLimit_p = KERNEL_LIMIT_P_ADDR;
 	g_kernelInfo.stackAddr_p = KERNEL_STACK_P_ADDR;

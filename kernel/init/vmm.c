@@ -261,7 +261,11 @@ void pd0_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags)
 
 	// Modification de l'entrée dans la table de pages
 	pte = (u32 *)(0xFFC00000 | (((u32)v_addr & 0xFFFFF000) >> 10));
-	*pte = ((u32)p_addr) | (IN_MEMORY | WRITEABLE | flags);
+
+	// TODO : utiliser cette erreur pour mieux gérer les pages fault !
+	//*pte = ((u32)p_addr) | (IN_MEMORY | WRITEABLE | flags);
+
+	set_page_table_entry((PageTableEntry *)pte, (u32)p_addr, IN_MEMORY | WRITEABLE);
 }
 
 /*
