@@ -23,10 +23,16 @@ typedef struct mem_pblock MemPageBlock;
 void init_heap();
 void init_page_heap();
 
+void CheckHeap();
+
 #ifdef __HEAP__
 MemBlock * g_heap = NULL; // Pointe juste après le dernier bloc créé par ksbrk(), limite courante du tas...
+int g_kmalloc_count = 0;
+int g_kfree_count = 0;
 MemPageBlock * g_page_heap = NULL;
 #else
 extern MemBlock * g_heap;
 extern MemPageBlock * g_page_heap;
+extern int g_kmalloc_count;
+extern int g_kfree_count;
 #endif

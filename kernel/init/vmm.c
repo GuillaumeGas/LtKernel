@@ -41,7 +41,6 @@ void init_vmm()
 
 	// On met à 0 le répertoire de pages
 	init_clean_pages_directory(g_kernelInfo.pageDirectory_p.pd_entry);
-	//g_kernelInfo.pageDirectory_p.page_table_list = list_create();
 
 	// Initialise tous le répertoire de pages du noyau ainsi que toutes les tables de pages
 	{
@@ -81,7 +80,9 @@ void init_vmm()
 	_init_vmm(g_kernelInfo.pageDirectory_p.pd_entry);
 
 	init_heap();
-	//init_page_heap();
+	init_page_heap();
+
+	g_kernelInfo.pageDirectory_p.page_table_list = ListCreate();
 }
 
 void init_clean_pages_directory(PageDirectoryEntry * first_pd)
@@ -293,7 +294,7 @@ void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd)
 		init_clean_pages_table((PageTableEntry *)pt);
 
 		// On ajoute la nouvelle page à la liste de pages associée à ce répertoire (pour plus facilement libérer la mémoire après)
-		list_push(pd.page_table_list, new_page.v_addr);
+		ListPush(pd.page_table_list, new_page.v_addr);
 	}
 
 	pte = (u32 *) ((0xFFC00000 | (PD_OFFSET((u32)v_addr) << 10)));
@@ -319,7 +320,7 @@ PageDirectory create_process_pd()
 	set_page_directory_entry(&(pd_entry[1023]), (u32)pd_entry, IN_MEMORY | WRITEABLE);
 
 	pd.pd_entry = pd_entry;
-	pd.page_table_list = list_create();
+	pd.page_table_list = ListCreate();
 
 	return pd;
 }

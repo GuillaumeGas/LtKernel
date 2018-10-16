@@ -3,6 +3,7 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/kmalloc.h>
+#include <kernel/lib/list.h>
 
 #include <kernel/init/gdt.h>
 #include <kernel/init/idt.h>
@@ -38,6 +39,11 @@ void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
          movl $0xA0000, %esp");
 
 	kinit(mbi, multibootMagicNumber);
+}
+
+void cleanStr(void * str)
+{
+	kfree(str);
 }
 
 static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
@@ -83,20 +89,23 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	sti();
 
-	char * c = (char *)kmalloc(6);
-	
-	kprint("addr : %x\n", c);
+	List * list = ListCreate();
+	char * c = (char*)kmalloc(10);
+	strcpy("test", c);
+	ListPush(list, (void*)c);
+	c = (char*)kmalloc(10);
+	strcpy("test2", c);
+	ListPush(list, (void*)c);
 
-	c[0] = 't';
-	c[1] = 'e';
-	c[2] = 's';
-	c[3] = 't';
-	c[4] = '\n';
-	c[5] = '\0';
+	char * res = (char*)ListGet(list, 0);
+	char * res2 = (char*)ListGet(list, 1);
 
-	kprint(c);
+	kprint("res : %s\n", res);
+	kprint("res2 : %s\n", res2);
 
-	kfree(c);
+	ListDestroyEx(list, cleanStr);
+
+	CheckHeap();
 
 	while (1);
 }

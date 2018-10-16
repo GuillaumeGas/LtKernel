@@ -18,18 +18,18 @@ void init_heap()
 }
 
 /*
-Initialise le tas de pages
+	Initialise le tas de pages
 */
 void init_page_heap()
 {
-	struct mem_pblock * tmp = NULL;
-	struct mem_pblock * prev = NULL;
+	MemPageBlock * tmp = NULL;
+	MemPageBlock * prev = NULL;
 
 	g_page_heap = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
 	g_page_heap->available = BLOCK_FREE;
 	g_page_heap->next = NULL;
-	g_page_heap->v_page_addr = (u32 *)g_kernelInfo.pagesHeapBase_v;
 	g_page_heap->prev = NULL;
+	g_page_heap->v_page_addr = (u32 *)g_kernelInfo.pagesHeapBase_v;
 
 	tmp = g_page_heap;
 
@@ -44,5 +44,17 @@ void init_page_heap()
 		tmp->available = BLOCK_FREE;
 		tmp->prev = prev;
 		tmp->next = NULL;
+
+		kprint("v_page_addr : %x\n", tmp->v_page_addr);
 	}
+
+	kprint("END\n");
+}
+
+void CheckHeap()
+{
+	kprint("== Heap Check ==\n");
+	kprint(" - Number of kmalloc() : %d\n", g_kmalloc_count);
+	kprint(" - NUmber of kfree()   : %d\n", g_kfree_count);
+	kprint(" - Diff                : %d\n", g_kmalloc_count - g_kfree_count);
 }

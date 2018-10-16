@@ -10,7 +10,7 @@
 
 void init_process_manager()
 {
-	g_process_list = list_create();
+	g_process_list = ListCreate();
 }
 
 /*
@@ -71,7 +71,7 @@ void create_process(void * task_addr, unsigned int size)
 	//new_process->regs.eflags = 0x200 & 0xFFFFBFFF;
 	//new_process->kstack_esp0 = kernel_stack_page.v_addr + PAGE_SIZE;
 
-	//list_push(g_process_list, (void*)new_process);
+	//ListPush(g_process_list, (void*)new_process);
 
 	//g_nb_process++;
 }

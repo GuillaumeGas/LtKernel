@@ -1,15 +1,18 @@
 #pragma once
 
-struct list_elem
+struct ListElem
 {
-	struct list_elem * prev;
-	struct list_elem * next;
+	struct ListElem * prev;
+	struct ListElem * next;
 	void * data;
-};
-typedef struct list_elem List;
+} typedef ListElem;
+typedef ListElem List;
 
-List * list_create();
-void list_destroy(List * list);
-void list_push(List * list, void * data);
-void * list_get(List * list, unsigned int index);
-void * list_top(List * list);
+typedef void(*CleanFunPtr)(void*);
+
+List * ListCreate();
+void ListDestroy(List * list);
+void ListDestroyEx(List * list, CleanFunPtr cleaner);
+void ListPush(List * list, void * data);
+void * ListGet(List * list, unsigned int index);
+void * ListTop(List * list);

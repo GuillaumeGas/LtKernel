@@ -57,6 +57,7 @@ void * kmalloc(int size)
 	void * res = NULL;
 	res = _kmalloc((MemBlock*)g_kernelInfo.heapBase_v, size + BLOCK_HEADER_SIZE);
 	_kdefrag();
+	g_kmalloc_count++;
 	return res;
 }
 
@@ -65,6 +66,7 @@ void kfree(void * ptr)
 	MemBlock * block = (MemBlock*)((int)ptr - BLOCK_HEADER_SIZE);
 	block->state = BLOCK_FREE;
 	mmset((u8 *)(&(block->data)), block->size - BLOCK_HEADER_SIZE, 0);
+	g_kfree_count++;
 }
 
 static void * _kmalloc(MemBlock * block, int size)

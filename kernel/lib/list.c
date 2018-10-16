@@ -3,9 +3,9 @@
 #include <kernel/lib/kmalloc.h>
 #include <kernel/lib/stdlib.h>
 
-List * list_create()
+List * ListCreate()
 {
-	struct list_elem * list = (struct list_elem *)kmalloc(sizeof (struct list_elem));
+	ListElem * list = (ListElem *)kmalloc(sizeof (ListElem));
 	
 	if (list == NULL)
 		return NULL;
@@ -17,23 +17,30 @@ List * list_create()
 	return list;
 }
 
-void list_destroy(List * list)
+void ListDestroy(List * list)
+{
+	ListDestroyEx(list, NULL);
+}
+
+void ListDestroyEx(List * list, CleanFunPtr cleaner)
 {
 	if (list == NULL)
 		return;
 
-	struct list_elem * elem = list;
-	struct list_elem * next = list->next;
+	ListElem * elem = list;
+	ListElem * next = list->next;
 
 	while (elem != NULL)
 	{
+		if (cleaner != NULL)
+			cleaner(elem->data);
 		kfree(elem);
 		elem = next;
 		next = next->next;
 	}
 }
 
-void list_push(List * list, void * data)
+void ListPush(List * list, void * data)
 {
 	if (list == NULL)
 		return;
@@ -44,11 +51,11 @@ void list_push(List * list, void * data)
 	}
 	else
 	{
-		struct list_elem * elem = list;
+		ListElem * elem = list;
 
 		while (elem->next != NULL);
 
-		elem->next = (struct list_elem *)kmalloc(sizeof(struct list_elem));
+		elem->next = (ListElem *)kmalloc(sizeof(ListElem));
 		
 		if (elem->next != NULL)
 		{
@@ -60,7 +67,7 @@ void list_push(List * list, void * data)
 	}
 }
 
-void * list_get(List * list, unsigned int index)
+void * ListGet(List * list, unsigned int index)
 {
 	if (list == NULL)
 		return NULL;
@@ -76,7 +83,7 @@ void * list_get(List * list, unsigned int index)
 	return list->data;
 }
 
-void * list_top(List * list)
+void * ListTop(List * list)
 {
 	if (list == NULL)
 		return NULL;

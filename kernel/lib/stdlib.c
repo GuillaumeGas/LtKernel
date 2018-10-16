@@ -21,3 +21,9 @@ void mmset(u8 * src, u8 byte, u32 size)
 	while ((size--) > 0)
 		*(src++) = byte;
 }
+
+void strcpy(const char * src, char * dst)
+{
+	while (*src != '\0')
+		*(dst++) = *(src++);
+}
