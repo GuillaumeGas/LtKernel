@@ -1,5 +1,10 @@
 #include <kernel/lib/types.h>
 
+void hlt()
+{
+	asm("hlt");
+}
+
 void pause ()
 {
     while (1) {}

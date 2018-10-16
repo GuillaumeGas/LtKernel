@@ -64,21 +64,37 @@ global _asm_syscall_isr
 
 %macro  SAVE_REGS 0
     pushad
+	pushfd
     push ds
     push es
     push fs
     push gs
+
+	mov ebx, cr0
 	push ebx
+	mov ebx, cr2
+	push ebx
+	mov ebx, cr3
+	push ebx
+
+	push esp
+
 	mov bx, 0x10
 	mov ds, bx
-	pop ebx
 %endmacro
 
 %macro  RESTORE_REGS 0
+	; pop crX et esp
+	pop ebx
+	pop ebx
+	pop ebx
+	pop ebx
     pop gs
     pop fs
     pop es
     pop ds
+	; pop eflags
+	pop ebx
     popad
 %endmacro
 
@@ -96,12 +112,6 @@ global _asm_syscall_isr
 	RESTORE_REGS
 	iret
 %endmacro
-
-global get_cr2
-
-get_cr2:
-	mov cr2, eax
-	ret
 
 ;;; Processor exceptions & faults
 _asm_divided_by_zero_isr:
@@ -170,7 +180,6 @@ _asm_general_protection_fault_isr:
 	INT_EPILOG
 
 _asm_page_fault_isr:
-	
 	INT_PROLOG
 	call page_fault_isr
 	INT_EPILOG

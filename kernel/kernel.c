@@ -83,12 +83,8 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	sti();
 
-	//dumpHeap();
-
 	char * c = (char *)kmalloc(6);
-
-	//dumpHeap();
-
+	
 	kprint("addr : %x\n", c);
 
 	c[0] = 't';
@@ -101,8 +97,6 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	kprint(c);
 
 	kfree(c);
-
-	//dumpHeap();
 
 	while (1);
 }

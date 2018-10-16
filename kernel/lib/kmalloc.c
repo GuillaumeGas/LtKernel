@@ -94,8 +94,6 @@ static void * _kmalloc(MemBlock * block, int size)
 
 	block->state = BLOCK_USED;
 
-	kprint("Block : addr = %x, size = %d\n", block, block->size);
-
 	return res_ptr;
 }
 
