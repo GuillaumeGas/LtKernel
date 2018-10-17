@@ -107,6 +107,8 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	CheckHeap();
 
+    //dumpHeap();
+
 	while (1);
 }
 

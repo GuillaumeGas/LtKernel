@@ -4,6 +4,7 @@
 #include <kernel/kernel.h>
 #include <kernel/lib/kmalloc.h>
 #include <kernel/lib/stdio.h>
+#include <kernel/lib/panic.h>
 
 /*
 	Initialise le tas avec un un bloc (taille d'une page)
@@ -35,20 +36,16 @@ void init_page_heap()
 
 	while (tmp->v_page_addr < (u32 *)g_kernelInfo.pagesHeapLimit_v)
 	{
-		tmp->next = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
+        tmp->next = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
 
-		prev = tmp;
+        prev = tmp;
 		tmp = tmp->next;
 
 		tmp->v_page_addr = prev->v_page_addr + PAGE_SIZE;
 		tmp->available = BLOCK_FREE;
 		tmp->prev = prev;
 		tmp->next = NULL;
-
-		kprint("v_page_addr : %x\n", tmp->v_page_addr);
 	}
-
-	kprint("END\n");
 }
 
 void CheckHeap()
