@@ -5,8 +5,15 @@
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 
+/*
+	
+	TODO : gérer les cas d'erreur (tailles négatives, pointeurs null...)
+		   remplacer les int par unsigned int ?
+	
+*/
+
 static void * _kmalloc(MemBlock * block, int size);
-static void _splitBlock(MemBlock * block, int size);
+static void _splitBlock(MemBlock * block, unsigned int size);
 static void _kdefrag();
 
 /*
@@ -16,7 +23,6 @@ static void _kdefrag();
 	Les ajoute ces pages à l'espace d'adressage du noyau
 	Les nouveaux bloques sont initialisés
 */
-static int tmp = 0;
 MemBlock * ksbrk(int n)
 {
 	// On ne doit pas dépasser la limite de l'espace réservé au tas
@@ -41,8 +47,6 @@ MemBlock * ksbrk(int n)
 			pd0_add_page((u8 *)newBlock, new_page, IN_MEMORY | WRITEABLE);
 
 			heap += (u32)PAGE_SIZE;
-
-            kprint("[%d] New block : %x, Future block : %x, n = %d, heap_limit : %x\n", tmp++, newBlock, heap, n, g_kernelInfo.heapLimit_v);
 		}
 
         g_heap = (MemBlock *)heap;
@@ -50,7 +54,7 @@ MemBlock * ksbrk(int n)
 		newBlock->size = n * PAGE_SIZE;
 		newBlock->state = BLOCK_FREE;
 		
-		mmset((u8 *)(&(newBlock->data)), newBlock->size - BLOCK_HEADER_SIZE, 0);
+		mmset((u8 *)(&(newBlock->data)), 0, newBlock->size - BLOCK_HEADER_SIZE);
 
 		return newBlock;
 	}
@@ -66,9 +70,9 @@ void * kmalloc(int size)
 
 void kfree(void * ptr)
 {
-	MemBlock * block = (MemBlock*)((int)ptr - BLOCK_HEADER_SIZE);
+	MemBlock * block = (MemBlock*)((u32)ptr - BLOCK_HEADER_SIZE);
 	block->state = BLOCK_FREE;
-	mmset((u8 *)(&(block->data)), block->size - BLOCK_HEADER_SIZE, 0);
+	mmset((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
 	g_kfree_count++;
     _kdefrag();
 }
@@ -77,11 +81,11 @@ static void * _kmalloc(MemBlock * block, int size)
 {
 	void * res_ptr = NULL;
 
-	while (block <= g_heap && res_ptr == NULL)
+	while (block < g_heap && res_ptr == NULL)
 	{
 		if (block->state == BLOCK_USED || size > block->size)
 		{
-			block = block + block->size;
+			block = (MemBlock *)((unsigned int)block + block->size);
 			continue;
 		}
 
@@ -97,7 +101,6 @@ static void * _kmalloc(MemBlock * block, int size)
             block = ksbrk(size / DEFAULT_BLOCK_SIZE);
         else
             block = ksbrk(1);
-
 		res_ptr = _kmalloc(block, size);
 	}
 
@@ -106,33 +109,37 @@ static void * _kmalloc(MemBlock * block, int size)
 	return res_ptr;
 }
 
-static void _splitBlock(MemBlock * block, int size)
+static void _splitBlock(MemBlock * block, unsigned int size)
 {
-	struct mem_block * second_block = block + size;
+	MemBlock * second_block = (MemBlock *)((unsigned int)block + size);
 	second_block->size = block->size - size;
 	second_block->state = BLOCK_FREE;
-
 	block->size = size;
 }
 
 static void _kdefrag()
 {
-	struct mem_block * block = g_heap;
+	/*MemBlock * block = g_kernelInfo.pagesHeapBase_v;
 
 	while (block < g_heap)
 	{
-		struct mem_block * next = block + block->size;
+		MemBlock * next = block + block->size;
 
-		if (block->state == BLOCK_FREE && next->state == BLOCK_FREE)
+		if (next->size > 0)
 		{
-			block->size += next->size;
-			mmset((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
+			if (block->state == BLOCK_FREE && next->state == BLOCK_FREE)
+			{
+				block->size += next->size;
+				kprint("block->size : %d | %d\n", (unsigned int)block->size, (int)block->size);
+				mmset2((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
+			}
 		}
 		else
 		{
-			block += block->size;
+			kprint("What ?? addr : %x\n");
 		}
-	}
+		block += block->size;
+	}*/
 }
 
 void dumpHeap()

@@ -6,6 +6,14 @@
 #define __GDT__
 #include "gdt.h"
 
+/*
+
+	TODO : 
+	 - décrire quel segment sert à quoi
+	 - ou utiliser des macro parce qu'on comprend rien à ces valeurs
+
+*/
+
 void load_gdt (const Gdt * gdt_ptr);
 void load_tss (const u16 tss_selector);
 

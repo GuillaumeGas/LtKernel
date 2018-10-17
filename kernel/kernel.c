@@ -73,7 +73,7 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	kprint("[Kernel] Kernel info structure initialized\n");
 
 	init_vmm();
-	kprint("[Kernel] Paging enabled\n");
+	kprint("[Kernel] Paging enabled\n\n");
 
 	//init_process_manager();
 	//kprint("[Kernel] Process manager initialized\n\n");
@@ -108,6 +108,8 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	CheckHeap();
 
     //dumpHeap();
+
+	// TODO : kernel_clean() ?
 
 	while (1);
 }
