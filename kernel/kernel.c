@@ -27,6 +27,10 @@
 static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 static void InitKernelInfo();
+static void InitCleanCallbacksList();
+static void CleanKernel();
+
+static List * CleanCallbacksList = NULL;
 
 void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 {
@@ -75,6 +79,8 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	init_vmm();
 	kprint("[Kernel] Paging enabled\n\n");
 
+    InitCleanCallbacksList();
+
 	//init_process_manager();
 	//kprint("[Kernel] Process manager initialized\n\n");
 
@@ -101,15 +107,13 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	char * res2 = (char*)ListGet(list, 1);
 
 	kprint("res : %s\n", res);
-	kprint("res2 : %s\n", res2);
+	kprint("res2 : %s\n\n", res2);
 
 	ListDestroyEx(list, cleanStr);
 
-	CheckHeap();
-
-    //dumpHeap();
-
-	// TODO : kernel_clean() ?
+    // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
+    CleanKernel();
+    CheckHeap();
 
 	while (1);
 }
@@ -151,4 +155,22 @@ static void InitKernelInfo()
 	g_kernelInfo.pagesHeapLimit_v = KERNEL_PAGES_HEAP_V_LIMIT_ADDR;
 	g_kernelInfo.heapBase_v = KERNEL_HEAP_V_BASE_ADDR;
 	g_kernelInfo.heapLimit_v = KERNEL_HEAP_V_LIMIT_ADDR;
+}
+
+static void InitCleanCallbacksList()
+{
+    CleanCallbacksList = ListCreate();
+
+    ListPush(CleanCallbacksList, (CleanCallbackFun)VmmCleanCallback);
+}
+
+static void CleanKernel()
+{
+    while (CleanCallbacksList != NULL)
+    {
+        CleanCallbackFun callback = ListPop(&CleanCallbacksList);
+
+        if (callback != NULL)
+            callback();
+    }
 }

@@ -22,6 +22,7 @@ typedef struct mem_pblock MemPageBlock;
 
 void init_heap();
 void init_page_heap();
+void CleanPageHeap();
 
 void CheckHeap();
 

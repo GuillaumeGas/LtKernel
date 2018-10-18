@@ -85,6 +85,13 @@ void init_vmm()
 	g_kernelInfo.pageDirectory_p.page_table_list = ListCreate();
 }
 
+void VmmCleanCallback()
+{
+    CleanPageHeap();
+    // TODO : il faudra sans doute free le contenu de chaque élément à l'avenir !
+    ListDestroy(g_kernelInfo.pageDirectory_p.page_table_list);
+}
+
 void init_clean_pages_directory(PageDirectoryEntry * first_pd)
 {
 	unsigned int index = 0;

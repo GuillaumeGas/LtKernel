@@ -90,3 +90,17 @@ void * ListTop(List * list)
 
 	return list->data;
 }
+
+void * ListPop(List ** list)
+{
+    if (list == NULL)
+        return NULL;
+    if ((*list) == NULL)
+        return NULL;
+
+    void * data = (*list)->data;
+    ListElem * next = (*list)->next;
+    kfree(*list);
+    *list = (List *)next;
+    return data;
+}

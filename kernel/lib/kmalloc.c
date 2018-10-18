@@ -119,27 +119,22 @@ static void _splitBlock(MemBlock * block, unsigned int size)
 
 static void _kdefrag()
 {
-	/*MemBlock * block = g_kernelInfo.pagesHeapBase_v;
+	MemBlock * block = (MemBlock *)g_kernelInfo.heapBase_v;
 
 	while (block < g_heap)
 	{
-		MemBlock * next = block + block->size;
+		MemBlock * next = (MemBlock *)((unsigned int)block + block->size);
 
-		if (next->size > 0)
+		if (next < g_heap)
 		{
 			if (block->state == BLOCK_FREE && next->state == BLOCK_FREE)
 			{
 				block->size += next->size;
-				kprint("block->size : %d | %d\n", (unsigned int)block->size, (int)block->size);
-				mmset2((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
+				mmset((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
 			}
 		}
-		else
-		{
-			kprint("What ?? addr : %x\n");
-		}
-		block += block->size;
-	}*/
+		block = (MemBlock *)((unsigned int)(block) + block->size);
+	}
 }
 
 void dumpHeap()
@@ -147,14 +142,14 @@ void dumpHeap()
 	MemBlock * block = (MemBlock *)g_kernelInfo.heapBase_v;
 	int i = 0;
 	kprint("== Heap Dump ==\n\n");
-	while (block < g_heap && i < 10)
+	while (block < g_heap)
 	{
 		kprint("[%d] Size : %d, Addr : %x, ", i++, block->size, block);
 		if (block->state == BLOCK_FREE)
 			kprint("FREE\n");
 		else
 			kprint("\n");
-		block = block + block->size;
+		block = (MemBlock *)((unsigned int)block + block->size);
 	}
 	kprint("\n");
 }

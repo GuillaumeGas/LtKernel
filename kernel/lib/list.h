@@ -16,3 +16,4 @@ void ListDestroyEx(List * list, CleanFunPtr cleaner);
 void ListPush(List * list, void * data);
 void * ListGet(List * list, unsigned int index);
 void * ListTop(List * list);
+void * ListPop(List ** list);

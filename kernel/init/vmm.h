@@ -122,3 +122,5 @@ void pd0_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags);
 void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd);
 
 PageDirectory create_process_pd();
+
+void VmmCleanCallback();

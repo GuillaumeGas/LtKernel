@@ -48,6 +48,18 @@ void init_page_heap()
 	}
 }
 
+void CleanPageHeap()
+{
+    MemPageBlock * block = g_page_heap;
+
+    while (block != NULL)
+    {
+        MemPageBlock * next = block->next;
+        kfree(block);
+        block = next;
+    }
+}
+
 void CheckHeap()
 {
 	kprint("== Heap Check ==\n");

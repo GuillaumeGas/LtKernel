@@ -23,6 +23,8 @@ struct KernelInfo
 	u32 heapLimit_v;
 } typedef KernelInfo;
 
+typedef void(*CleanCallbackFun)(void);
+
 #ifdef __KERNEL__
 KernelInfo g_kernelInfo = { 0 };
 #else
