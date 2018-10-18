@@ -81,27 +81,12 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
     InitCleanCallbacksList();
 
-	//init_process_manager();
-	//kprint("[Kernel] Process manager initialized\n\n");
-
-	//{
-	//	sc_setColor(WHITE);
-	//	kprint("> Starting new task 0...\n\n");
-	//	sc_setColor(RED);
-	//	
-	//	/*create_process(test_task, 500);
-	//	create_process(test_task2, 500);*/
-	//}
+	init_process_manager();
+	kprint("[Kernel] Process manager initialized\n\n");
 
 	sti();
 
-	Page p = PageAlloc();
-	kprint("p : %x, v : %x\n", p.p_addr, p.v_addr);
-	Page p2 = PageAlloc();
-	kprint("p : %x, v : %x\n", p2.p_addr, p2.v_addr);
-
-	strcpy("Hello !\n", (char*)p.v_addr);
-	kprint("test : %s", (char*)p.v_addr);
+	create_process(test_task, 500);
 
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     CleanKernel();
@@ -154,6 +139,7 @@ static void InitCleanCallbacksList()
     CleanCallbacksList = ListCreate();
 
     ListPush(CleanCallbacksList, (CleanCallbackFun)VmmCleanCallback);
+	ListPush(CleanCallbacksList, (CleanCallbackFun)ProcessManagerCleanCallback);
 }
 
 static void CleanKernel()

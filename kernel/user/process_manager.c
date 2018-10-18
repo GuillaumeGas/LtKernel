@@ -24,56 +24,57 @@ void init_process_manager()
 */
 void create_process(void * task_addr, unsigned int size)
 {
-	//PageDirectory user_pd = { 0 };
-	//Process * new_process = NULL;
-	//u8 * v_user_code_ptr = NULL;
-	//Page kernel_stack_page = { 0 };
-	//u8 * p_user_stack = NULL;
-	//unsigned int count = 0;
+	PageDirectory user_pd = { 0 };
+	Process * new_process = NULL;
+	u8 * v_user_code_ptr = NULL;
+	Page kernel_stack_page = { 0 };
+	u8 * p_user_stack = NULL;
+	unsigned int count = 0;
 
-	//user_pd = create_process_pd();
-	//v_user_code_ptr = (u8 *)USER_TASK_V_ADDR;
+	user_pd = create_process_pd();
+	v_user_code_ptr = (u8 *)USER_TASK_V_ADDR;
 
-	//// Tant qu'on a du code à copier en mémoire...
-	//while (count < size)
-	//{
-	//	// On récupère une page physique libre dans laquelle on va y copier le code
-	//	u8 * p_new_code_page = (u8 *)get_free_page();
+	// Tant qu'on a du code à copier en mémoire...
+	while (count < size)
+	{
+		// On récupère une page physique libre dans laquelle on va y copier le code
+		u8 * p_new_code_page = (u8 *)get_free_page();
 
-	//	// On commence par nettoyer la page...
-	//	mmset((u8*)p_new_code_page, 0, PAGE_SIZE);
+		// On ajoute la page dans l'espace d'adressage du noyau
+		pd0_add_page(v_user_code_ptr, p_new_code_page, IN_MEMORY | WRITEABLE);
+		// On ajoute la page physique dans l'espace d'adressage de la tâche utilisateur
+		pd_add_page(v_user_code_ptr, p_new_code_page, IN_MEMORY | WRITEABLE, user_pd);
 
-	//	// Si on a de quoi copier sur une page entière, on fait ça sinon on copie seulement le reste de code à copier
-	//	if ((size - count) < PAGE_SIZE)
-	//		mmcopy((u8 *)task_addr + count, p_new_code_page, size - count);
-	//	else
-	//		mmcopy((u8 *)task_addr + count, p_new_code_page, PAGE_SIZE);
+		mmset((u8*)v_user_code_ptr, 0, PAGE_SIZE);
 
-	//	// On ajoute la page physique dans l'espace d'adressage de la tâche utilisateur
-	//	pd_add_page(v_user_code_ptr, p_new_code_page, IN_MEMORY | WRITEABLE, user_pd);
+		// Si on a de quoi copier sur une page entière, on fait ça sinon on copie seulement le reste de code à copier
+		if ((size - count) < PAGE_SIZE)
+			mmcopy((u8 *)task_addr + count, v_user_code_ptr, size - count);
+		else
+			mmcopy((u8 *)task_addr + count, v_user_code_ptr, PAGE_SIZE);
 
-	//	v_user_code_ptr += PAGE_SIZE;
-	//	count += PAGE_SIZE;
-	//}
+		v_user_code_ptr += PAGE_SIZE;
+		count += PAGE_SIZE;
+	}
 
-	//kernel_stack_page = page_alloc();
+	kernel_stack_page = PageAlloc();
 
-	//p_user_stack = (u8 *)get_free_page();
-	//pd_add_page((u8 *)USER_STACK_V_ADDR, p_user_stack, IN_MEMORY | WRITEABLE, user_pd);
+	p_user_stack = (u8 *)get_free_page();
+	pd_add_page((u8 *)USER_STACK_V_ADDR, p_user_stack, IN_MEMORY | WRITEABLE, user_pd);
 
-	//new_process = (struct process *)kmalloc(sizeof(struct process));
-	//new_process->pid = g_nb_process;
-	//new_process->page_directory = user_pd;
-	//new_process->regs.ss = USER_STACK_SEG_SELECTOR;
-	//new_process->regs.esp = USER_STACK_V_ADDR;
-	//new_process->regs.cs = USER_CODE_SEG_SELECTOR;
-	//new_process->regs.eip = USER_TASK_V_ADDR;
-	//new_process->regs.eflags = 0x200 & 0xFFFFBFFF;
-	//new_process->kstack_esp0 = kernel_stack_page.v_addr + PAGE_SIZE;
+	new_process = (struct process *)kmalloc(sizeof(struct process));
+	new_process->pid = g_nb_process;
+	new_process->page_directory = user_pd;
+	new_process->regs.ss = USER_STACK_SEG_SELECTOR;
+	new_process->regs.esp = USER_STACK_V_ADDR;
+	new_process->regs.cs = USER_CODE_SEG_SELECTOR;
+	new_process->regs.eip = USER_TASK_V_ADDR;
+	new_process->regs.eflags = 0x200 & 0xFFFFBFFF;
+	new_process->kstack_esp0 = kernel_stack_page.v_addr + PAGE_SIZE;
 
-	//ListPush(g_process_list, (void*)new_process);
+	ListPush(g_process_list, (void*)new_process);
 
-	//g_nb_process++;
+	g_nb_process++;
 }
 
 void start_process(int pid)
@@ -111,4 +112,20 @@ void start_process(int pid)
 			g_current_process->regs.cs == K_CODE_SEG_SELECTOR ? KERNEL : USER
 		);
 	}*/
+}
+
+static void _cleanProcess(void * param)
+{
+	if (param == NULL)
+		return;
+
+	Process * process = (Process *)param;
+	// todo clean process content
+
+	kfree(process);
+}
+
+void ProcessManagerCleanCallback()
+{
+	//ListDestroyEx(g_process_list, _cleanProcess);
 }

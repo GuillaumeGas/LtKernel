@@ -8,18 +8,6 @@
 #define PAGE_SIZE 4096        // Taille d'une page
 #define RAM_MAXPAGE 0x100000  // Car on permet d'adresser 4Go de mémoire (0x100000 * 0x1000 = 4Go)
 
-
-//#define USER_TASK_P_ADDR 0x100000 // ne devrait plus être utilisée
-#define USER_TASK_V_ADDR 0x40000000
-
-#define USER_STACK_V_ADDR 0xE0000000
-
-// Sélecteurs de segment de code et de pile d'une tâche utilisateur
-// Les bits RPL (niveau de privilège) sont à '11' afin de permettre le passage en niveau de privilèges utilisateur
-// lors de l'exécution de l'instruction iret (voir process_starter.asm et le fonctionnement de iret)
-#define USER_CODE_SEG_SELECTOR 0x1B
-#define USER_STACK_SEG_SELECTOR 0x23
-
 #define PAGING_FLAG 0x80000000 // CR0 - bit 31
 
 #define NB_PAGES_TABLE_PER_DIRECTORY 1024

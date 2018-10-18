@@ -5,6 +5,15 @@
 #include <kernel/lib/types.h>
 #include <kernel/lib/list.h>
 
+#define USER_TASK_V_ADDR  0x40000000
+#define USER_STACK_V_ADDR 0xE0000000
+
+// Sélecteurs de segment de code et de pile d'une tâche utilisateur
+// Les bits RPL (niveau de privilège) sont à '11' afin de permettre le passage en niveau de privilèges utilisateur
+// lors de l'exécution de l'instruction iret (voir process_starter.asm et le fonctionnement de iret)
+#define USER_CODE_SEG_SELECTOR 0x1B
+#define USER_STACK_SEG_SELECTOR 0x23
+
 struct process
 {
 	int pid;
@@ -39,6 +48,7 @@ extern unsigned int g_nb_process;
 void init_process_manager();
 void create_process(void * task_addr, unsigned int size);
 void start_process(int pid);
+void ProcessManagerCleanCallback();
 
 void _start_process(PageDirectoryEntry * pd, u32 ss, u32 esp, u32 eflags, u32 cs, u32 eip,
 	u32 eax, u32 ecx, u32 edx, u32 ebx, u32 ebp, u32 esi, u32 edi, u32 ds, u32 es, u32 fs, u32 gs,

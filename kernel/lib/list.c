@@ -32,7 +32,7 @@ void ListDestroyEx(List * list, CleanFunPtr cleaner)
 
 	while (elem != NULL)
 	{
-		if (cleaner != NULL)
+		if (cleaner != NULL && elem->data != NULL)
 			cleaner(elem->data);
 		kfree(elem);
 		elem = next;
