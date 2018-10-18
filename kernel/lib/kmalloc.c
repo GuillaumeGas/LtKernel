@@ -154,10 +154,12 @@ void dumpHeap()
 	kprint("\n");
 }
 
-Page page_alloc()
+// Pour le moment on se contente d'ajouter la page dans pd0, je sais pas si c'est suffisant, est ce qu'on est sûr que le pd0
+// utilisé au moment de l'appel est le bon à chaque fois qu'on a besoin de cette fonction ?
+Page PageAlloc()
 {
 	Page newPage = {0};
-	struct mem_pblock * block = g_page_heap;
+	MemPageBlock * block = g_page_heap;
 
 	newPage.p_addr = (u32 *)get_free_page();
 	
@@ -170,6 +172,7 @@ Page page_alloc()
 		{
 			block->available = BLOCK_USED;
 			newPage.v_addr = block->v_page_addr;
+			break;
 		}
 
 		block = block->next;
@@ -178,12 +181,14 @@ Page page_alloc()
 	if (newPage.v_addr == NULL)
 		panic(VIRTUAL_MEMORY_FULL);
 
+	pd0_add_page((u8 *)newPage.v_addr, (u8 *)newPage.p_addr, IN_MEMORY | WRITEABLE);
+
 	return newPage;
 }
 
-void page_free(void * ptr)
+void PageFree(void * ptr)
 {
-	struct mem_pblock * block = g_page_heap;
+	MemPageBlock * block = g_page_heap;
 
 	while (block != NULL)
 	{

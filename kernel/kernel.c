@@ -95,21 +95,13 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	sti();
 
-	List * list = ListCreate();
-	char * c = (char*)kmalloc(10);
-	strcpy("test", c);
-	ListPush(list, (void*)c);
-	c = (char*)kmalloc(10);
-	strcpy("test2", c);
-	ListPush(list, (void*)c);
+	Page p = PageAlloc();
+	kprint("p : %x, v : %x\n", p.p_addr, p.v_addr);
+	Page p2 = PageAlloc();
+	kprint("p : %x, v : %x\n", p2.p_addr, p2.v_addr);
 
-	char * res = (char*)ListGet(list, 0);
-	char * res2 = (char*)ListGet(list, 1);
-
-	kprint("res : %s\n", res);
-	kprint("res2 : %s\n\n", res2);
-
-	ListDestroyEx(list, cleanStr);
+	strcpy("Hello !\n", (char*)p.v_addr);
+	kprint("test : %s", (char*)p.v_addr);
 
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     CleanKernel();

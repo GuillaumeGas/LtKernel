@@ -7,5 +7,5 @@ void * kmalloc(int size);
 void kfree(void * ptr);
 void dumpHeap();
 
-Page page_alloc();
-void page_free(void * ptr);
+Page PageAlloc();
+void PageFree(void * ptr);

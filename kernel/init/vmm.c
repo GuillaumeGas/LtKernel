@@ -183,29 +183,23 @@ void set_page_table_entryEx(PageTableEntry * pt, u32 page_addr, PT_FLAG flags, u
 */
 void * get_free_page()
 {
-	unsigned int index = 0;
-
-	for (; index < MEM_BITMAP_SIZE; index++)
-	{
-		if (mem_bitmap[index] != 0xFF)
+	int byte, bit;
+	for (byte = 0; byte < MEM_BITMAP_SIZE; byte++)
+	{ 
+		if (mem_bitmap[byte] != 0xFF)
 		{
-			u8 byte = mem_bitmap[index];
-			unsigned int offset = 0;
-
-			for (; offset < sizeof(u8); offset++)
+			for (bit = 0; bit < 8; bit++)
 			{
-				byte >>= offset;
-
-				if ((byte & 1) == 0)
+				u8 b = mem_bitmap[byte];
+				if (!(b & (1 << bit)))
 				{
-					int page = 8 * index + offset;
+					u32 page = 8 * byte + bit;
 					set_page_used(page);
 					return (void*)(page * PAGE_SIZE);
 				}
 			}
 		}
 	}
-
 	return (void*)(-1);
 }
 
@@ -270,9 +264,6 @@ void pd0_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags)
 	// Modification de l'entrée dans la table de pages
 	pte = (u32 *)(0xFFC00000 | (((u32)v_addr & 0xFFFFF000) >> 10));
 
-	// TODO : utiliser cette erreur pour mieux gérer les pages fault !
-	//*pte = ((u32)p_addr) | (IN_MEMORY | WRITEABLE | flags);
-
 	set_page_table_entry((PageTableEntry *)pte, (u32)p_addr, IN_MEMORY | WRITEABLE);
 }
 
@@ -292,7 +283,7 @@ void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd)
 
 	if (!FlagOn(*pde, IN_MEMORY))
 	{
-		Page new_page = page_alloc();
+		Page new_page = PageAlloc();
 		pt = (u32 *)new_page.v_addr;
 
 		// On ajoute la nouvelle page au répertoire de pages
@@ -310,7 +301,7 @@ void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd)
 
 PageDirectory create_process_pd()
 {
-	Page pd_page = page_alloc();
+	Page pd_page = PageAlloc();
 	PageDirectory pd = { 0 };
 	PageDirectoryEntry * kernelPdEntry = (PageDirectoryEntry *)g_kernelInfo.pageDirectory_p.pd_entry;
 	PageDirectoryEntry * pd_entry = (PageDirectoryEntry *)pd_page.p_addr;

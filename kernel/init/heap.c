@@ -41,7 +41,7 @@ void init_page_heap()
         prev = tmp;
 		tmp = tmp->next;
 
-		tmp->v_page_addr = prev->v_page_addr + PAGE_SIZE;
+		tmp->v_page_addr = (u32 *)((unsigned int)prev->v_page_addr + PAGE_SIZE);
 		tmp->available = BLOCK_FREE;
 		tmp->prev = prev;
 		tmp->next = NULL;
