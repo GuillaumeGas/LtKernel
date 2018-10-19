@@ -186,6 +186,7 @@ Page PageAlloc()
 	return newPage;
 }
 
+// Virer la page du répertoire du noyau
 void PageFree(void * ptr)
 {
 	MemPageBlock * block = g_page_heap;

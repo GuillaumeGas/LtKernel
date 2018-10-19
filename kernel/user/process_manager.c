@@ -122,10 +122,12 @@ static void _cleanProcess(void * param)
 	Process * process = (Process *)param;
 	// todo clean process content
 
+    ListDestroy(process->page_directory.page_table_list);
+
 	kfree(process);
 }
 
 void ProcessManagerCleanCallback()
 {
-	//ListDestroyEx(g_process_list, _cleanProcess);
+	ListDestroyEx(g_process_list, _cleanProcess);
 }

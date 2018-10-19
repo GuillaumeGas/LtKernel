@@ -6,6 +6,7 @@
 #include <kernel/kernel.h>
 #include <kernel/multiboot.h>
 #include <kernel/init/heap.h>
+#include <kernel/user/process_manager.h>
 
 #include "vmm.h"
 
@@ -304,7 +305,7 @@ PageDirectory create_process_pd()
 	Page pd_page = PageAlloc();
 	PageDirectory pd = { 0 };
 	PageDirectoryEntry * kernelPdEntry = (PageDirectoryEntry *)g_kernelInfo.pageDirectory_p.pd_entry;
-	PageDirectoryEntry * pd_entry = (PageDirectoryEntry *)pd_page.p_addr;
+	PageDirectoryEntry * pd_entry = (PageDirectoryEntry *)pd_page.v_addr;
 	unsigned int i = 0;
 
 	// On veut que le premier Go de mémoire virtuelle soit pour le noyau : 1024 / 4 = 256 (1024 = nombre d'entrées dans un répertoire de pages)
@@ -317,7 +318,7 @@ PageDirectory create_process_pd()
 
 	set_page_directory_entry(&(pd_entry[1023]), (u32)pd_entry, IN_MEMORY | WRITEABLE);
 
-	pd.pd_entry = pd_entry;
+	pd.pd_entry = (PageDirectoryEntry *)pd_page.p_addr;
 	pd.page_table_list = ListCreate();
 
 	return pd;

@@ -88,6 +88,8 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	create_process(test_task, 500);
 
+    kprint("Process created !\n");
+
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     CleanKernel();
     CheckHeap();
