@@ -29,6 +29,7 @@ void create_process(void * task_addr, unsigned int size)
 	u8 * v_user_code_ptr = NULL;
 	Page kernel_stack_page = { 0 };
 	u8 * p_user_stack = NULL;
+    u8 * v_user_stack = NULL;
 	unsigned int count = 0;
 
 	user_pd = create_process_pd();
@@ -53,20 +54,21 @@ void create_process(void * task_addr, unsigned int size)
 		else
 			mmcopy((u8 *)task_addr + count, v_user_code_ptr, PAGE_SIZE);
 
-		v_user_code_ptr += PAGE_SIZE;
+		v_user_code_ptr = (u8 *)((unsigned int)v_user_code_ptr + PAGE_SIZE);
 		count += PAGE_SIZE;
 	}
 
 	kernel_stack_page = PageAlloc();
 
 	p_user_stack = (u8 *)get_free_page();
-	pd_add_page((u8 *)USER_STACK_V_ADDR, p_user_stack, IN_MEMORY | WRITEABLE, user_pd);
+    v_user_stack = (u8 *)(USER_STACK_V_ADDR - PAGE_SIZE);
+	pd_add_page(v_user_stack, p_user_stack, IN_MEMORY | WRITEABLE, user_pd);
 
 	new_process = (struct process *)kmalloc(sizeof(struct process));
 	new_process->pid = g_nb_process;
 	new_process->page_directory = user_pd;
 	new_process->regs.ss = USER_STACK_SEG_SELECTOR;
-	new_process->regs.esp = USER_STACK_V_ADDR;
+	new_process->regs.esp = USER_STACK_V_ADDR; // test kprint(USER_STACK_V_ADDR);
 	new_process->regs.cs = USER_CODE_SEG_SELECTOR;
 	new_process->regs.eip = USER_TASK_V_ADDR;
 	new_process->regs.eflags = 0x200 & 0xFFFFBFFF;
@@ -79,17 +81,21 @@ void create_process(void * task_addr, unsigned int size)
 
 void start_process(int pid)
 {
-	/*if (pid == -1)
+	if (pid == -1)
 	{
 		kprint("[Process Manager] : start_process() failed, pid = -1\n");
 		return;
 	}
 	else
 	{
-		g_current_process = list_get(g_process_list, pid);
+		g_current_process = ListGet(g_process_list, pid);
 		g_current_process->start_execution_time = g_clock;
 
+        DumpProcess(g_current_process);
+        kprint("\n");
+
 		g_tss.esp0 = (u32)g_current_process->kstack_esp0;
+        g_tss.ss0 = 0x10;
 
 		_start_process(
 			g_current_process->page_directory.pd_entry, 
@@ -111,7 +117,7 @@ void start_process(int pid)
 			g_current_process->regs.gs,
 			g_current_process->regs.cs == K_CODE_SEG_SELECTOR ? KERNEL : USER
 		);
-	}*/
+	}
 }
 
 static void _cleanProcess(void * param)
@@ -120,14 +126,36 @@ static void _cleanProcess(void * param)
 		return;
 
 	Process * process = (Process *)param;
-	// todo clean process content
-
     ListDestroy(process->page_directory.page_table_list);
-
 	kfree(process);
 }
 
 void ProcessManagerCleanCallback()
 {
 	ListDestroyEx(g_process_list, _cleanProcess);
+}
+
+void DumpProcess(Process * process)
+{
+    kprint("== Process %d ==\n", process->pid);
+    kprint(" - kstack_esp0 : %x\n", process->kstack_esp0);
+    kprint(" - page_directory : %x\n", process->page_directory.pd_entry);
+    kprint(" - start_execution_time : %x\n", process->start_execution_time);
+    kprint(" - ss : %x\n", process->regs.ss);
+    kprint(" - esp : %x\n", process->regs.esp);
+    kprint(" - eflags : %x\n", process->regs.eflags);
+    kprint(" - cs : %x\n", process->regs.cs);
+    kprint(" - eip : %x\n", process->regs.eip);
+    kprint(" - eax : %x\n", process->regs.eax);
+    kprint(" - ecx : %x\n", process->regs.ecx);
+    kprint(" - edx : %x\n", process->regs.edx);
+    kprint(" - ebx : %x\n", process->regs.ebx);
+    kprint(" - ebp : %x\n", process->regs.ebp);
+    kprint(" - esi : %x\n", process->regs.esi);
+    kprint(" - edi : %x\n", process->regs.edi);
+    kprint(" - ds : %x\n", process->regs.ds);
+    kprint(" - es : %x\n", process->regs.es);
+    kprint(" - fs : %x\n", process->regs.fs);
+    kprint(" - gs : %x\n", process->regs.gs);
+    kprint(" - cs : %x\n", process->regs.cs);
 }

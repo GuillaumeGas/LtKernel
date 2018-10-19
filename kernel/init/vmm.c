@@ -295,9 +295,14 @@ void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd)
 		// On ajoute la nouvelle page à la liste de pages associée à ce répertoire (pour plus facilement libérer la mémoire après)
 		ListPush(pd.page_table_list, new_page.v_addr);
 	}
+    else
+    {
+        // La page ne devrait pas être en mémoire non ?
+        kprint("pde : %x (%b), in_mem : %b\n", *pde, *pde, IN_MEMORY); while (1);
+    }
 
-	pte = (u32 *) ((0xFFC00000 | (PD_OFFSET((u32)v_addr) << 10)));
-	set_page_table_entry((PageTableEntry *)pte, (u32)p_addr, (IN_MEMORY | WRITEABLE | flags));
+    pte = (u32 *)(0xFFC00000 | (((u32)v_addr & 0xFFFFF000) >> 10));
+	set_page_table_entry((PageTableEntry *)pte, (u32)p_addr, (IN_MEMORY | WRITEABLE));
 }
 
 PageDirectory create_process_pd()
