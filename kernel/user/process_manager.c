@@ -99,7 +99,7 @@ void start_process(int pid)
         /*DumpProcess(g_current_process);
         kprint("\n");*/
 
-		/*g_tss.esp0 = (u32)g_current_process->kstack_esp0;
+		g_tss.esp0 = (u32)g_current_process->kstack_esp0;
         g_tss.ss0 = 0x10;
 
 		_start_process(
@@ -121,7 +121,7 @@ void start_process(int pid)
 			g_current_process->regs.fs,
 			g_current_process->regs.gs,
 			g_current_process->regs.cs == K_CODE_SEG_SELECTOR ? KERNEL : USER
-		);*/
+		);
 	}
 }
 

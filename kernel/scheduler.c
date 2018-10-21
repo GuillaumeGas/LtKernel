@@ -6,8 +6,6 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/init/gdt.h>
 
-#define NEXT_PID() (g_current_process->pid + 1) % g_nb_process
-
 void schedule()
 {
 	if (g_current_process == NULL && ListTop(g_process_list) != NULL)
@@ -15,7 +13,7 @@ void schedule()
 		g_current_process = (Process *)ListTop(g_process_list);
 		start_process(g_current_process->pid);
 	}
-	else if (g_current_process != NULL && g_current_process->pid != NEXT_PID())
+	else if (g_current_process != NULL && g_nb_process > 1)
 	{
 		u32 * stack_ptr = NULL;
 
@@ -51,6 +49,6 @@ void schedule()
 
 		g_current_process->kstack_esp0 = (u32 *)(g_tss.esp0);
 
-		start_process(NEXT_PID());
+		start_process((g_current_process->pid + 1) % g_nb_process);
 	}
 }

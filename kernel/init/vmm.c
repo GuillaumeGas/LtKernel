@@ -155,13 +155,9 @@ void SetPageDirectoryEntry(PageDirectoryEntry * pd, u32 pt_addr, PAGE_FLAG flags
 */
 void SetPageDirectoryEntryEx(PageDirectoryEntry * pd, u32 pt_addr, PAGE_FLAG flags, u8 global, u8 avail)
 {
-	if (!FlagOn(PAGE_EMPTY, flags))
-	{
-		pd->global = global;
-		pd->avail = avail;
-	}
-
 	SetPageDirectoryEntry(pd, pt_addr, flags);
+	pd->avail = avail;
+	pd->global = global;
 }
 
 /*
@@ -192,10 +188,9 @@ void SetPageTableEntry(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags)
 */
 void SetPageTableEntryEx(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags, u8 global, u8 avail)
 {
-	if (!FlagOn(PAGE_EMPTY, flags))
-		pt->written = FlagOn(PAGE_WRITTEN, flags);
-
-	SetPageDirectoryEntryEx((PageDirectoryEntry *)pt, page_addr, flags, global, avail);
+	SetPageTableEntry(pt, page_addr, flags);
+	pt->avail = avail;
+	pt->global = global;
 }
 
 /*
@@ -338,7 +333,7 @@ PageDirectory CreateProcessPageDirectory()
 		pd_entry[i] = kernelPdEntry[i];
 
 	for (i = 256; i < NB_PAGES_TABLE_PER_DIRECTORY; i++)
-		SetPageDirectoryEntry(&(pd_entry[i]), 0, PAGE_PRESENT | PAGE_WRITEABLE);
+		SetPageDirectoryEntry(&(pd_entry[i]), 0, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS);
 
 	SetPageDirectoryEntry(&(pd_entry[1023]), (u32)pd_page.p_addr, PAGE_PRESENT | PAGE_WRITEABLE);
 

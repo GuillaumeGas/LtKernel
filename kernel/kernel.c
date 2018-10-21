@@ -84,9 +84,10 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	InitCleanCallbacksList();
 
-	sti();
-
 	create_process(test_task, 500);
+	//create_process(test_task2, 500);
+
+	sti();
 
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     CleanKernel();
