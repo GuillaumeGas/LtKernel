@@ -1,8 +1,9 @@
 #include "panic.h"
+#include <kernel/lib/stdio.h>
 
 void panic(PanicType type)
 {
-	kprint("Kernel Panic !");
+	kprint("Kernel Panic ! ");
 
 	switch (type)
 	{
@@ -22,5 +23,5 @@ void panic(PanicType type)
 		kprint("Unknown Type\n");
 	}
 
-	asm("hlt");
+	while (1);
 }

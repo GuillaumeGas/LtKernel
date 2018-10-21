@@ -22,6 +22,6 @@ struct ExceptionContextWithCode
 } typedef ExceptionContextWithCode;
 
 void kdump ();
-void panic (const char * str);
+void panicStr (const char * str);
 void PrintExceptionContext(ExceptionContext * context);
 void PrintExceptionContextWithCode(ExceptionContextWithCode * context);

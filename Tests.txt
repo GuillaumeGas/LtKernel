@@ -1,0 +1,74 @@
+TEST 1, tous les répertoires et tables de pages sont à 0
+
+	// tests
+	{
+		unsigned int i = 0;
+		PageDirectoryEntry * pde = g_kernelInfo.pageDirectory_p.pd_entry;
+		PageTableEntry * pte = g_kernelInfo.pageTables_p;
+
+		for (; i < NB_PAGES_TABLE_PER_DIRECTORY; i++)
+		{
+			u32 p = *((u32 *)&pde[i]);
+			if (p != 0)
+			{
+				panic(PANIC_TEST);
+			}
+		}
+		kprint("PD OK\n");
+
+		for (i = 0; i < NB_PAGES_TABLE_PER_DIRECTORY; i++)
+		{
+			unsigned int j = 0;
+			for (; j < NB_PAGES_PER_TABLE; j++)
+			{
+				u32 p = *((u32 *)&pte[j]);
+				if (p != 0)
+				{
+					panic(PANIC_TEST);
+				}
+			}
+			pte = (PageTableEntry *)((unsigned int)pte + PAGE_SIZE);
+		}
+		kprint("PT OK\n");
+		pause();
+	}
+	
+TEST 2, toutes les entrées du répertoire de pages pointent vers 0x400000, 0x401000, ... et sont présentes (bits 11)
+
+// tests
+	{
+		PageDirectoryEntry * pageDirectory = g_kernelInfo.pageDirectory_p.pd_entry;
+		PageTableEntry * pageTable = g_kernelInfo.pageTables_p;
+		unsigned int pdIndex = 0;
+
+		for (; pdIndex < 10; pdIndex++)
+		{
+			u32 * pd = (u32 *)(&pageDirectory[pdIndex]);
+			kprint("> %x : %b*\n", *pd & 0x3FFFFC00, pageDirectory[pdIndex]);
+		}
+		pause();
+	}
+
+TEST 3, toutes les entrées des tables sont à 0, mais présentes (bits 11 à la fin)
+	// tests
+	{
+		PageTableEntry * pageTable = g_kernelInfo.pageTables_p;
+		unsigned int ptIndex = 0;
+
+		for (; ptIndex < 2; ptIndex++)
+		{
+			unsigned int j = 0;
+			for (; j < 5; j++)
+			{
+				u32 * p = (u32 *)(&pageTable[j]);
+				kprint("> %x : %b*\n", *p & 0x3FFFFC00, *p);
+			}
+			pageTable = (PageTableEntry *)((unsigned int)pageTable + PAGE_SIZE);
+		}
+		pause();
+	}
+	
+TEST 4, la dernière entrée du répertoire pointe sur la première
+	u32 * pd = (u32 *)(&(g_kernelInfo.pageDirectory_p.pd_entry[1023]));
+	kprint("> %x : %b*\n", *pd & 0x3FFFFC00, *pd);
+	pause(); 

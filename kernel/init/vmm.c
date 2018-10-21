@@ -11,6 +11,7 @@
 #include "vmm.h"
 
 extern void _init_vmm(PageDirectoryEntry * pd0_addr);
+static void InitKernelPageDirectoryAndPageTables();
 
 // Représente l'ensemble des pages disponibles ou non
 static u8 mem_bitmap[MEM_BITMAP_SIZE];
@@ -22,7 +23,7 @@ static u8 mem_bitmap[MEM_BITMAP_SIZE];
 	Initialisation simple de la mémoire virtuelle :
 	 - Identity mapping pour le noyau
 */
-void init_vmm()
+void InitVmm()
 {
 	int page = 0;
 
@@ -30,7 +31,7 @@ void init_vmm()
 	int lastPage = (g_mbi.high_mem * 1024) / PAGE_SIZE;
 
 	// Initialisation du bitmap à 0 : toutes les pages sont dispo
-	mmset(mem_bitmap, 0, RAM_MAXPAGE / 8);
+	mmset(mem_bitmap, 0, MEM_BITMAP_SIZE);
 
 	// On bloque les pages inexistantes (si on a moins de 4Go de RAM en réalité)
 	for (page = lastPage / 8; page < RAM_MAXPAGE / 8; page++)
@@ -41,49 +42,58 @@ void init_vmm()
 		set_page_used(page);
 
 	// On met à 0 le répertoire de pages
-	init_clean_pages_directory(g_kernelInfo.pageDirectory_p.pd_entry);
+	CleanAllPageDirectoryAndPageTables(g_kernelInfo.pageDirectory_p.pd_entry, g_kernelInfo.pageTables_p);
 
 	// Initialise tous le répertoire de pages du noyau ainsi que toutes les tables de pages
-	{
-		unsigned int i = 0;
-		PageDirectoryEntry * pd = g_kernelInfo.pageDirectory_p.pd_entry;
-		PageTableEntry * pt = g_kernelInfo.pageTables_p;
-		for (; i < 1024; i++)
-		{
-			unsigned int j = 0;
-			set_page_directory_entry(&pd[i], (u32)pt, IN_MEMORY | WRITEABLE);
-			for (; j < 1024; j++)
-			{
-				set_page_table_entry(&pt[j], 0, IN_MEMORY | WRITEABLE);
-			}
-			set_page_table_entry(&pt[j - 1], (u32)&pt[0], IN_MEMORY | WRITEABLE);
-			pt = &pt[j];
-		}
-	}
+	InitKernelPageDirectoryAndPageTables();
 
 	// Identity mapping (v_addr == p_addr pour le noyau, donc entre 0x0 et 0x800000)
 	{
-		u32 index = 0;
-		PageTableEntry * kernelPt = g_kernelInfo.pageTables_p;
+		PageTableEntry * kernelFirstPt = g_kernelInfo.pageTables_p;
+		PageTableEntry * kernelSecondPt = (PageTableEntry *)((unsigned int)kernelFirstPt + PAGE_SIZE);
 
-		set_page_directory_entry(g_kernelInfo.pageDirectory_p.pd_entry, (u32)kernelPt, IN_MEMORY | WRITEABLE);
-
-		for (page = PAGE(0); page < PAGE(g_kernelInfo.kernelLimit_p); page++)
+		unsigned int ptIndex = 0;
+		for (page = PAGE(0); page <= PAGE(g_kernelInfo.kernelLimit_p); page++)
 		{
-			set_page_table_entry(&(kernelPt[index]), index * PAGE_SIZE, IN_MEMORY | WRITEABLE);
-			index++;
+			SetPageTableEntry(&(kernelFirstPt[ptIndex]), ptIndex * PAGE_SIZE, PAGE_PRESENT | PAGE_WRITEABLE);
+			ptIndex++;
 		}
-	}
 
-	// Trick pour accéder au contenu du répertoire et des tables de pages : la dernière entrée pointe sur l'adresse du répertoire.
-	set_page_directory_entry(&(g_kernelInfo.pageDirectory_p.pd_entry[1023]), (u32)g_kernelInfo.pageDirectory_p.pd_entry, IN_MEMORY | WRITEABLE);
+		SetPageTableEntry(&(kernelFirstPt[1023]), (u32)kernelFirstPt, PAGE_PRESENT | PAGE_WRITEABLE);
+		SetPageTableEntry(&(kernelSecondPt[1023]), (u32)kernelSecondPt, PAGE_PRESENT | PAGE_WRITEABLE);
+	}
 
 	_init_vmm(g_kernelInfo.pageDirectory_p.pd_entry);
 
 	init_heap();
 	init_page_heap();
-
+	
 	g_kernelInfo.pageDirectory_p.page_table_list = ListCreate();
+}
+
+// Initialise tous le répertoire de pages du noyau ainsi que toutes les tables de pages
+void InitKernelPageDirectoryAndPageTables()
+{
+	PageDirectoryEntry * pageDirectory = g_kernelInfo.pageDirectory_p.pd_entry;
+	PageTableEntry * pageTable = g_kernelInfo.pageTables_p;
+	unsigned int pdIndex = 0;
+
+	for (; pdIndex < NB_PAGES_TABLE_PER_DIRECTORY; pdIndex++)
+	{
+		SetPageDirectoryEntry(&(pageDirectory[pdIndex]), (u32)pageTable, PAGE_PRESENT | PAGE_WRITEABLE);
+
+		unsigned int j = 0;
+		for (; j < NB_PAGES_PER_TABLE; j++)
+		{
+			SetPageTableEntry(&(pageTable[j]), 0, PAGE_PRESENT | PAGE_WRITEABLE);
+		}
+
+		SetPageTableEntry(&(pageTable[1023]), (u32)pageTable, PAGE_PRESENT | PAGE_WRITEABLE);
+
+		pageTable = (PageTableEntry *)((unsigned int)pageTable + PAGE_SIZE);
+	}
+
+	SetPageDirectoryEntry(&(pageDirectory[1023]), (u32)pageDirectory, PAGE_PRESENT | PAGE_WRITEABLE);
 }
 
 void VmmCleanCallback()
@@ -93,20 +103,32 @@ void VmmCleanCallback()
     ListDestroy(g_kernelInfo.pageDirectory_p.page_table_list);
 }
 
-void init_clean_pages_directory(PageDirectoryEntry * first_pd)
+void CleanAllPageDirectoryAndPageTables(PageDirectoryEntry * pageDirectoryEntry, PageTableEntry * pageTableEntry)
+{
+	CleanPageDirectory(pageDirectoryEntry);
+
+	unsigned int pdIndex = 0;
+	for (; pdIndex < NB_PAGES_TABLE_PER_DIRECTORY; pdIndex++)
+	{
+		CleanPageTable(pageTableEntry);
+		pageTableEntry = (PageTableEntry *)((unsigned int)pageTableEntry + PAGE_SIZE);
+	}
+}
+
+void CleanPageDirectory(PageDirectoryEntry * pageDirectoryEntry)
 {
 	unsigned int index = 0;
 
 	for (; index < NB_PAGES_TABLE_PER_DIRECTORY; index++)
-		set_page_directory_entry(&(first_pd[index]), 0, EMPTY);
+		SetPageDirectoryEntry(&(pageDirectoryEntry[index]), 0, PAGE_EMPTY);
 }
 
-void init_clean_pages_table(PageTableEntry * first_pt)
+void CleanPageTable(PageTableEntry * pageTableEntry)
 {
 	unsigned int index = 0;
 
 	for (; index < NB_PAGES_PER_TABLE; index++)
-		set_page_table_entry(&(first_pt[index]), 0, EMPTY);
+		SetPageTableEntry(&(pageTableEntry[index]), 0, PAGE_EMPTY);
 }
 
 /*
@@ -114,23 +136,16 @@ void init_clean_pages_table(PageTableEntry * first_pt)
 
 	Si le flag PAGE_SIZE_4KO et 4MO sont à 1, 4MO l'emporte
 */
-void set_page_directory_entry(PageDirectoryEntry * pd, u32 pt_addr, PD_FLAG flags)
+void SetPageDirectoryEntry(PageDirectoryEntry * pd, u32 pt_addr, PAGE_FLAG flags)
 {
-	u32 * pd_addr = (u32*)pd;
-	(*pd_addr) = EMPTY_PAGE_TABLE;
+	if (flags == PAGE_EMPTY)
+		mmset((u8 *)pd, 0, sizeof(PageDirectoryEntry));
 
-	if (FlagOn(EMPTY, flags))
-		return;
-	else
-		(*pd_addr) = pt_addr;
-
-	pd->in_memory = FlagOn(IN_MEMORY, flags);
-	pd->writable = FlagOn(WRITEABLE, flags);
-	pd->non_privileged_access = FlagOn(NON_PRIVILEGED_ACCESS, flags);
-	pd->pwt = FlagOn(PWT, flags);
-	pd->pcd = FlagOn(PCD, flags);
-	pd->accessed = FlagOn(ACCESSED, flags);
-	pd->page_size = FlagOn(PAGE_SIZE_4MO, flags);
+	u32 * addr = (u32 *)pd;
+	*addr = pt_addr;
+	pd->present = FlagOn(flags, PAGE_PRESENT);
+	pd->writable = FlagOn(flags, PAGE_WRITEABLE);
+	pd->non_privileged_access = FlagOn(flags, PAGE_NON_PRIVILEGED_ACCESS);
 }
 
 /*
@@ -138,15 +153,15 @@ void set_page_directory_entry(PageDirectoryEntry * pd, u32 pt_addr, PD_FLAG flag
 
 	Permet de définir le champ de gestion du cache et le champ librement utilisable
 */
-void set_page_directory_entryEx(PageDirectoryEntry * pd, u32 pt_addr, PD_FLAG flags, u8 global, u8 avail)
+void SetPageDirectoryEntryEx(PageDirectoryEntry * pd, u32 pt_addr, PAGE_FLAG flags, u8 global, u8 avail)
 {
-	if (!FlagOn(EMPTY, flags))
+	if (!FlagOn(PAGE_EMPTY, flags))
 	{
 		pd->global = global;
 		pd->avail = avail;
 	}
 
-	set_page_directory_entry(pd, pt_addr, flags);
+	SetPageDirectoryEntry(pd, pt_addr, flags);
 }
 
 /*
@@ -155,12 +170,16 @@ void set_page_directory_entryEx(PageDirectoryEntry * pd, u32 pt_addr, PD_FLAG fl
 	Fait appel à la fonction d'initialisation d'un répertoire de pages car leur structure
 	 est identique.
 */
-void set_page_table_entry(PageTableEntry * pt, u32 page_addr, PT_FLAG flags)
+void SetPageTableEntry(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags)
 {
-	if (!FlagOn(EMPTY, flags))
-		pt->written = FlagOn(WRITTEN, flags);
+	if (flags == PAGE_EMPTY)
+		mmset((u8 *)pt, 0, sizeof(PageTableEntry));
 
-	set_page_directory_entry((PageDirectoryEntry *)pt, page_addr, flags);
+	u32 * addr = (u32 *)pt;
+	*addr = page_addr;
+	pt->present = FlagOn(flags, PAGE_PRESENT);
+	pt->writable = FlagOn(flags, PAGE_WRITEABLE);
+	pt->non_privileged_access = FlagOn(flags, PAGE_NON_PRIVILEGED_ACCESS);
 }
 
 /*
@@ -171,18 +190,18 @@ void set_page_table_entry(PageTableEntry * pt, u32 page_addr, PT_FLAG flags)
 
 	Permet de définir le champ de gestion du cache et le champ librement utilisable
 */
-void set_page_table_entryEx(PageTableEntry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail)
+void SetPageTableEntryEx(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags, u8 global, u8 avail)
 {
-	if (!FlagOn(EMPTY, flags))
-		pt->written = FlagOn(WRITTEN, flags);
+	if (!FlagOn(PAGE_EMPTY, flags))
+		pt->written = FlagOn(PAGE_WRITTEN, flags);
 
-	set_page_directory_entryEx((PageDirectoryEntry *)pt, page_addr, flags, global, avail);
+	SetPageDirectoryEntryEx((PageDirectoryEntry *)pt, page_addr, flags, global, avail);
 }
 
 /*
 	Va chercher dans le bitmap une page de disponible et renvoie son adresse physique
 */
-void * get_free_page()
+void * GetFreePage()
 {
 	int byte, bit;
 	for (byte = 0; byte < MEM_BITMAP_SIZE; byte++)
@@ -204,7 +223,7 @@ void * get_free_page()
 	return (void*)(-1);
 }
 
-void release_page(void * p_addr)
+void ReleasePage(void * p_addr)
 {
 	set_page_unused(p_addr);
 }
@@ -213,7 +232,7 @@ void release_page(void * p_addr)
 /*
 	Récupère une adresse physique à partir d'une adresse virtuelle
 */
-void * get_p_addr(void * v_addr)
+void * GetPhysicalAddress(void * v_addr)
 {
 	u32 * pde = NULL;
 	u32 * pte = NULL;
@@ -225,9 +244,9 @@ void * get_p_addr(void * v_addr)
 	//  (la dernière entrée pointe sur le répertoire lui-même, puis avec les bits suivant aussi à 1, on se retrouve sur la dernière entrée du répertoire 
 	//   qui pointe à nouveau sur le début du répertoire). Là, il ajoute l'offset qu'on a foutu à la fin de l'adresse.)
 	// Ceci nous permet juste de vérifier si la table qui nous intéresse est en mémoire ou non.
-	pde = (u32 *)(0xFFFFF000 | (((u32)v_addr & 0xFFC00000) >> 20));
+	pde = (u32 *)(0xFFFFF000 | PD_OFFSET((u32)v_addr));
 
-	if ((*pde & IN_MEMORY))
+	if ((*pde & PAGE_PRESENT))
 	{
 		// On récupère maintenant un pointeur sur l'entrée de la table afin de savoir si la page en question est en mémoire.
 		// On a encore le trick (0xFFC00000) qui nous permet de pointer sur le début du répertoire dans un premier temps
@@ -235,7 +254,7 @@ void * get_p_addr(void * v_addr)
 		// Les derniers bits, au lieu de représenter un offset physique, représente l'offset dans la table de page, afin de pointer sur l'entrée qui nous intéresse
 		// et vérifier qu'elle est bien en mémoire (on a donc les deux dernières info grace au masque ainsi qu'au décallage de 10 bits (ça ne devrait pas être 12 d'ailleurs ??)
 		pte = (u32 *)(0xFFC00000 | (((u32)v_addr & 0xFFFFF000) >> 10));
-		if ((*pte & IN_MEMORY))
+		if ((*pte & PAGE_PRESENT))
 			// On termine en faisant ce que fait le CPU, prendre ce qui est pointé par l'entrée de la table et ajouter l'offset (les 12 derniers bits de l'adresse v).
 			return (void *)((*pte & 0xFFFFF000) + ((((u32)v_addr)) & 0x00000FFF));
 	}
@@ -246,7 +265,7 @@ void * get_p_addr(void * v_addr)
 /*
 	Met à jour l'espace d'adressage du noyau
 */
-void pd0_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags)
+void AddPageToKernelPageDirectory(u8 * v_addr, u8 * p_addr, PAGE_FLAG flags)
 {
 	u32 * pde = NULL;
 	u32 * pte = NULL;
@@ -254,18 +273,22 @@ void pd0_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags)
 	if (v_addr > (u8 *)USER_TASK_V_ADDR)
 	{
 		kprint("ERROR: pd0_add_page(): %p is not in kernel space !\n", v_addr);
+		asm("hlt");
 		return;
 	}
 
 	// On vérifie que la page est bien présente (voir get_p_addr pour mieux comprendre l'algo)
 	pde = (u32 *)(0xFFFFF000 | PD_OFFSET((u32)v_addr));
-	if (!FlagOn(*pde, IN_MEMORY))
+
+	if (!FlagOn(*pde, PAGE_PRESENT))
+	{
 		panic(PAGE_TABLE_NOTE_FOUND);
+	}
 
 	// Modification de l'entrée dans la table de pages
 	pte = (u32 *)(0xFFC00000 | (((u32)v_addr & 0xFFFFF000) >> 10));
 
-	set_page_table_entry((PageTableEntry *)pte, (u32)p_addr, IN_MEMORY | WRITEABLE);
+	SetPageTableEntry((PageTableEntry *)pte, (u32)p_addr, PAGE_PRESENT | PAGE_WRITEABLE);
 }
 
 /*
@@ -273,7 +296,7 @@ void pd0_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags)
 
 	[!] L'adresse du répertoire de pages doit avoir été renseigné dans le registre cr3 au préalable !
 */
-void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd)
+void AddPageToPageDirectory(u8 * v_addr, u8 * p_addr, PAGE_FLAG flags, PageDirectory pd)
 {
 	u32 * pde = NULL; // adresse virtuelle de l'entrée du répertoire de pages
 	u32 * pte = NULL; // adresse virtuelle de l'entrée de la table de pages
@@ -282,46 +305,42 @@ void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd)
 	// On vérifie que la page est bien présente (voir get_p_addr pour mieux comprendre l'algo)
 	pde = (u32 *)(0xFFFFF000 | PD_OFFSET((u32)v_addr));
 
-	if (!FlagOn(*pde, IN_MEMORY))
+	if (!FlagOn(*pde, PAGE_PRESENT))
 	{
 		Page new_page = PageAlloc();
 		pt = (u32 *)new_page.v_addr;
 
 		// On ajoute la nouvelle page au répertoire de pages
-		set_page_directory_entry((PageDirectoryEntry *)pde, (u32)new_page.p_addr, IN_MEMORY | WRITEABLE | flags);
+		SetPageDirectoryEntry((PageDirectoryEntry *)pde, (u32)new_page.p_addr, PAGE_PRESENT | PAGE_WRITEABLE | flags);
 
-		init_clean_pages_table((PageTableEntry *)pt);
+		CleanPageTable((PageTableEntry *)pt);
 
 		// On ajoute la nouvelle page à la liste de pages associée à ce répertoire (pour plus facilement libérer la mémoire après)
 		ListPush(pd.page_table_list, new_page.v_addr);
 	}
-    else
-    {
-        // La page ne devrait pas être en mémoire non ?
-        kprint("pde : %x (%b), in_mem : %b\n", *pde, *pde, IN_MEMORY); while (1);
-    }
 
     pte = (u32 *)(0xFFC00000 | (((u32)v_addr & 0xFFFFF000) >> 10));
-	set_page_table_entry((PageTableEntry *)pte, (u32)p_addr, (IN_MEMORY | WRITEABLE));
+
+	SetPageTableEntry((PageTableEntry *)pte, (u32)p_addr, (PAGE_PRESENT | PAGE_WRITEABLE | flags));
 }
 
-PageDirectory create_process_pd()
+PageDirectory CreateProcessPageDirectory()
 {
 	Page pd_page = PageAlloc();
 	PageDirectory pd = { 0 };
 	PageDirectoryEntry * kernelPdEntry = (PageDirectoryEntry *)g_kernelInfo.pageDirectory_p.pd_entry;
 	PageDirectoryEntry * pd_entry = (PageDirectoryEntry *)pd_page.v_addr;
 	unsigned int i = 0;
-
+	
 	// On veut que le premier Go de mémoire virtuelle soit pour le noyau : 1024 / 4 = 256 (1024 = nombre d'entrées dans un répertoire de pages)
 	// On vérifie:  256 * 1024 * 4096 = 1Go
 	for (; i < 256; i++)
 		pd_entry[i] = kernelPdEntry[i];
 
 	for (i = 256; i < NB_PAGES_TABLE_PER_DIRECTORY; i++)
-		set_page_directory_entry(&(pd_entry[i]), 0, EMPTY);
+		SetPageDirectoryEntry(&(pd_entry[i]), 0, PAGE_PRESENT | PAGE_WRITEABLE);
 
-	set_page_directory_entry(&(pd_entry[1023]), (u32)pd_entry, IN_MEMORY | WRITEABLE);
+	SetPageDirectoryEntry(&(pd_entry[1023]), (u32)pd_page.p_addr, PAGE_PRESENT | PAGE_WRITEABLE);
 
 	pd.pd_entry = (PageDirectoryEntry *)pd_page.p_addr;
 	pd.page_table_list = ListCreate();

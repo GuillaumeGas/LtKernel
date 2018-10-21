@@ -39,12 +39,12 @@ MemBlock * ksbrk(int n)
 
 		for (; i < n; i++)
 		{
-			u8 * new_page = (u8*)get_free_page();
+			u8 * new_page = (u8*)GetFreePage();
 
 			if (new_page == NULL)
 				panic(MEMORY_FULL);
 
-			pd0_add_page((u8 *)newBlock, new_page, IN_MEMORY | WRITEABLE);
+			AddPageToKernelPageDirectory((u8 *)newBlock, new_page, PAGE_PRESENT | PAGE_WRITEABLE);
 
 			heap += (u32)PAGE_SIZE;
 		}
@@ -53,7 +53,7 @@ MemBlock * ksbrk(int n)
 
 		newBlock->size = n * PAGE_SIZE;
 		newBlock->state = BLOCK_FREE;
-		
+
 		mmset((u8 *)(&(newBlock->data)), 0, newBlock->size - BLOCK_HEADER_SIZE);
 
 		return newBlock;
@@ -101,6 +101,7 @@ static void * _kmalloc(MemBlock * block, int size)
             block = ksbrk(size / DEFAULT_BLOCK_SIZE);
         else
             block = ksbrk(1);
+
 		res_ptr = _kmalloc(block, size);
 	}
 
@@ -161,8 +162,8 @@ Page PageAlloc()
 	Page newPage = {0};
 	MemPageBlock * block = g_page_heap;
 
-	newPage.p_addr = (u32 *)get_free_page();
-	
+	newPage.p_addr = (u32 *)GetFreePage();
+
 	if (newPage.p_addr == NULL)
 		panic(MEMORY_FULL);
 
@@ -181,7 +182,7 @@ Page PageAlloc()
 	if (newPage.v_addr == NULL)
 		panic(VIRTUAL_MEMORY_FULL);
 
-	pd0_add_page((u8 *)newPage.v_addr, (u8 *)newPage.p_addr, IN_MEMORY | WRITEABLE);
+	AddPageToKernelPageDirectory((u8 *)newPage.v_addr, (u8 *)newPage.p_addr, PAGE_PRESENT | PAGE_WRITEABLE);
 
 	return newPage;
 }
@@ -197,7 +198,7 @@ void PageFree(void * ptr)
 		{
 			block->available = BLOCK_FREE;
 			block = NULL;
-			release_page(get_p_addr(ptr));
+			ReleasePage(GetPhysicalAddress(ptr));
 		}
 	}
 }

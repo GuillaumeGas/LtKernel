@@ -22,7 +22,7 @@ void kdump()
 	pause();
 }
 
-void panic(const char * str)
+void panicStr(const char * str)
 {
 	sc_clear();
 	sc_setBackground(BLUE);

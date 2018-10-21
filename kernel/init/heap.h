@@ -3,6 +3,14 @@
 #include <kernel/lib/types.h>
 #include <kernel/lib/stdlib.h>
 
+#define BLOCK_HEADER_SIZE sizeof(int)
+#define DEFAULT_BLOCK_SIZE PAGE_SIZE - BLOCK_HEADER_SIZE
+#define DEFAULT_BLOCK_SIZE_WITH_HEADER DEFAULT_BLOCK_SIZE + BLOCK_HEADER_SIZE
+
+#define MINIMAL_BLOCK_SIZE 4
+#define BLOCK_FREE 0
+#define BLOCK_USED 1
+
 struct mem_block
 {
 	unsigned int size : 31; // 31 bits pour la taille, 1 bit pour indiquer si le bloc est libre (0) ou non (1)

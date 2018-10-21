@@ -76,19 +76,17 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	InitKernelInfo();
 	kprint("[Kernel] Kernel info structure initialized\n");
 
-	init_vmm();
-	kprint("[Kernel] Paging enabled\n\n");
-
-    InitCleanCallbacksList();
+	InitVmm();
+	kprint("[Kernel] Paging enabled\n");
 
 	init_process_manager();
 	kprint("[Kernel] Process manager initialized\n\n");
 
+	InitCleanCallbacksList();
+
 	sti();
 
 	create_process(test_task, 500);
-
-    kprint("Process created !\n");
 
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     CleanKernel();

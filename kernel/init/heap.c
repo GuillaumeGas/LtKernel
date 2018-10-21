@@ -42,10 +42,13 @@ void init_page_heap()
 		tmp = tmp->next;
 
 		tmp->v_page_addr = (u32 *)((unsigned int)prev->v_page_addr + PAGE_SIZE);
+
 		tmp->available = BLOCK_FREE;
 		tmp->prev = prev;
 		tmp->next = NULL;
 	}
+
+	kprint("[Kernel] Kernel pages heap initialized\n");
 }
 
 void CleanPageHeap()

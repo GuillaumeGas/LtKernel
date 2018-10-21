@@ -16,41 +16,27 @@
 
 #define MEM_BITMAP_SIZE RAM_MAXPAGE / 8
 
-// TODO : revoir organisation de la mémoire : ici on a un trou entre la table de pages du noyau et le tas de pages
-
-#define BLOCK_HEADER_SIZE sizeof(int)
-#define DEFAULT_BLOCK_SIZE PAGE_SIZE - BLOCK_HEADER_SIZE
-#define DEFAULT_BLOCK_SIZE_WITH_HEADER DEFAULT_BLOCK_SIZE + BLOCK_HEADER_SIZE
-
-#define MINIMAL_BLOCK_SIZE 4
-#define BLOCK_FREE 0
-#define BLOCK_USED 1
-
 #define PAGE(addr) (addr) >> 12
-#define PD_OFFSET(addr) (addr & 0xFFC00000) >> 20 // c'est pas plutôt >> 22 ?
-#define PT_OFFSET(addr) (addr & 0x003FF000) >> 10 // >> 12 ?
+#define PD_OFFSET(addr) ((addr) & 0xFFC00000) >> 20
+#define PT_OFFSET(addr) (addr & 0x003FF000) >> 12
 
-// TODO : séparer les flags, on sait plus quel flag appartient à quel type...
-enum PD_FLAG
+enum PAGE_FLAG
 {
-	EMPTY = 0,
-	IN_MEMORY = 2,
-	WRITEABLE = 4,
-	NON_PRIVILEGED_ACCESS = 8,
-	PWT = 16,
-	PCD = 32,
-	ACCESSED = 64,
-	WRITTEN = 128,
-	PAGE_SIZE_4KO = 256,
-	PAGE_SIZE_4MO = 512,
-	G = 1024
-};
-typedef enum PD_FLAG PD_FLAG;
-typedef enum PD_FLAG PT_FLAG;
+	PAGE_EMPTY = 0,
+	PAGE_PRESENT = 1,
+	PAGE_WRITEABLE = 2,
+	PAGE_NON_PRIVILEGED_ACCESS = 4,
+	PAGE_PWT = 8,
+	PAGE_PCD = 16,
+	PAGE_ACCESSED = 32,
+	PAGE_PAGE_SIZE_4MO = 128,
+	PAGE_WRITTEN = 64,
+	PAGE_G = 256
+} typedef PAGE_FLAG;
 
 struct page_directory_entry
 {
-	u32 in_memory : 1;
+	u32 present : 1;
 	u32 writable : 1;
 	u32 non_privileged_access : 1;
 	u32 pwt : 1;
@@ -66,7 +52,7 @@ typedef struct page_directory_entry PageDirectoryEntry;
 
 struct page_table_entry
 {
-	u32 in_memory : 1;
+	u32 present : 1;
 	u32 writable : 1;
 	u32 non_privileged_access : 1;
 	u32 pwt : 1;
@@ -94,21 +80,22 @@ struct page
 };
 typedef struct page Page;
 
-void init_vmm();
+void InitVmm();
 
-void init_clean_pages_directory(PageDirectoryEntry * first_pd);
-void init_clean_pages_table(PageTableEntry * first_pt);
-void set_page_directory_entry(PageDirectoryEntry * pde, u32 pt_addr, PD_FLAG flags);
-void set_page_directory_entryEx(PageDirectoryEntry * pde, u32 pt_addr, PD_FLAG flags, u8 global, u8 avail);
-void set_page_table_entry(PageTableEntry * pt, u32 page_addr, PT_FLAG flags);
-void set_page_table_entryEx(PageTableEntry * pt, u32 page_addr, PT_FLAG flags, u8 global, u8 avail);
-void * get_free_page();
-void release_page(void * p_addr);
-void * get_p_addr(void * v_addr);
+void CleanAllPageDirectoryAndPageTables(PageDirectoryEntry * pageDirectoryEntry, PageTableEntry * pageTableEntry);
+void CleanPageDirectory(PageDirectoryEntry * pageDirectory);
+void CleanPageTable(PageTableEntry * pageTable);
+void SetPageDirectoryEntry(PageDirectoryEntry * pde, u32 pt_addr, PAGE_FLAG flags);
+void SetPageDirectoryEntryEx(PageDirectoryEntry * pde, u32 pt_addr, PAGE_FLAG flags, u8 global, u8 avail);
+void SetPageTableEntry(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags);
+void SetPageTableEntryEx(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags, u8 global, u8 avail);
+void * GetFreePage();
+void ReleasePage(void * p_addr);
+void * GetPhysicalAddress(void * v_addr);
 
-void pd0_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags);
-void pd_add_page(u8 * v_addr, u8 * p_addr, PT_FLAG flags, PageDirectory pd);
+void AddPageToKernelPageDirectory(u8 * v_addr, u8 * p_addr, PAGE_FLAG flags);
+void AddPageToPageDirectory(u8 * v_addr, u8 * p_addr, PAGE_FLAG flags, PageDirectory pd);
 
-PageDirectory create_process_pd();
+PageDirectory CreateProcessPageDirectory();
 
 void VmmCleanCallback();

@@ -8,7 +8,7 @@ ROOT=kernel.o logger.o scheduler.o
 DEBUG=debug.o
 DRIVERS=screen.o serial.o
 INIT=gdt.o gdt_loader.o idt.o idt_loader.o int.o isr.o vmm.o pic.o vmm_loader.o heap.o
-LIB=kmalloc.o list.o stdio.o stdlib.o
+LIB=kmalloc.o list.o stdio.o stdlib.o panic.o
 USER=process_manager.o process_starter.o user_tests.o
 
 all: $(OBJ) 
@@ -83,6 +83,9 @@ stdio.o: lib/stdio.c
 	$(CC) -c $^
 
 stdlib.o: lib/stdlib.c
+	$(CC) -c $^
+
+panic.o: lib/panic.c
 	$(CC) -c $^
 
 # USER DIRECTORY

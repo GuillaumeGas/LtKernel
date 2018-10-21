@@ -1,3 +1,4 @@
+#include <kernel/kernel.h>
 #include <kernel/init/vmm.h>
 #include <kernel/init/gdt.h>
 #include <kernel/scheduler.h>
@@ -32,19 +33,20 @@ void create_process(void * task_addr, unsigned int size)
     u8 * v_user_stack = NULL;
 	unsigned int count = 0;
 
-	user_pd = create_process_pd();
+	user_pd = CreateProcessPageDirectory();
 	v_user_code_ptr = (u8 *)USER_TASK_V_ADDR;
+
+	// On utilise maintenant le répertoire de pages de la tâche utilisateur pour le mettre correctement à jour
+	_setCurrentPagesDirectory(user_pd.pd_entry);
 
 	// Tant qu'on a du code à copier en mémoire...
 	while (count < size)
 	{
 		// On récupère une page physique libre dans laquelle on va y copier le code
-		u8 * p_new_code_page = (u8 *)get_free_page();
+		u8 * p_new_code_page = (u8 *)GetFreePage();
 
-		// On ajoute la page dans l'espace d'adressage du noyau
-		pd0_add_page(v_user_code_ptr, p_new_code_page, IN_MEMORY | WRITEABLE);
 		// On ajoute la page physique dans l'espace d'adressage de la tâche utilisateur
-		pd_add_page(v_user_code_ptr, p_new_code_page, IN_MEMORY | WRITEABLE, user_pd);
+		AddPageToPageDirectory(v_user_code_ptr, p_new_code_page, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, user_pd);
 
 		mmset((u8*)v_user_code_ptr, 0, PAGE_SIZE);
 
@@ -60,9 +62,9 @@ void create_process(void * task_addr, unsigned int size)
 
 	kernel_stack_page = PageAlloc();
 
-	p_user_stack = (u8 *)get_free_page();
+	p_user_stack = (u8 *)GetFreePage();
     v_user_stack = (u8 *)(USER_STACK_V_ADDR - PAGE_SIZE);
-	pd_add_page(v_user_stack, p_user_stack, IN_MEMORY | WRITEABLE, user_pd);
+	AddPageToPageDirectory(v_user_stack, p_user_stack, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, user_pd);
 
 	new_process = (struct process *)kmalloc(sizeof(struct process));
 	new_process->pid = g_nb_process;
@@ -77,6 +79,9 @@ void create_process(void * task_addr, unsigned int size)
 	ListPush(g_process_list, (void*)new_process);
 
 	g_nb_process++;
+
+	// On revient sur le répertoire de pages initial du noyau
+	_setCurrentPagesDirectory(g_kernelInfo.pageDirectory_p.pd_entry);
 }
 
 void start_process(int pid)
@@ -91,10 +96,10 @@ void start_process(int pid)
 		g_current_process = ListGet(g_process_list, pid);
 		g_current_process->start_execution_time = g_clock;
 
-        DumpProcess(g_current_process);
-        kprint("\n");
+        /*DumpProcess(g_current_process);
+        kprint("\n");*/
 
-		g_tss.esp0 = (u32)g_current_process->kstack_esp0;
+		/*g_tss.esp0 = (u32)g_current_process->kstack_esp0;
         g_tss.ss0 = 0x10;
 
 		_start_process(
@@ -116,7 +121,7 @@ void start_process(int pid)
 			g_current_process->regs.fs,
 			g_current_process->regs.gs,
 			g_current_process->regs.cs == K_CODE_SEG_SELECTOR ? KERNEL : USER
-		);
+		);*/
 	}
 }
 

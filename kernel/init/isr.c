@@ -145,7 +145,7 @@ void page_fault_isr(ExceptionContextWithCode * context)
 	kprint (" - U/S : %d (%s)\n", us ? 1 : 0, us ? "user mode" : "supervisor mode");
 	kprint (" - RSVD : %d (%s)\n", rsvd ? 1 : 0, rsvd ? "one or more page directory entries contain reserved bits which are set to 1" : "PSE or PAE flags in CR4 are set to 1");
 	kprint (" - I/D : %d (%s)\n\n", id ? 1 : 0, id ? "instruction fetch (applies when the No-Execute bit is supported and enabled" : "-");
-	kprint("Linear address : %x\n\n", context->cr2);
+	kprint("Linear address : %x, %b*\n\n", context->cr2, context->cr2, 32);
 
 	PrintExceptionContextWithCode(context);
 

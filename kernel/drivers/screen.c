@@ -6,14 +6,29 @@ u8 _color = 0x0F;
 
 void sc_printChar(char c)
 {
-	if (c == LF) {
+	if (c == LF) 
+	{
 		_line++;
 		_column = 0;
 	}
-	else if (c == CR) {
+	else if (c == CR) 
+	{
 		_column = 0;
 	}
-	else {
+	else 
+	{
+		if (_column > COLUMNS - 1) 
+		{
+			_column = 0;
+			_line++;
+		}
+
+		if (_line > LINES) 
+		{
+			sc_scrollUp();
+			_line--;
+		}
+
 		u8 * screen_ptr = (u8*)SCREEN_PTR + ((_column + (_line * COLUMNS)) * 2);
 		*screen_ptr = c;
 		*(screen_ptr + 1) = _color;
