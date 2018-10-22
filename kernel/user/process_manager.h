@@ -13,6 +13,7 @@
 // lors de l'exécution de l'instruction iret (voir process_starter.asm et le fonctionnement de iret)
 #define USER_CODE_SEG_SELECTOR 0x1B
 #define USER_STACK_SEG_SELECTOR 0x23
+#define USER_DATA_SEG_SELECTOR 0x23
 
 struct process
 {

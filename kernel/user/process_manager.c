@@ -69,10 +69,24 @@ void create_process(void * task_addr, unsigned int size)
 	new_process = (struct process *)kmalloc(sizeof(struct process));
 	new_process->pid = g_nb_process;
 	new_process->page_directory = user_pd;
-	new_process->regs.ss = USER_STACK_SEG_SELECTOR;
-	new_process->regs.esp = USER_STACK_V_ADDR; // test kprint(USER_STACK_V_ADDR);
-	new_process->regs.cs = USER_CODE_SEG_SELECTOR;
+    
+    new_process->regs.ss = USER_STACK_SEG_SELECTOR;
+    new_process->regs.cs = USER_CODE_SEG_SELECTOR;
+    new_process->regs.ds = USER_DATA_SEG_SELECTOR;
+    new_process->regs.es = USER_DATA_SEG_SELECTOR;
+    new_process->regs.fs = USER_DATA_SEG_SELECTOR;
+    new_process->regs.gs = USER_DATA_SEG_SELECTOR;
+    
+    new_process->regs.eax = 0;
+    new_process->regs.ebp = 0;
+    new_process->regs.ecx = 0;
+    new_process->regs.edx = 0;
+    new_process->regs.edi = 0;
+    new_process->regs.esi = 0;
+
+	new_process->regs.esp = USER_STACK_V_ADDR;
 	new_process->regs.eip = USER_TASK_V_ADDR;
+
 	new_process->regs.eflags = 0x200 & 0xFFFFBFFF;
 	new_process->kstack_esp0 = kernel_stack_page.v_addr + PAGE_SIZE;
 
@@ -95,9 +109,6 @@ void start_process(int pid)
 	{
 		g_current_process = ListGet(g_process_list, pid);
 		g_current_process->start_execution_time = g_clock;
-
-        /*DumpProcess(g_current_process);
-        kprint("\n");*/
 
 		g_tss.esp0 = (u32)g_current_process->kstack_esp0;
         g_tss.ss0 = 0x10;
