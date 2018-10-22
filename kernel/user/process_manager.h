@@ -5,7 +5,7 @@
 #include <kernel/lib/types.h>
 #include <kernel/lib/list.h>
 
-#define USER_TASK_V_ADDR  0x40000000
+#define USER_TASK_V_ADDR  0x60000000
 #define USER_STACK_V_ADDR 0xE0000000
 
 // Sélecteurs de segment de code et de pile d'une tâche utilisateur

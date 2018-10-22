@@ -129,8 +129,8 @@ void start_process(int pid)
 		//else
 		//	pause();
 
-		if (testValue2++ < 10)
-			kprint("switching to %d\n", g_current_process->pid);
+		/*if (testValue2++ < 10)
+			kprint("switching to %d\n", g_current_process->pid);*/
 
 		g_tss.esp0 = g_current_process->kstack.esp0;
         g_tss.ss0 = g_current_process->kstack.ss0;

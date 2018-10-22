@@ -52,8 +52,11 @@ void InitVmm()
 		PageTableEntry * kernelFirstPt = g_kernelInfo.pageTables_p;
 		PageTableEntry * kernelSecondPt = (PageTableEntry *)((unsigned int)kernelFirstPt + PAGE_SIZE);
 
+		SetPageDirectoryEntry(g_kernelInfo.pageDirectory_p.pd_entry, (u32)kernelFirstPt, PAGE_PRESENT | PAGE_WRITEABLE);
+		SetPageDirectoryEntry(&(g_kernelInfo.pageDirectory_p.pd_entry[1]), (u32)kernelSecondPt, PAGE_PRESENT | PAGE_WRITEABLE);
+
 		unsigned int ptIndex = 0;
-		for (page = PAGE(0); page <= PAGE(g_kernelInfo.kernelLimit_p); page++)
+		for (page = PAGE(0); page < PAGE(g_kernelInfo.kernelLimit_p); page++)
 		{
 			SetPageTableEntry(&(kernelFirstPt[ptIndex]), ptIndex * PAGE_SIZE, PAGE_PRESENT | PAGE_WRITEABLE);
 			ptIndex++;
