@@ -46,12 +46,7 @@ user_mode:
 	; esp
 	push dword [esi+16]
 	; eflags
-	; push dword [esi+20]
-	pushf
-	pop eax
-	or eax, 0x200
-	and eax, 0xFFFFBFFF
-	push eax
+	push dword [esi+20]
 	; cs
 	push dword [esi+24]
 	; eip

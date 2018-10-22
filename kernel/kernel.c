@@ -85,7 +85,7 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	InitCleanCallbacksList();
 
 	create_process(test_task, 500);
-	//create_process(test_task2, 500);
+	create_process(test_task2, 500);
 
 	sti();
 

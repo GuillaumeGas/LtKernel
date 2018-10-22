@@ -319,6 +319,7 @@ void AddPageToPageDirectory(u8 * v_addr, u8 * p_addr, PAGE_FLAG flags, PageDirec
 	SetPageTableEntry((PageTableEntry *)pte, (u32)p_addr, (PAGE_PRESENT | PAGE_WRITEABLE | flags));
 }
 
+static int testValue = 0;
 PageDirectory CreateProcessPageDirectory()
 {
 	Page pd_page = PageAlloc();
@@ -327,6 +328,8 @@ PageDirectory CreateProcessPageDirectory()
 	PageDirectoryEntry * pd_entry = (PageDirectoryEntry *)pd_page.v_addr;
 	unsigned int i = 0;
 	
+	//kprint("Task %d, v = %x, p : %x\n", testValue++, pd_page.v_addr, pd_page.p_addr);
+
 	// On veut que le premier Go de mémoire virtuelle soit pour le noyau : 1024 / 4 = 256 (1024 = nombre d'entrées dans un répertoire de pages)
 	// On vérifie:  256 * 1024 * 4096 = 1Go
 	for (; i < 256; i++)

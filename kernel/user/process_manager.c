@@ -45,6 +45,8 @@ void create_process(void * task_addr, unsigned int size)
 		// On récupère une page physique libre dans laquelle on va y copier le code
 		u8 * p_new_code_page = (u8 *)GetFreePage();
 
+		//kprint("code page : %x\n", p_new_code_page);
+
 		// On ajoute la page physique dans l'espace d'adressage de la tâche utilisateur
 		AddPageToPageDirectory(v_user_code_ptr, p_new_code_page, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, user_pd);
 
@@ -88,7 +90,8 @@ void create_process(void * task_addr, unsigned int size)
 	new_process->regs.eip = USER_TASK_V_ADDR;
 
 	new_process->regs.eflags = 0x200 & 0xFFFFBFFF;
-	new_process->kstack_esp0 = kernel_stack_page.v_addr + PAGE_SIZE;
+	new_process->kstack.esp0 = (u32)kernel_stack_page.v_addr + PAGE_SIZE;
+	new_process->kstack.ss0 = 0x10;
 
 	ListPush(g_process_list, (void*)new_process);
 
@@ -98,6 +101,7 @@ void create_process(void * task_addr, unsigned int size)
 	_setCurrentPagesDirectory(g_kernelInfo.pageDirectory_p.pd_entry);
 }
 
+static int testValue2 = 0;
 void start_process(int pid)
 {
 	if (pid == -1)
@@ -110,8 +114,26 @@ void start_process(int pid)
 		g_current_process = ListGet(g_process_list, pid);
 		g_current_process->start_execution_time = g_clock;
 
-		g_tss.esp0 = (u32)g_current_process->kstack_esp0;
-        g_tss.ss0 = 0x10;
+		//if (testValue2++ < 2)
+		//{
+		//	kprint("Starting task %d with pd : %x\n", g_current_process->pid, g_current_process->page_directory.pd_entry);
+
+		//	// si on passe sur le rep de la tâche on a une entrée bizarre du répertoire de page
+		//	_setCurrentPagesDirectory(g_current_process->page_directory.pd_entry);
+
+		//	u32 * pde = (u32 *)(0xFFFFF000 | PD_OFFSET(0x40000000));
+		//	kprint("*pde : %x (%b*)\n", *pde, *pde, 32);
+
+		//	_setCurrentPagesDirectory(g_kernelInfo.pageDirectory_p.pd_entry);
+		//}
+		//else
+		//	pause();
+
+		if (testValue2++ < 10)
+			kprint("switching to %d\n", g_current_process->pid);
+
+		g_tss.esp0 = g_current_process->kstack.esp0;
+        g_tss.ss0 = g_current_process->kstack.ss0;
 
 		_start_process(
 			g_current_process->page_directory.pd_entry, 
@@ -154,7 +176,7 @@ void ProcessManagerCleanCallback()
 void DumpProcess(Process * process)
 {
     kprint("== Process %d ==\n", process->pid);
-    kprint(" - kstack_esp0 : %x\n", process->kstack_esp0);
+    kprint(" - kstack_esp0 : %x\n", process->kstack.esp0);
     kprint(" - page_directory : %x\n", process->page_directory.pd_entry);
     kprint(" - start_execution_time : %x\n", process->start_execution_time);
     kprint(" - ss : %x\n", process->regs.ss);

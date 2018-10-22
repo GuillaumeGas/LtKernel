@@ -18,9 +18,9 @@ void test_task()
 
 void test_task2()
 {
-	//char * str = (char*)0x40000100;
+	char * str = (char*)0x40000100;
 
-	/*str[0] = 'T';
+	str[0] = 'T';
 	str[1] = 'a';
 	str[2] = 's';
 	str[3] = 'k';
@@ -28,7 +28,7 @@ void test_task2()
 	str[5] = '\n';
 	str[6] = '\0';
 
-	asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));*/
+	asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
 
 	while (1);
 }

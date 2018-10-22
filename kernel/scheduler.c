@@ -47,7 +47,8 @@ void schedule()
 			g_current_process->regs.esp = (u32)(&stack_ptr[17]);
 		}
 
-		g_current_process->kstack_esp0 = (u32 *)(g_tss.esp0);
+		g_current_process->kstack.esp0 = g_tss.esp0;
+		g_current_process->kstack.ss0 = g_tss.ss0;
 
 		start_process((g_current_process->pid + 1) % g_nb_process);
 	}

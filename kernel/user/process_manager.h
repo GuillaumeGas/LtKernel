@@ -20,7 +20,12 @@ struct process
 	int pid;
 	unsigned int start_execution_time;
 	struct page_directory page_directory;
-	u32 * kstack_esp0;
+	
+	struct
+	{
+		u32 esp0;
+		u16 ss0;
+	} kstack;
 	
 	struct
 	{
