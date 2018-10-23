@@ -26,7 +26,7 @@ static void _kdefrag();
 MemBlock * ksbrk(int n)
 {
 	// On ne doit pas dépasser la limite de l'espace réservé au tas
-	if ((u32)g_heap + (n * PAGE_SIZE) > g_kernelInfo.heapLimit_v)
+	if ((u32)gHeap + (n * PAGE_SIZE) > gKernelInfo.vHeapLimit)
 	{
 		panic(HEAP_LIMIT);
 		return NULL;
@@ -34,8 +34,8 @@ MemBlock * ksbrk(int n)
 	else
 	{
 		unsigned int i = 0;
-		MemBlock * newBlock = g_heap;
-        u32 heap = (u32)g_heap;
+		MemBlock * newBlock = gHeap;
+        u32 heap = (u32)gHeap;
 
 		for (; i < n; i++)
 		{
@@ -49,12 +49,12 @@ MemBlock * ksbrk(int n)
 			heap += (u32)PAGE_SIZE;
 		}
 
-        g_heap = (MemBlock *)heap;
+        gHeap = (MemBlock *)heap;
 
 		newBlock->size = n * PAGE_SIZE;
 		newBlock->state = BLOCK_FREE;
 
-		mmset((u8 *)(&(newBlock->data)), 0, newBlock->size - BLOCK_HEADER_SIZE);
+		MmSet((u8 *)(&(newBlock->data)), 0, newBlock->size - BLOCK_HEADER_SIZE);
 
 		return newBlock;
 	}
@@ -63,8 +63,8 @@ MemBlock * ksbrk(int n)
 void * kmalloc(int size)
 {
 	void * res = NULL;
-    res = _kmalloc((MemBlock*)g_kernelInfo.heapBase_v, size + BLOCK_HEADER_SIZE);
-	g_kmalloc_count++;
+    res = _kmalloc((MemBlock*)gKernelInfo.vHeapBase, size + BLOCK_HEADER_SIZE);
+	gKMallocCount++;
 	return res;
 }
 
@@ -72,8 +72,8 @@ void kfree(void * ptr)
 {
 	MemBlock * block = (MemBlock*)((u32)ptr - BLOCK_HEADER_SIZE);
 	block->state = BLOCK_FREE;
-	mmset((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
-	g_kfree_count++;
+	MmSet((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
+	gKFreeCount++;
     _kdefrag();
 }
 
@@ -81,7 +81,7 @@ static void * _kmalloc(MemBlock * block, int size)
 {
 	void * res_ptr = NULL;
 
-	while (block < g_heap && res_ptr == NULL)
+	while (block < gHeap && res_ptr == NULL)
 	{
 		if (block->state == BLOCK_USED || size > block->size)
 		{
@@ -120,18 +120,18 @@ static void _splitBlock(MemBlock * block, unsigned int size)
 
 static void _kdefrag()
 {
-	MemBlock * block = (MemBlock *)g_kernelInfo.heapBase_v;
+	MemBlock * block = (MemBlock *)gKernelInfo.vHeapBase;
 
-	while (block < g_heap)
+	while (block < gHeap)
 	{
 		MemBlock * next = (MemBlock *)((unsigned int)block + block->size);
 
-		if (next < g_heap)
+		if (next < gHeap)
 		{
 			if (block->state == BLOCK_FREE && next->state == BLOCK_FREE)
 			{
 				block->size += next->size;
-				mmset((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
+				MmSet((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
 			}
 		}
 		block = (MemBlock *)((unsigned int)(block) + block->size);
@@ -140,10 +140,10 @@ static void _kdefrag()
 
 void dumpHeap()
 {
-	MemBlock * block = (MemBlock *)g_kernelInfo.heapBase_v;
+	MemBlock * block = (MemBlock *)gKernelInfo.vHeapBase;
 	int i = 0;
 	kprint("== Heap Dump ==\n\n");
-	while (block < g_heap)
+	while (block < gHeap)
 	{
 		kprint("[%d] Size : %d, Addr : %x, ", i++, block->size, block);
 		if (block->state == BLOCK_FREE)
@@ -160,11 +160,11 @@ void dumpHeap()
 Page PageAlloc()
 {
 	Page newPage = {0};
-	MemPageBlock * block = g_page_heap;
+	MemPageBlock * block = gPageHeap;
 
-	newPage.p_addr = (u32 *)GetFreePage();
+	newPage.pAddr = (u32 *)GetFreePage();
 
-	if (newPage.p_addr == NULL)
+	if (newPage.pAddr == NULL)
 		panic(MEMORY_FULL);
 
 	while (block != NULL)
@@ -172,17 +172,17 @@ Page PageAlloc()
 		if (block->available == BLOCK_FREE)
 		{
 			block->available = BLOCK_USED;
-			newPage.v_addr = block->v_page_addr;
+			newPage.vAddr = block->vPageAddr;
 			break;
 		}
 
 		block = block->next;
 	}
 
-	if (newPage.v_addr == NULL)
+	if (newPage.vAddr == NULL)
 		panic(VIRTUAL_MEMORY_FULL);
 
-	AddPageToKernelPageDirectory((u8 *)newPage.v_addr, (u8 *)newPage.p_addr, PAGE_PRESENT | PAGE_WRITEABLE);
+	AddPageToKernelPageDirectory((u8 *)newPage.vAddr, (u8 *)newPage.pAddr, PAGE_PRESENT | PAGE_WRITEABLE);
 
 	return newPage;
 }
@@ -190,11 +190,11 @@ Page PageAlloc()
 // Virer la page du répertoire du noyau
 void PageFree(void * ptr)
 {
-	MemPageBlock * block = g_page_heap;
+	MemPageBlock * block = gPageHeap;
 
 	while (block != NULL)
 	{
-		if (block->v_page_addr == ptr)
+		if (block->vPageAddr == ptr)
 		{
 			block->available = BLOCK_FREE;
 			block = NULL;

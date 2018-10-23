@@ -24,7 +24,7 @@
 #define __MULTIBOOT__
 #include <kernel/multiboot.h>
 
-static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
+static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 static void InitKernelInfo();
 static void InitCleanCallbacksList();
@@ -36,37 +36,32 @@ void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 {
 	cli();
 
-	init_gdt();
+	GdtInit();
 
 	asm("movw $0x10, %ax \n \
          movw %ax, %ss \n \
          movl $0xA0000, %esp");
 
-	kinit(mbi, multibootMagicNumber);
+	KernelInit(mbi, multibootMagicNumber);
 }
 
-void cleanStr(void * str)
+static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 {
-	kfree(str);
-}
+	LoggerInit(LOG_SCREEN);
 
-static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
-{
-	init_logger(LOG_SCREEN);
+	ScClear();
 
-	sc_clear();
-
-	sc_setColor(WHITE);
+	ScSetColor(WHITE);
 	kprint("< ## LtKernel ## >\n\n");
 
-	init_pic();
+	PicInit();
 	kprint("[Kernel] PIC loaded\n");
 
-	init_idt();
+	IdtInit();
 	kprint("[Kernel] IDT loaded\n");
 
-	init_serial();
-	init_logger(LOG_SCREEN | LOG_SERIAL);
+	SerialInit();
+	LoggerInit(LOG_SCREEN | LOG_SERIAL);
 
 	kprint("[Kernel] GDT loaded\n");
 	kprint("[Kernel] Serial port COM1 initialized\n");
@@ -79,18 +74,18 @@ static void kinit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	InitVmm();
 	kprint("[Kernel] Paging enabled\n");
 
-	init_process_manager();
+	PmInit();
 	kprint("[Kernel] Process manager initialized\n\n");
 
 	InitCleanCallbacksList();
 
-	create_process(test_task, 500);
-    create_process(test_task2, 500);
-    create_process(test_task2, 500);
-    create_process(test_task, 500);
-    create_process(test_task, 500);
-    create_process(test_task, 500);
-    create_process(test_task2, 500);
+	PmCreateProcess(TestTask1, 500);
+	PmCreateProcess(TestTask2, 500);
+	PmCreateProcess(TestTask2, 500);
+	PmCreateProcess(TestTask1, 500);
+	PmCreateProcess(TestTask1, 500);
+	PmCreateProcess(TestTask1, 500);
+	PmCreateProcess(TestTask2, 500);
 
 	sti();
 
@@ -109,7 +104,7 @@ static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootM
 {
 	kprint("\n");
 
-	g_mbi = *mbi;
+	gMbi = *mbi;
 
 	if (multibootMagicNumber != MULTIBOOT_HEADER_MAGIC)
 	{ 
@@ -130,14 +125,14 @@ static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootM
 
 static void InitKernelInfo()
 {
-	g_kernelInfo.pageDirectory_p.pd_entry = (PageDirectoryEntry *)KERNEL_PAGE_DIR_P_ADDR;
-	g_kernelInfo.pageTables_p = (PageTableEntry *)KERNEL_PAGES_TABLE_P_ADDR;
-	g_kernelInfo.kernelLimit_p = KERNEL_LIMIT_P_ADDR;
-	g_kernelInfo.stackAddr_p = KERNEL_STACK_P_ADDR;
-	g_kernelInfo.pagesHeapBase_v = KERNEL_PAGES_HEAP_V_BASE_ADDR;
-	g_kernelInfo.pagesHeapLimit_v = KERNEL_PAGES_HEAP_V_LIMIT_ADDR;
-	g_kernelInfo.heapBase_v = KERNEL_HEAP_V_BASE_ADDR;
-	g_kernelInfo.heapLimit_v = KERNEL_HEAP_V_LIMIT_ADDR;
+	gKernelInfo.pPageDirectory.pdEntry = (PageDirectoryEntry *)KERNEL_PAGE_DIR_P_ADDR;
+	gKernelInfo.pPageTables = (PageTableEntry *)KERNEL_PAGES_TABLE_P_ADDR;
+	gKernelInfo.pKernelLimit = KERNEL_LIMIT_P_ADDR;
+	gKernelInfo.pStackAddr = KERNEL_STACK_P_ADDR;
+	gKernelInfo.vPagesHeapBase = KERNEL_PAGES_HEAP_V_BASE_ADDR;
+	gKernelInfo.vPagesHeapLimit = KERNEL_PAGES_HEAP_V_LIMIT_ADDR;
+	gKernelInfo.vHeapBase = KERNEL_HEAP_V_BASE_ADDR;
+	gKernelInfo.vHeapLimit = KERNEL_HEAP_V_LIMIT_ADDR;
 }
 
 static void InitCleanCallbacksList()
@@ -145,7 +140,7 @@ static void InitCleanCallbacksList()
     CleanCallbacksList = ListCreate();
 
     ListPush(CleanCallbacksList, (CleanCallbackFun)VmmCleanCallback);
-	ListPush(CleanCallbacksList, (CleanCallbackFun)ProcessManagerCleanCallback);
+	ListPush(CleanCallbacksList, (CleanCallbackFun)PmCleanCallback);
 }
 
 static void CleanKernel()

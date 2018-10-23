@@ -1,10 +1,10 @@
 [BITS 32]
 
-global load_idt
+global _idtLoad
 
 ;;; Transmet l'adresse de l'idt au processeur
 ;;; Param : adresse de l'idt
-load_idt:
+_idtLoad:
 	push ebp
 	mov ebp, esp
 

@@ -149,9 +149,6 @@
     <ClInclude Include="kernel\init\idt.h">
       <Filter>Fichiers sources\kernel\init</Filter>
     </ClInclude>
-    <ClInclude Include="kernel\init\isr.h">
-      <Filter>Fichiers sources\kernel\init</Filter>
-    </ClInclude>
     <ClInclude Include="kernel\lib\stdio.h">
       <Filter>Fichiers sources\kernel\lib</Filter>
     </ClInclude>

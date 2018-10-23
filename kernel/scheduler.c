@@ -8,12 +8,12 @@
 
 void schedule()
 {
-	if (g_current_process == NULL && ListTop(g_process_list) != NULL)
+	if (gCurrentProcess == NULL && ListTop(gProcessList) != NULL)
 	{
-		g_current_process = (Process *)ListTop(g_process_list);
-		start_process(g_current_process->pid);
+		gCurrentProcess = (Process *)ListTop(gProcessList);
+		PmStartProcess(gCurrentProcess->pid);
 	}
-	else if (g_current_process != NULL && g_nb_process > 1)
+	else if (gCurrentProcess != NULL && gNbProcess > 1)
 	{
 		u32 * stack_ptr = NULL;
 
@@ -21,35 +21,35 @@ void schedule()
 		// On récupère le pointeur de pile stocké dans ebp afin de récupérer les registres qui nous intéressent.
 		asm("mov (%%ebp), %%eax; mov %%eax, %0" : "=m" (stack_ptr) : );
 		
-		g_current_process->regs.eflags = stack_ptr[16];
-		g_current_process->regs.cs = stack_ptr[15];
-		g_current_process->regs.eip = stack_ptr[14];
-		g_current_process->regs.eax = stack_ptr[13];
-		g_current_process->regs.ecx = stack_ptr[12];
-		g_current_process->regs.edx = stack_ptr[11];
-		g_current_process->regs.ebx = stack_ptr[10];
-		g_current_process->regs.ebp = stack_ptr[8];
-		g_current_process->regs.esi = stack_ptr[7];
-		g_current_process->regs.edi = stack_ptr[6];
-		g_current_process->regs.ds = stack_ptr[5];
-		g_current_process->regs.es = stack_ptr[4];
-		g_current_process->regs.fs = stack_ptr[3];
-		g_current_process->regs.gs = stack_ptr[2];
+		gCurrentProcess->regs.eflags = stack_ptr[16];
+		gCurrentProcess->regs.cs = stack_ptr[15];
+		gCurrentProcess->regs.eip = stack_ptr[14];
+		gCurrentProcess->regs.eax = stack_ptr[13];
+		gCurrentProcess->regs.ecx = stack_ptr[12];
+		gCurrentProcess->regs.edx = stack_ptr[11];
+		gCurrentProcess->regs.ebx = stack_ptr[10];
+		gCurrentProcess->regs.ebp = stack_ptr[8];
+		gCurrentProcess->regs.esi = stack_ptr[7];
+		gCurrentProcess->regs.edi = stack_ptr[6];
+		gCurrentProcess->regs.ds = stack_ptr[5];
+		gCurrentProcess->regs.es = stack_ptr[4];
+		gCurrentProcess->regs.fs = stack_ptr[3];
+		gCurrentProcess->regs.gs = stack_ptr[2];
 
-		if (g_current_process->regs.cs != K_CODE_SEG_SELECTOR)
+		if (gCurrentProcess->regs.cs != K_CODE_SEG_SELECTOR)
 		{
-			g_current_process->regs.ss = stack_ptr[18];
-			g_current_process->regs.esp = stack_ptr[17];
+			gCurrentProcess->regs.ss = stack_ptr[18];
+			gCurrentProcess->regs.esp = stack_ptr[17];
 		}
 		else
 		{
-			g_current_process->regs.ss = g_tss.ss0;
-			g_current_process->regs.esp = (u32)(&stack_ptr[17]);
+			gCurrentProcess->regs.ss = gTss.ss0;
+			gCurrentProcess->regs.esp = (u32)(&stack_ptr[17]);
 		}
 
-		g_current_process->kstack.esp0 = g_tss.esp0;
-		g_current_process->kstack.ss0 = g_tss.ss0;
+		gCurrentProcess->kstack.esp0 = gTss.esp0;
+		gCurrentProcess->kstack.ss0 = gTss.ss0;
 
-		start_process((g_current_process->pid + 1) % g_nb_process);
+		PmStartProcess((gCurrentProcess->pid + 1) % gNbProcess);
 	}
 }

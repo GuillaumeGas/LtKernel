@@ -7,32 +7,32 @@
 
 void kdump()
 {
-	sc_clear();
-	sc_setBackground(BLUE);
+	ScClear();
+	ScSetBackground(BLUE);
 
-	sc_setColorEx(BLUE, RED, 0, 1);
+	ScSetColorEx(BLUE, RED, 0, 1);
 	kprint(">> Debug breakpoint\n\n");
 
-	sc_setColorEx(BLUE, WHITE, 0, 1);
+	ScSetColorEx(BLUE, WHITE, 0, 1);
 
-	print_gdt();
+	GdtPrint();
 	kprint("\n");
-	print_tss();
+	TssPrint();
 
-	pause();
+	Pause();
 }
 
 void panicStr(const char * str)
 {
-	sc_clear();
-	sc_setBackground(BLUE);
+	ScClear();
+	ScSetBackground(BLUE);
 
-	sc_setColorEx(BLUE, RED, 0, 1);
+	ScSetColorEx(BLUE, RED, 0, 1);
 	kprint(">> %s\n\n", str);
 
-	sc_setColorEx(BLUE, WHITE, 0, 1);
+	ScSetColorEx(BLUE, WHITE, 0, 1);
 
-	pause ();
+	Pause ();
 }
 
 void PrintExceptionContext(ExceptionContext * context)

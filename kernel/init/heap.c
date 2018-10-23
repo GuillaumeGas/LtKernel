@@ -2,6 +2,7 @@
 #include "heap.h"
 
 #include <kernel/kernel.h>
+
 #include <kernel/lib/kmalloc.h>
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/panic.h>
@@ -9,9 +10,9 @@
 /*
 	Initialise le tas avec un un bloc (taille d'une page)
 */
-void init_heap()
+void HeapInit()
 {
-	g_heap = (MemBlock *)g_kernelInfo.heapBase_v;
+	gHeap = (MemBlock *)gKernelInfo.vHeapBase;
 
 	ksbrk(1);
 
@@ -21,27 +22,27 @@ void init_heap()
 /*
 	Initialise le tas de pages
 */
-void init_page_heap()
+void PageHeapInit()
 {
 	MemPageBlock * tmp = NULL;
 	MemPageBlock * prev = NULL;
 
-	g_page_heap = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
-	g_page_heap->available = BLOCK_FREE;
-	g_page_heap->next = NULL;
-	g_page_heap->prev = NULL;
-	g_page_heap->v_page_addr = (u32 *)g_kernelInfo.pagesHeapBase_v;
+	gPageHeap = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
+	gPageHeap->available = BLOCK_FREE;
+	gPageHeap->next = NULL;
+	gPageHeap->prev = NULL;
+	gPageHeap->vPageAddr = (u32 *)gKernelInfo.vPagesHeapBase;
 
-	tmp = g_page_heap;
+	tmp = gPageHeap;
 
-	while (tmp->v_page_addr < (u32 *)g_kernelInfo.pagesHeapLimit_v)
+	while (tmp->vPageAddr < (u32 *)gKernelInfo.vPagesHeapLimit)
 	{
         tmp->next = (MemPageBlock *)kmalloc(sizeof(MemPageBlock));
 
         prev = tmp;
 		tmp = tmp->next;
 
-		tmp->v_page_addr = (u32 *)((unsigned int)prev->v_page_addr + PAGE_SIZE);
+		tmp->vPageAddr = (u32 *)((unsigned int)prev->vPageAddr + PAGE_SIZE);
 
 		tmp->available = BLOCK_FREE;
 		tmp->prev = prev;
@@ -53,7 +54,7 @@ void init_page_heap()
 
 void CleanPageHeap()
 {
-    MemPageBlock * block = g_page_heap;
+    MemPageBlock * block = gPageHeap;
 
     while (block != NULL)
     {
@@ -66,7 +67,7 @@ void CleanPageHeap()
 void CheckHeap()
 {
 	kprint("== Heap Check ==\n");
-	kprint(" - Number of kmalloc() : %d\n", g_kmalloc_count);
-	kprint(" - NUmber of kfree()   : %d\n", g_kfree_count);
-	kprint(" - Diff                : %d\n", g_kmalloc_count - g_kfree_count);
+	kprint(" - Number of kmalloc() : %d\n", gKMallocCount);
+	kprint(" - NUmber of kfree()   : %d\n", gKFreeCount);
+	kprint(" - Diff                : %d\n", gKMallocCount - gKFreeCount);
 }

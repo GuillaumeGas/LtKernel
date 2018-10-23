@@ -1,13 +1,13 @@
 [BITS 32]
 
-global load_gdt
-global load_tss
+global _gdtLoad
+global _tssLoad
 
-extern g_tss
+extern gTss
 	
 ;;; Transmet l'adresse de la gdt au processeur
 ;;; Param : adresse de la gdt
-load_gdt:
+_gdtLoad:
 	push ebp
 	mov ebp, esp
 
@@ -29,7 +29,7 @@ next:
 ;;; Renseigne le selecteur correspondant au descripteur tss dans la gdt
 ;;;  On en profite pour le segment et pointeur de pile du noyau
 ;;; Param : selecteur de segment (u16)
-load_tss:
+_tssLoad:
 	push ebp
 	mov ebp, esp
 
@@ -37,7 +37,7 @@ load_tss:
 	mov eax, [ebp+8]
 	ltr ax
 
-	mov eax, g_tss
+	mov eax, gTss
 	mov ebx, 0x300000
 	mov dword [eax+4], ebx
 	mov word [eax+8], ss

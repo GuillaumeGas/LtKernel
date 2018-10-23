@@ -40,7 +40,7 @@ struct page_directory_entry
 {
 	u32 present : 1;
 	u32 writable : 1;
-	u32 non_privileged_access : 1;
+	u32 nonPrivilegedAccess : 1;
 	u32 pwt : 1;
 	u32 pcd : 1;
 	u32 accessed : 1;
@@ -48,7 +48,7 @@ struct page_directory_entry
 	u32 page_size : 1;
 	u32 global : 1;
 	u32 avail : 3;
-	u32 page_table_addr : 20;
+	u32 pageTableAddr : 20;
 };
 typedef struct page_directory_entry PageDirectoryEntry;
 
@@ -56,7 +56,7 @@ struct page_table_entry
 {
 	u32 present : 1;
 	u32 writable : 1;
-	u32 non_privileged_access : 1;
+	u32 nonPrivilegedAccess : 1;
 	u32 pwt : 1;
 	u32 pcd : 1;
 	u32 accessed : 1;
@@ -70,15 +70,15 @@ typedef struct page_table_entry PageTableEntry;
 
 struct page_directory
 {
-	PageDirectoryEntry * pd_entry;
-	List * page_table_list;
+	PageDirectoryEntry * pdEntry;
+	List * pageTableList;
 };
 typedef struct page_directory PageDirectory;
 
 struct page
 {
-	u32 * p_addr;
-	u32 * v_addr;
+	u32 * pAddr;
+	u32 * vAddr;
 };
 typedef struct page Page;
 
@@ -87,16 +87,16 @@ void InitVmm();
 void CleanAllPageDirectoryAndPageTables(PageDirectoryEntry * pageDirectoryEntry, PageTableEntry * pageTableEntry);
 void CleanPageDirectory(PageDirectoryEntry * pageDirectory);
 void CleanPageTable(PageTableEntry * pageTable);
-void SetPageDirectoryEntry(PageDirectoryEntry * pde, u32 pt_addr, PAGE_FLAG flags);
-void SetPageDirectoryEntryEx(PageDirectoryEntry * pde, u32 pt_addr, PAGE_FLAG flags, u8 global, u8 avail);
-void SetPageTableEntry(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags);
-void SetPageTableEntryEx(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags, u8 global, u8 avail);
+void SetPageDirectoryEntry(PageDirectoryEntry * pde, u32 ptAddr, PAGE_FLAG flags);
+void SetPageDirectoryEntryEx(PageDirectoryEntry * pde, u32 ptAddr, PAGE_FLAG flags, u8 global, u8 avail);
+void SetPageTableEntry(PageTableEntry * pt, u32 pageAddr, PAGE_FLAG flags);
+void SetPageTableEntryEx(PageTableEntry * pt, u32 pageAddr, PAGE_FLAG flags, u8 global, u8 avail);
 void * GetFreePage();
-void ReleasePage(void * p_addr);
-void * GetPhysicalAddress(void * v_addr);
+void ReleasePage(void * pAddr);
+void * GetPhysicalAddress(void * vAddr);
 
-void AddPageToKernelPageDirectory(u8 * v_addr, u8 * p_addr, PAGE_FLAG flags);
-void AddPageToPageDirectory(u8 * v_addr, u8 * p_addr, PAGE_FLAG flags, PageDirectory pd);
+void AddPageToKernelPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags);
+void AddPageToPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags, PageDirectory pd);
 
 PageDirectory CreateProcessPageDirectory();
 

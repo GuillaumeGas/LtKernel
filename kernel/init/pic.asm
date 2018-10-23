@@ -1,10 +1,10 @@
 [BITS 32]
 
-global init_pic
+global PicInit
 	
 ;;; Initialisation et configuration du PIC (Programmable Interrupt Controller)
 
-init_pic:	
+PicInit:	
 	;; ICW1, port 0x20 (et 0xA0 pour esclave)
 	;; 0 0 0 1 . 0 0 0 0
 	;; Les 4 derniers bits sont pour :

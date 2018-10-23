@@ -1,6 +1,7 @@
 #pragma once
 
 #include <kernel/init/vmm.h>
+
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/types.h>
 #include <kernel/lib/list.h>
@@ -18,8 +19,8 @@
 struct process
 {
 	int pid;
-	unsigned int start_execution_time;
-	struct page_directory page_directory;
+	unsigned int startExcecutionTime;
+	struct page_directory pageDirectory;
 	
 	struct
 	{
@@ -42,20 +43,20 @@ enum ExecMode { KERNEL, USER };
 typedef enum ExecMode ExecMode;
 
 #ifdef __PROCESS_MANAGER__
-Process * g_current_process = NULL;
-List * g_process_list = NULL;
-unsigned int g_nb_process = 0;
+Process * gCurrentProcess = NULL;
+List * gProcessList = NULL;
+unsigned int gNbProcess = 0;
 #else
-extern Process * g_current_process;
-extern List * g_process_list;
-extern unsigned int g_nb_process;
+extern Process * gCurrentProcess;
+extern List * gProcessList;
+extern unsigned int gNbProcess;
 #endif
 
-void init_process_manager();
-void create_process(void * task_addr, unsigned int size);
-void start_process(int pid);
-void ProcessManagerCleanCallback();
-void DumpProcess(Process * process);
+void PmInit();
+void PmCreateProcess(void * task_addr, unsigned int size);
+void PmStartProcess(int pid);
+void PmCleanCallback();
+void PmDumpProcess(Process * process);
 
 void _start_process(PageDirectoryEntry * pd, u32 ss, u32 esp, u32 eflags, u32 cs, u32 eip,
 	u32 eax, u32 ecx, u32 edx, u32 ebx, u32 ebp, u32 esi, u32 edi, u32 ds, u32 es, u32 fs, u32 gs,

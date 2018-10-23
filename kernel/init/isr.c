@@ -15,8 +15,8 @@
 #include "gdt.h"
 
 #define EXCEPTION_SCREEN \
-	sc_clear(); \
-	sc_setBackground(BLUE); \
+	ScClear(); \
+	ScSetBackground(BLUE); \
 
 //#define CLOCK_DEBUG
 
@@ -92,10 +92,10 @@ void general_protection_fault_isr(ExceptionContextWithCode * context)
 
 	EXCEPTION_SCREEN
 
-	sc_setColorEx(BLUE, RED, 0, 1);
+	ScSetColorEx(BLUE, RED, 0, 1);
 	kprint(">> [Fault] General protection fault ! \n\n");
 
-	sc_setColorEx(BLUE, WHITE, 0, 1);
+	ScSetColorEx(BLUE, WHITE, 0, 1);
 
 	kprint("Selector Error Code : %x (%b)\n", code, code);
 	
@@ -119,7 +119,7 @@ void general_protection_fault_isr(ExceptionContextWithCode * context)
 
 	PrintExceptionContextWithCode(context);
 
-	hlt();
+	Halt();
 }
 
 void page_fault_isr(ExceptionContextWithCode * context)
@@ -128,10 +128,10 @@ void page_fault_isr(ExceptionContextWithCode * context)
 
 	EXCEPTION_SCREEN
 
-	sc_setColorEx(BLUE, RED, 0, 1);
+	ScSetColorEx(BLUE, RED, 0, 1);
 	kprint(">> [Fault] Page fault ! \n\n");
 
-	sc_setColorEx(BLUE, WHITE, 0, 1);
+	ScSetColorEx(BLUE, WHITE, 0, 1);
 
 	u8 p = (code & 1);
 	u8 wr = (code & 2);
@@ -149,7 +149,7 @@ void page_fault_isr(ExceptionContextWithCode * context)
 
 	PrintExceptionContextWithCode(context);
 
-	hlt();
+	Halt();
 }
 
 void x87_floating_point_isr(ExceptionContext * context)
@@ -258,7 +258,7 @@ void keyboard_isr(void)
 
 void com1_isr()
 {
-	kprint("One byte received on COM port : %c\n", read_serial());
+	kprint("One byte received on COM port : %c\n", SerialRead());
 }
 
 void syscall_isr(int syscall_number)
@@ -280,10 +280,10 @@ static void DefaultExceptionHandler(ExceptionContext * context, const char * str
 {
 	EXCEPTION_SCREEN
 
-	sc_setColorEx(BLUE, RED, 0, 1);
+	ScSetColorEx(BLUE, RED, 0, 1);
 	kprint(str);
 	kprint("\n\n");
-	sc_setColorEx(BLUE, WHITE, 0, 1);
+	ScSetColorEx(BLUE, WHITE, 0, 1);
 
 	PrintExceptionContext(context);
 

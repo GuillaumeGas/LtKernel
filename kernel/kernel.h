@@ -13,20 +13,20 @@
 
 struct KernelInfo
 {
-	PageDirectory pageDirectory_p;
-	PageTableEntry * pageTables_p;
-	u32 kernelLimit_p;
-	u32 stackAddr_p;
-	u32 pagesHeapBase_v;
-	u32 pagesHeapLimit_v;
-	u32 heapBase_v;
-	u32 heapLimit_v;
+	PageDirectory pPageDirectory;
+	PageTableEntry * pPageTables;
+	u32 pKernelLimit;
+	u32 pStackAddr;
+	u32 vPagesHeapBase;
+	u32 vPagesHeapLimit;
+	u32 vHeapBase;
+	u32 vHeapLimit;
 } typedef KernelInfo;
 
 typedef void(*CleanCallbackFun)(void);
 
 #ifdef __KERNEL__
-KernelInfo g_kernelInfo = { 0 };
+KernelInfo gKernelInfo = { 0 };
 #else
-extern KernelInfo g_kernelInfo;
+extern KernelInfo gKernelInfo;
 #endif

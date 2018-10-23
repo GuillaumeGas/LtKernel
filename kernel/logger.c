@@ -4,9 +4,9 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
 
-void init_logger(const LogType logType)
+void LoggerInit(const LogType logType)
 {
-	set_logger(logType);
+	LoggerSetType(logType);
 
 	kprint("[LOGGER] Initialized with :");
 	if (FlagOn(g_logType, LOG_SCREEN))
@@ -16,7 +16,7 @@ void init_logger(const LogType logType)
 	kprint("\n");
 }
 
-void set_logger(const LogType logType)
+void LoggerSetType(const LogType logType)
 {
 	g_logType = logType;
 }

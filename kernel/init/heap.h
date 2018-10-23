@@ -22,26 +22,26 @@ typedef struct mem_block MemBlock;
 struct mem_pblock
 {
 	u8 available;
-	u32 * v_page_addr;
+	u32 * vPageAddr;
 	struct mem_pblock * prev;
 	struct mem_pblock * next;
 };
 typedef struct mem_pblock MemPageBlock;
 
-void init_heap();
-void init_page_heap();
+void HeapInit();
+void PageHeapInit();
 void CleanPageHeap();
 
 void CheckHeap();
 
 #ifdef __HEAP__
-MemBlock * g_heap = NULL; // Pointe juste après le dernier bloc créé par ksbrk(), limite courante du tas...
-int g_kmalloc_count = 0;
-int g_kfree_count = 0;
-MemPageBlock * g_page_heap = NULL;
+MemBlock * gHeap = NULL; // Pointe juste après le dernier bloc créé par ksbrk(), limite courante du tas...
+int gKMallocCount = 0;
+int gKFreeCount = 0;
+MemPageBlock * gPageHeap = NULL;
 #else
-extern MemBlock * g_heap;
-extern MemPageBlock * g_page_heap;
-extern int g_kmalloc_count;
-extern int g_kfree_count;
+extern MemBlock * gHeap;
+extern MemPageBlock * gPageHeap;
+extern int gKMallocCount;
+extern int gKFreeCount;
 #endif

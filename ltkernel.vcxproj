@@ -129,7 +129,6 @@
     <ClInclude Include="kernel\init\gdt.h" />
     <ClInclude Include="kernel\init\heap.h" />
     <ClInclude Include="kernel\init\idt.h" />
-    <ClInclude Include="kernel\init\isr.h" />
     <ClInclude Include="kernel\init\vmm.h" />
     <ClInclude Include="kernel\kernel.h" />
     <ClInclude Include="kernel\lib\kmalloc.h" />

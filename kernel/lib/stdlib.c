@@ -1,17 +1,17 @@
 #include <kernel/lib/types.h>
 #include <kernel/lib/stdlib.h>
 
-void hlt()
+void Halt()
 {
 	asm("hlt");
 }
 
-void pause ()
+void Pause ()
 {
     while (1) {}
 }
 
-void mmcopy(u8 * src, u8 * dst, unsigned int size)
+void MmCopy(u8 * src, u8 * dst, unsigned int size)
 {
 	if (src == NULL || size == 0)
 		return;
@@ -20,7 +20,7 @@ void mmcopy(u8 * src, u8 * dst, unsigned int size)
 		*(dst++) = *(src++);
 }
 
-void mmset(u8 * src, u8 byte, unsigned int size)
+void MmSet(u8 * src, u8 byte, unsigned int size)
 {
 	if (src == NULL || size == 0)
 		return;
@@ -29,7 +29,7 @@ void mmset(u8 * src, u8 byte, unsigned int size)
 		*(src++) = byte;
 }
 
-void strcpy(const char * src, char * dst)
+void StrCpy(const char * src, char * dst)
 {
 	if (src == NULL || dst == NULL)
 		return;

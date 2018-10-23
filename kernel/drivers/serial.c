@@ -2,10 +2,10 @@
 
 #include "serial.h"
 
-static int received_data ();
-static int is_transmit_empty ();
+static int ReceivedData ();
+static int IsTransmitEmpty ();
 
-void init_serial ()
+void SerialInit ()
 {
     outb (COM1_PORT + 1, 0x00); // Desactive les interruptions
     outb (COM1_PORT + 3, 0x80); // Active le DLAB (Divisor Latch Access Bit)
@@ -17,26 +17,26 @@ void init_serial ()
     outb (COM1_PORT + 1, 0x01);
 }
 
-char read_serial ()
+char SerialRead ()
 {
-    while (received_data() == 0);
+    while (ReceivedData() == 0);
 
     return inb (COM1_PORT);
 }
 
-void write_serial (char c)
+void SerialWrite (char c)
 {
-    while (is_transmit_empty () == 0);
+    while (IsTransmitEmpty() == 0);
 
     outb (COM1_PORT, c);
 }
 
-static int received_data ()
+static int ReceivedData()
 {
     return inb (COM1_PORT + 5) & 1;
 }
 
-static int is_transmit_empty ()
+static int IsTransmitEmpty ()
 {
     return inb (COM1_PORT + 5) & 0x20;
 }

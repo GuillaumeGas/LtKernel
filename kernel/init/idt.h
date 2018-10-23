@@ -61,20 +61,22 @@ struct idt_descriptor
     u16 type;
     u16 offset16_31;
 } __attribute__ ((packed));
+typedef struct idt_descriptor IdtDescriptor;
 
 struct idt
 {
     u16 limit;
     u32 base;
 } __attribute__ ((packed));
+typedef struct idt Idt;
 
-void init_idt (void);
-void init_pic (void);
+void IdtInit (void);
+void PicInit (void);
 
 #ifdef __IDT__
-struct idt g_idt;
-struct idt_descriptor g_idt_descriptor[IDT_SIZE];
+Idt gIdt;
+IdtDescriptor gIdtDescriptor[IDT_SIZE];
 #else
-extern struct idt g_idt;
-extern struct idt_descriptor g_idt_descriptor[];
+extern Idt gIdt;
+extern IdtDescriptor gIdtDescriptor[];
 #endif

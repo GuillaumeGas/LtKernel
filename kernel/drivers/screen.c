@@ -1,10 +1,10 @@
 #include "screen.h"
 
-int _line = 1;
-int _column = 1;
-u8 _color = 0x0F;
+static int _line = 1;
+static int _column = 1;
+static u8 _color = 0x0F;
 
-void sc_printChar(char c)
+void ScPrintChar(char c)
 {
 	if (c == LF) 
 	{
@@ -25,7 +25,7 @@ void sc_printChar(char c)
 
 		if (_line > LINES) 
 		{
-			sc_scrollUp();
+			ScScrollUp();
 			_line--;
 		}
 
@@ -41,12 +41,12 @@ void sc_printChar(char c)
 	}
 
 	if (_line > LINES) {
-		sc_scrollUp();
+		ScScrollUp();
 		_line--;
 	}
 }
 
-void sc_clear()
+void ScClear()
 {
 	int i = 0;
 	u8 * screen_ptr = (u8*)SCREEN_PTR;
@@ -56,15 +56,15 @@ void sc_clear()
 	_column = 0;
 }
 
-void sc_setColor(u8 value)
+void ScSetColor(u8 value)
 {
 	if (value == WHITE)
-		sc_setColorEx(BLACK, value, 0, 0);
+		ScSetColorEx(BLACK, value, 0, 0);
 	else
-		sc_setColorEx(BLACK, value, 0, 1);
+		ScSetColorEx(BLACK, value, 0, 1);
 }
 
-void sc_setColorEx(u8 background, u8 foreground, u8 blink, u8 intensity)
+void ScSetColorEx(u8 background, u8 foreground, u8 blink, u8 intensity)
 {
 	_color = 0x0;
 	u8 mask = (0x1 << 7);
@@ -77,7 +77,7 @@ void sc_setColorEx(u8 background, u8 foreground, u8 blink, u8 intensity)
 	_color |= (mask & foreground);
 }
 
-void sc_scrollUp()
+void ScScrollUp()
 {
 	u8 * screen_ptr = (u8*)SCREEN_PTR;
 	u8 * screen_end_ptr = (u8*)SCREEN_END_PTR;
@@ -94,7 +94,7 @@ void sc_scrollUp()
 	}
 }
 
-void sc_setBackground(u8 color)
+void ScSetBackground(u8 color)
 {
 	u8 * screen_ptr = (u8*)SCREEN_PTR + 1;
 	u8 * screen_end_ptr = (u8*)SCREEN_END_PTR;

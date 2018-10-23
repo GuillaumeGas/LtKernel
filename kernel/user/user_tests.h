@@ -1,4 +1,4 @@
 #pragma once
 
-void test_task();
-void test_task2();
+void TestTask1();
+void TestTask2();

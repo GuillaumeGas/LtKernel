@@ -1,5 +1,5 @@
 // Test utilisateur (CPL 3)
-void test_task()
+void TestTask1()
 {
 	char * str = (char*)0x50000000; // test avec la page réservée pour les données
 
@@ -16,7 +16,7 @@ void test_task()
 	while (1);
 }
 
-void test_task2()
+void TestTask2()
 {
 	char * str = (char*)0x40000100;
 

@@ -32,11 +32,11 @@
 #define YELLOW         0x6
 #define WHITE          0x7
 
-void sc_printChar (char c);
-void sc_clear ();
-void sc_setColor (u8 color);
-void sc_setColorEx (u8, u8, u8, u8);
-void sc_scrollUp ();
-void sc_setBackground (u8 color);
+void ScPrintChar(char c);
+void ScClear();
+void ScSetColor (u8 color);
+void ScSetColorEx (u8, u8, u8, u8);
+void ScScrollUp ();
+void ScSetBackground (u8 color);
 
 #endif

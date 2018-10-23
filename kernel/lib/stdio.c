@@ -18,9 +18,9 @@ static int checkType(char type)
 static void printChar(char c)
 {
 	if (FlagOn(g_logType, LOG_SCREEN))
-		sc_printChar(c);
+		ScPrintChar(c);
 	if (FlagOn(g_logType, LOG_SERIAL))
-		write_serial(c);
+		SerialWrite(c);
 }
 
 static void printStr(char * str)

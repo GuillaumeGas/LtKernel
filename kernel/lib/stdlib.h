@@ -5,10 +5,10 @@
 #define FlagOn(a, b) ((a & b) != 0)
 #define NULL 0
 
-void pause ();
-void hlt();
+void Pause ();
+void Halt();
 
-void mmcopy(u8 * src, u8 * dst, unsigned int size);
-void mmset(u8 * src, u8 byte, u32 size);
+void MmCopy(u8 * src, u8 * dst, unsigned int size);
+void MmSet(u8 * src, u8 byte, u32 size);
 
-void strcpy(const char * src, char * dst);
+void StrCpy(const char * src, char * dst);

@@ -12,6 +12,6 @@
 // Port COM1
 #define COM1_PORT 0x3F8
 
-void init_serial ();
-char read_serial ();
-void write_serial (char c);
+void SerialInit ();
+char SerialRead ();
+void SerialWrite (char c);

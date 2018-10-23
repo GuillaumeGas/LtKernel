@@ -28,7 +28,7 @@ enum MultibootFlag
 } typedef MultibootFlag;
 
 #ifdef __MULTIBOOT__
-MultibootPartialInfo g_mbi = { 0 };
+MultibootPartialInfo gMbi = { 0 };
 #else
-extern MultibootPartialInfo g_mbi;
+extern MultibootPartialInfo gMbi;
 #endif

@@ -60,20 +60,20 @@ struct tss
 } __attribute__ ((packed));
 typedef struct tss Tss;
 
-void init_gdt ();
-struct gdt_descriptor * get_gdt_descriptor (u8 selector);
-u32 get_base_addr (struct gdt_descriptor * desc);
+void GdtInit ();
+GdtDescriptor * GdtGetDescriptor (u8 selector);
+u32 GdtGetBaseAddrFromDescriptor (GdtDescriptor * desc);
 
-void print_gdt ();
-void print_gdt_descriptor (struct gdt_descriptor * entry);
-void print_tss ();
+void GdtPrint ();
+void GdtPrintDescriptor (GdtDescriptor * entry);
+void TssPrint ();
 
 #ifdef __GDT__
-Gdt g_gdt;
-GdtDescriptor g_gdt_descriptor[GDT_SIZE];
-Tss g_tss;
+Gdt gGdt;
+GdtDescriptor gGdtDescriptor[GDT_SIZE];
+Tss gTss;
 #else
-extern Gdt g_gdt;
-extern GdtDescriptor g_gdt_descriptor[];
-extern Tss g_tss;
+extern Gdt gGdt;
+extern GdtDescriptor gGdtDescriptor[];
+extern Tss gTss;
 #endif
