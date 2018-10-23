@@ -13,6 +13,8 @@
 #define NB_PAGES_TABLE_PER_DIRECTORY 1024
 #define EMPTY_PAGE_TABLE 0
 #define NB_PAGES_PER_TABLE 1024
+#define NB_PAGES_TABLE_PER_KERNEL_DIRECTORY 256 // On veut que le premier Go de mémoire virtuelle soit pour le noyau : 1024 / 4 = 256 (1024 = nombre d'entrées dans un répertoire de pages)
+                                                // On vérifie:  256 * 1024 * 4096 = 1Go
 
 #define MEM_BITMAP_SIZE RAM_MAXPAGE / 8
 

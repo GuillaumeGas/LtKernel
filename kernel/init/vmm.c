@@ -12,6 +12,7 @@
 
 extern void _init_vmm(PageDirectoryEntry * pd0_addr);
 static void InitKernelPageDirectoryAndPageTables();
+static void SetIdentityMapping();
 
 // Représente l'ensemble des pages disponibles ou non
 static u8 mem_bitmap[MEM_BITMAP_SIZE];
@@ -48,23 +49,7 @@ void InitVmm()
 	InitKernelPageDirectoryAndPageTables();
 
 	// Identity mapping (v_addr == p_addr pour le noyau, donc entre 0x0 et 0x800000)
-	{
-		PageTableEntry * kernelFirstPt = g_kernelInfo.pageTables_p;
-		PageTableEntry * kernelSecondPt = (PageTableEntry *)((unsigned int)kernelFirstPt + PAGE_SIZE);
-
-		SetPageDirectoryEntry(g_kernelInfo.pageDirectory_p.pd_entry, (u32)kernelFirstPt, PAGE_PRESENT | PAGE_WRITEABLE);
-		SetPageDirectoryEntry(&(g_kernelInfo.pageDirectory_p.pd_entry[1]), (u32)kernelSecondPt, PAGE_PRESENT | PAGE_WRITEABLE);
-
-		unsigned int ptIndex = 0;
-		for (page = PAGE(0); page < PAGE(g_kernelInfo.kernelLimit_p); page++)
-		{
-			SetPageTableEntry(&(kernelFirstPt[ptIndex]), ptIndex * PAGE_SIZE, PAGE_PRESENT | PAGE_WRITEABLE);
-			ptIndex++;
-		}
-
-		SetPageTableEntry(&(kernelFirstPt[1023]), (u32)kernelFirstPt, PAGE_PRESENT | PAGE_WRITEABLE);
-		SetPageTableEntry(&(kernelSecondPt[1023]), (u32)kernelSecondPt, PAGE_PRESENT | PAGE_WRITEABLE);
-	}
+    SetIdentityMapping();
 
 	_init_vmm(g_kernelInfo.pageDirectory_p.pd_entry);
 
@@ -81,7 +66,7 @@ void InitKernelPageDirectoryAndPageTables()
 	PageTableEntry * pageTable = g_kernelInfo.pageTables_p;
 	unsigned int pdIndex = 0;
 
-	for (; pdIndex < NB_PAGES_TABLE_PER_DIRECTORY; pdIndex++)
+	for (; pdIndex < NB_PAGES_TABLE_PER_KERNEL_DIRECTORY; pdIndex++)
 	{
 		SetPageDirectoryEntry(&(pageDirectory[pdIndex]), (u32)pageTable, PAGE_PRESENT | PAGE_WRITEABLE);
 
@@ -97,6 +82,27 @@ void InitKernelPageDirectoryAndPageTables()
 	}
 
 	SetPageDirectoryEntry(&(pageDirectory[1023]), (u32)pageDirectory, PAGE_PRESENT | PAGE_WRITEABLE);
+}
+
+// Identity mapping (v_addr == p_addr pour le noyau, donc entre 0x0 et 0x800000)
+void SetIdentityMapping()
+{
+    PageTableEntry * kernelFirstPt = g_kernelInfo.pageTables_p;
+    PageTableEntry * kernelSecondPt = (PageTableEntry *)((unsigned int)kernelFirstPt + PAGE_SIZE);
+    unsigned int page = 0;
+
+    SetPageDirectoryEntry(g_kernelInfo.pageDirectory_p.pd_entry, (u32)kernelFirstPt, PAGE_PRESENT | PAGE_WRITEABLE);
+    SetPageDirectoryEntry(&(g_kernelInfo.pageDirectory_p.pd_entry[1]), (u32)kernelSecondPt, PAGE_PRESENT | PAGE_WRITEABLE);
+
+    unsigned int ptIndex = 0;
+    for (page = PAGE(0); page < PAGE(g_kernelInfo.kernelLimit_p); page++)
+    {
+        SetPageTableEntry(&(kernelFirstPt[ptIndex]), ptIndex * PAGE_SIZE, PAGE_PRESENT | PAGE_WRITEABLE);
+        ptIndex++;
+    }
+
+    SetPageTableEntry(&(kernelFirstPt[1023]), (u32)kernelFirstPt, PAGE_PRESENT | PAGE_WRITEABLE);
+    SetPageTableEntry(&(kernelSecondPt[1023]), (u32)kernelSecondPt, PAGE_PRESENT | PAGE_WRITEABLE);
 }
 
 void VmmCleanCallback()
@@ -331,15 +337,13 @@ PageDirectory CreateProcessPageDirectory()
 	PageDirectoryEntry * pd_entry = (PageDirectoryEntry *)pd_page.v_addr;
 	unsigned int i = 0;
 	
-	//kprint("Task %d, v = %x, p : %x\n", testValue++, pd_page.v_addr, pd_page.p_addr);
-
 	// On veut que le premier Go de mémoire virtuelle soit pour le noyau : 1024 / 4 = 256 (1024 = nombre d'entrées dans un répertoire de pages)
 	// On vérifie:  256 * 1024 * 4096 = 1Go
-	for (; i < 256; i++)
+	for (; i < NB_PAGES_TABLE_PER_KERNEL_DIRECTORY; i++)
 		pd_entry[i] = kernelPdEntry[i];
 
 	for (i = 256; i < NB_PAGES_TABLE_PER_DIRECTORY; i++)
-		SetPageDirectoryEntry(&(pd_entry[i]), 0, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS);
+		SetPageDirectoryEntry(&(pd_entry[i]), 0, PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS);
 
 	SetPageDirectoryEntry(&(pd_entry[1023]), (u32)pd_page.p_addr, PAGE_PRESENT | PAGE_WRITEABLE);
 

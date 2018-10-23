@@ -3,6 +3,8 @@
 #include <kernel/lib/kmalloc.h>
 #include <kernel/lib/stdlib.h>
 
+#include <kernel/lib/stdio.h>
+
 List * ListCreate()
 {
 	ListElem * list = (ListElem *)kmalloc(sizeof (ListElem));
@@ -53,7 +55,10 @@ void ListPush(List * list, void * data)
 	{
 		ListElem * elem = list;
 
-		while (elem->next != NULL);
+        while (elem->next != NULL)
+        {
+            elem = elem->next;
+        }
 
 		elem->next = (ListElem *)kmalloc(sizeof(ListElem));
 		

@@ -1,7 +1,7 @@
 // Test utilisateur (CPL 3)
 void test_task()
 {
-	char * str = (char*)0x40000100;
+	char * str = (char*)0x50000000; // test avec la page réservée pour les données
 
 	str[0] = 'T';
 	str[1] = 'a';

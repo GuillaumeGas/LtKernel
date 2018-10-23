@@ -68,6 +68,11 @@ void create_process(void * task_addr, unsigned int size)
     v_user_stack = (u8 *)(USER_STACK_V_ADDR - PAGE_SIZE);
 	AddPageToPageDirectory(v_user_stack, p_user_stack, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, user_pd);
 
+    // Pour l'exemple : on réserve une page exprès pour les données de la tâche
+    u8 * p_user_data = GetFreePage();
+    u8 * v_user_data = (u8 *)0x50000000;
+    AddPageToPageDirectory(v_user_data, p_user_data, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, user_pd);
+
 	new_process = (struct process *)kmalloc(sizeof(struct process));
 	new_process->pid = g_nb_process;
 	new_process->page_directory = user_pd;

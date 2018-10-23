@@ -1,45 +1,14 @@
-NOTE :
+== TODO ==
 
-L'ensemble du noyau occupe 8Mo, donc on commence par rendre occupé toutes les pages entre l'addr p 0x0 et 0x800000.
+- On rempli tous les champs des PD/PT ?
+- Renommage
+- Ré-organisation du code
 
------------------------ 0x800000
-Tables de pages (1024 * (1024 * 32) = 1 048 571 = 0x100000, (nombre entrées répertoire) * (t'aille d'une table de pages))
------------------------ 0x400000
-Code Noyau
-----------      (4Mo)
-Hardware/Pile noyau/Répertoire de pages/GDT/IDT
------------------------
+- Tests libération de pages...
+- => Terminer libération de mémoire
+- Possibilité de laisser un processus se terminer ?
+- Ajouter PIT ?
+- Aller plus loin dans la gestion des processus/threads, avoir un thread system ?
 
-On place le répertoire de page à l'adresse 0x1000.
-Sa première entrée va mapper la première page : 0x0, c'est la partie purement noyau 
-  - regroupe IDT/GDT, 
-  - répertoire de page du noyau, 
-  - pile noyau (0xa0000),
-  - hardware jusqu'à 0x100000
-Sa seconde entrée va mapper la seconde page, qui va contenir les tables de page du noyau.
-
-Le tas de pages est placé en mémoire virtuelle en 0x800000
-Le tas est placée en mémoire virtuelle en 0x10000000.
-
-On l'utilise pour créer la liste chaînée de tables de pages dispo.
-
-------------------------
-QUESTION : 
- - cool d'avoir un page heap ? Si on se base là dessus pour les process, ça veut dire qu'on ne peut avoir que 2048 process ? Surtout qu'on ne va pas y stocker que des pd, mais aussi pile noyau...
- - ptet pas besoin de tout allouer dès le début ?
- 
-TODO : 
- - nettoyer memory.c/h, renommer defines...
-
-------------------------
-
-# Processus :
-
- - pid
- - répertoire de pages -> les premières entrées vont pointer sur celles de pd0, la suite sera init pour le user, voir en dessous
- - mapping tel que 0x0-0x40000000 pour le noyau (1Go), la suite pour l'utilisateur
- - une pile utilisateur à 0xE0000000 (on va chercher une page dispo, on la map dans la mem v de l'utilisateur)
- - une pile noyau (appel à page_alloc())
- - code utilisateur à 0x40000000
- 
-[!!] : Penser à la mise à jour du TLB !
+- Créer un debugger ?
+- Ou passer au système de fichier ?
