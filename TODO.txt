@@ -1,14 +1,5 @@
 == TODO ==
 
-- On rempli tous les champs des PD/PT ?
-- Renommage
-- Ré-organisation du code
-
-- Tests libération de pages...
-- => Terminer libération de mémoire
-- Possibilité de laisser un processus se terminer ?
-- Ajouter PIT ?
-- Aller plus loin dans la gestion des processus/threads, avoir un thread system ?
-
-- Créer un debugger ?
-- Ou passer au système de fichier ?
+- Ajouter exit() syscall
+  -> Ajouter un processus system qui attend qu'il ne reste que lui d'actif pour terminer.
+- VÃ©rifier que tout est bien nettoyÃ©, pages, etc...

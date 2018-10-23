@@ -31,7 +31,7 @@ enum PAGE_FLAG
 	PAGE_PWT = 8,
 	PAGE_PCD = 16,
 	PAGE_ACCESSED = 32,
-	PAGE_PAGE_SIZE_4MO = 128,
+	PAGE_SIZE_4MO = 128,
 	PAGE_WRITTEN = 64,
 	PAGE_G = 256
 } typedef PAGE_FLAG;
@@ -45,7 +45,7 @@ struct page_directory_entry
 	u32 pcd : 1;
 	u32 accessed : 1;
 	u32 reserved : 1;
-	u32 page_size : 1;
+	u32 pageSize : 1; // 0 : 4Ko, 1 : 4Mo
 	u32 global : 1;
 	u32 avail : 3;
 	u32 pageTableAddr : 20;
@@ -64,7 +64,7 @@ struct page_table_entry
 	u32 reserved : 1;
 	u32 global : 1;
 	u32 avail : 3;
-	u32 page_addr : 20;
+	u32 pageAddr : 20;
 };
 typedef struct page_table_entry PageTableEntry;
 

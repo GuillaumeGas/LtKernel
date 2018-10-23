@@ -142,19 +142,21 @@ void CleanPageTable(PageTableEntry * pageTableEntry)
 
 /*
 	Initialise un répertoire de pages
-
-	Si le flag PAGE_SIZE_4KO et 4MO sont à 1, 4MO l'emporte
 */
-void SetPageDirectoryEntry(PageDirectoryEntry * pd, u32 pt_addr, PAGE_FLAG flags)
+void SetPageDirectoryEntry(PageDirectoryEntry * pd, u32 ptAddr, PAGE_FLAG flags)
 {
 	if (flags == PAGE_EMPTY)
 		MmSet((u8 *)pd, 0, sizeof(PageDirectoryEntry));
 
 	u32 * addr = (u32 *)pd;
-	*addr = pt_addr;
+	*addr = ptAddr;
 	pd->present = FlagOn(flags, PAGE_PRESENT);
 	pd->writable = FlagOn(flags, PAGE_WRITEABLE);
 	pd->nonPrivilegedAccess = FlagOn(flags, PAGE_NON_PRIVILEGED_ACCESS);
+	pd->pwt = FlagOn(flags, PAGE_PWT);
+	pd->pcd = FlagOn(flags, PAGE_PCD);
+	pd->accessed = FlagOn(flags, PAGE_ACCESSED);
+	pd->pageSize = FlagOn(flags, PAGE_SIZE_4MO);
 }
 
 /*
@@ -162,9 +164,9 @@ void SetPageDirectoryEntry(PageDirectoryEntry * pd, u32 pt_addr, PAGE_FLAG flags
 
 	Permet de définir le champ de gestion du cache et le champ librement utilisable
 */
-void SetPageDirectoryEntryEx(PageDirectoryEntry * pd, u32 pt_addr, PAGE_FLAG flags, u8 global, u8 avail)
+void SetPageDirectoryEntryEx(PageDirectoryEntry * pd, u32 ptAddr, PAGE_FLAG flags, u8 global, u8 avail)
 {
-	SetPageDirectoryEntry(pd, pt_addr, flags);
+	SetPageDirectoryEntry(pd, ptAddr, flags);
 	pd->avail = avail;
 	pd->global = global;
 }
@@ -175,16 +177,20 @@ void SetPageDirectoryEntryEx(PageDirectoryEntry * pd, u32 pt_addr, PAGE_FLAG fla
 	Fait appel à la fonction d'initialisation d'un répertoire de pages car leur structure
 	 est identique.
 */
-void SetPageTableEntry(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags)
+void SetPageTableEntry(PageTableEntry * pt, u32 pageAddr, PAGE_FLAG flags)
 {
 	if (flags == PAGE_EMPTY)
 		MmSet((u8 *)pt, 0, sizeof(PageTableEntry));
 
 	u32 * addr = (u32 *)pt;
-	*addr = page_addr;
+	*addr = pageAddr;
 	pt->present = FlagOn(flags, PAGE_PRESENT);
 	pt->writable = FlagOn(flags, PAGE_WRITEABLE);
 	pt->nonPrivilegedAccess = FlagOn(flags, PAGE_NON_PRIVILEGED_ACCESS);
+	pt->pwt = FlagOn(flags, PAGE_PWT);
+	pt->pcd = FlagOn(flags, PAGE_PCD);
+	pt->accessed = FlagOn(flags, PAGE_ACCESSED);
+	pt->written = FlagOn(flags, PAGE_WRITTEN);
 }
 
 /*
@@ -195,9 +201,9 @@ void SetPageTableEntry(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags)
 
 	Permet de définir le champ de gestion du cache et le champ librement utilisable
 */
-void SetPageTableEntryEx(PageTableEntry * pt, u32 page_addr, PAGE_FLAG flags, u8 global, u8 avail)
+void SetPageTableEntryEx(PageTableEntry * pt, u32 pageAddr, PAGE_FLAG flags, u8 global, u8 avail)
 {
-	SetPageTableEntry(pt, page_addr, flags);
+	SetPageTableEntry(pt, pageAddr, flags);
 	pt->avail = avail;
 	pt->global = global;
 }
