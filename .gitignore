@@ -16,3 +16,4 @@ kernel_bin
 /TODO.txt
 /iso/boot/ltkernel.img
 /ltkernel.iso
+*.bxrc
