@@ -123,14 +123,14 @@
     <ClCompile Include="kernel\init\heap.c">
       <Filter>Fichiers sources\kernel\init</Filter>
     </ClCompile>
-    <ClCompile Include="kernel\user\syscall.c">
-      <Filter>Fichiers sources\kernel\user</Filter>
-    </ClCompile>
     <ClCompile Include="kernel\drivers\clock.c">
       <Filter>Fichiers sources\kernel\drivers</Filter>
     </ClCompile>
     <ClCompile Include="kernel\drivers\keyboard.c">
       <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\user\syscalls.c">
+      <Filter>Fichiers sources\kernel\user</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -197,9 +197,6 @@
     <ClInclude Include="kernel\init\heap.h">
       <Filter>Fichiers sources\kernel\init</Filter>
     </ClInclude>
-    <ClInclude Include="kernel\init\isr.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="kernel\user\syscalls.h">
       <Filter>Fichiers sources\kernel\user</Filter>
     </ClInclude>
@@ -208,6 +205,9 @@
     </ClInclude>
     <ClInclude Include="kernel\drivers\keyboard.h">
       <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\init\isr.h">
+      <Filter>Fichiers sources\kernel\init</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

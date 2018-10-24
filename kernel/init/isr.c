@@ -11,9 +11,9 @@
 #include <kernel/debug/debug.h>
 #include <kernel/scheduler.h>
 
-#include <kernel/drivers/proc_io.h>
-
 #include <kernel/init/gdt.h>
+
+#include <kernel/user/syscalls.h>
 
 #include "isr.h"
 
@@ -204,9 +204,9 @@ void com1_isr()
 	kprint("One byte received on COM port : %c\n", SerialRead());
 }
 
-void syscall_isr(int syscallNumber, Context * context)
+void syscall_isr(int syscallNumber, InterruptContext * context)
 {
-    SyscallHanlder(syscallNumber, context);
+    SyscallHandler(syscallNumber, context);
 }
 
 static void DefaultExceptionHandler(ExceptionContext * context, const char * str)

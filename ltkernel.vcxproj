@@ -122,7 +122,7 @@
     <ClCompile Include="kernel\logger.c" />
     <ClCompile Include="kernel\scheduler.c" />
     <ClCompile Include="kernel\user\process_manager.c" />
-    <ClCompile Include="kernel\user\syscall.c" />
+    <ClCompile Include="kernel\user\syscalls.c" />
     <ClCompile Include="kernel\user\user_tests.c" />
   </ItemGroup>
   <ItemGroup>
@@ -136,6 +136,7 @@
     <ClInclude Include="kernel\init\gdt.h" />
     <ClInclude Include="kernel\init\heap.h" />
     <ClInclude Include="kernel\init\idt.h" />
+    <ClInclude Include="kernel\init\isr.h" />
     <ClInclude Include="kernel\init\vmm.h" />
     <ClInclude Include="kernel\kernel.h" />
     <ClInclude Include="kernel\lib\kmalloc.h" />

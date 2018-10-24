@@ -2,26 +2,23 @@
 
 #include <kernel/lib/stdio.h>
 #include <kernel/drivers/clock.h>
-#include <kernel/init/isr.h>
+
+#include <kernel/debug/debug.h>
+#include <kernel/lib/stdlib.h>
 
 static void SysPrint(const char * str);
-static void SysTime(u32 * retPtr);
 
 enum SyscallId
 {
-    SYSCALL_PRINT = 1,
-    SYSCALL_TIME  = 2
-} typedef;
+    SYSCALL_PRINT = 1
+};
 
-void SyscallHandler(int syscallNumber, Context context)
+void SyscallHandler(int syscallNumber, InterruptContext * context)
 {
     switch (syscallNumber)
     {
         case SYSCALL_PRINT:
-            SysPrint((char *)context->eax);
-            break;
-        case SYSCALL_TIME:
-            SysTime(&context->eax);
+            SysPrint((char *)context->ebx);
             break;
         default:
             kprint("SyscallHandler() : unknown system call !\n");
@@ -31,9 +28,4 @@ void SyscallHandler(int syscallNumber, Context context)
 static void SysPrint(const char * str)
 {
     kprint(str);
-}
-
-static void SysTime(u32 * retPtr)
-{
-    *retPtr = gClockSec;
 }

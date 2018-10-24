@@ -1,3 +1,4 @@
+#define __CLOCK__
 #include "clock.h"
 
 void DrvClock()

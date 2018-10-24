@@ -1,8 +1,10 @@
 #include "keyboard.h"
 
 #include <kernel/drivers/kbmap.h>
+#include <kernel/drivers/proc_io.h>
 
 #include <kernel/lib/types.h>
+#include <kernel/lib/stdio.h>
 
 void DrvKeyboard()
 {

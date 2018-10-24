@@ -35,6 +35,18 @@ void panicStr(const char * str)
 	Pause ();
 }
 
+void PrintInterruptContext(InterruptContext * context)
+{
+	u16 cs = 0;
+
+	asm("mov %%cs, %%ax; mov %%ax, %0" : "=m" (cs) : );
+
+	kprint("eax = %x, ebx = %x, ecx = %x, edx = %x\n", context->eax, context->ebx, context->ecx, context->edx);
+	kprint("esp = %x, ebp = %x, esi = %x, edi = %x\n", context->esp, context->ebp, context->esi, context->edi);
+	kprint("eip = %x", context->eip);
+	kprint("gs = %x, fs = %x, es = %x, ds = %x\n", context->gs, context->fs, context->es, context->ds, cs);
+}
+
 void PrintExceptionContext(ExceptionContext * context)
 {
     u16 cs = 0;

@@ -6,10 +6,10 @@ LD=ld
 BOOT=../boot/bootsector.o
 ROOT=kernel.o logger.o scheduler.o
 DEBUG=debug.o
-DRIVERS=screen.o serial.o
+DRIVERS=screen.o serial.o clock.o keyboard.o
 INIT=gdt.o gdt_loader.o idt.o idt_loader.o int.o isr.o vmm.o pic.o vmm_loader.o heap.o
 LIB=kmalloc.o list.o stdio.o stdlib.o panic.o
-USER=process_manager.o process_starter.o user_tests.o
+USER=process_manager.o process_starter.o syscalls.o user_tests.o
 
 all: $(OBJ) 
 
@@ -39,6 +39,12 @@ screen.o: drivers/screen.c
 	$(CC) -c $^
 
 serial.o: drivers/serial.c
+	$(CC) -c $^
+
+clock.o: drivers/clock.c
+	$(CC) -c $^
+
+keyboard.o: drivers/keyboard.c
 	$(CC) -c $^
 
 # INIT DIRECTORY
@@ -94,6 +100,9 @@ process_manager.o: user/process_manager.c
 
 process_starter.o: user/process_starter.asm
 	$(ASM) -o $@ $^
+
+syscalls.o: user/syscalls.c
+	$(CC) -c $^
 
 user_tests.o: user/user_tests.c
 	$(CC) -c $^

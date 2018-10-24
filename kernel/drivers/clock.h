@@ -4,7 +4,12 @@
 
 //#define CLOCK_DEBUG   
 
-static u32 gClockTic = 0;
-static u32 gClockSec = 0;
+#ifdef __CLOCK__
+u32 gClockTic = 0;
+u32 gClockSec = 0;
+#else
+extern u32 gClockTic;
+extern u32 gClockSec;
+#endif
 
 void DrvClock();
