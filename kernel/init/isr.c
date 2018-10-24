@@ -1,7 +1,8 @@
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
 #include <kernel/drivers/proc_io.h>
-#include <kernel/drivers/kbmap.h>
+#include <kernel/drivers/clock.h>
+#include <kernel/drivers/keyboard.h>
 
 #include <kernel/lib/types.h>
 #include <kernel/lib/stdio.h>
@@ -12,13 +13,13 @@
 
 #include <kernel/drivers/proc_io.h>
 
-#include "gdt.h"
+#include <kernel/init/gdt.h>
+
+#include "isr.h"
 
 #define EXCEPTION_SCREEN \
 	ScClear(); \
 	ScSetBackground(BLUE); \
-
-//#define CLOCK_DEBUG
 
 static void DefaultExceptionHandler(ExceptionContext * context, const char * str);
 
@@ -189,71 +190,13 @@ void default_isr(ExceptionContext * context)
 
 void clock_isr(void)
 {
-	static int tic = 0;
-	static int sec = 0;
-	tic++;
-	if (tic % 100 == 0) {
-		sec++;
-		tic = 0;
-#ifdef CLOCK_DEBUG
-		if (sec % 2 == 0)
-			kprint(".");
-#endif
-	}
-	schedule();
+    DrvClock();
+	Schedules();
 }
 
 void keyboard_isr(void)
 {
-	uchar i;
-	static int lshift_enable;
-	static int rshift_enable;
-	/* static int alt_enable; */
-	/* static int ctrl_enable; */
-
-	do {
-		i = inb(0x64);
-	} while ((i & 0x01) == 0);
-
-	i = inb(0x60);
-	i--;
-
-	if (i < 0x80) {         /* touche enfoncee */
-		switch (i) {
-		case 0x29:
-			lshift_enable = 1;
-			break;
-		case 0x35:
-			rshift_enable = 1;
-			break;
-			/* case 0x1C: */
-			/*     ctrl_enable = 1; */
-			/*     break; */
-			/* case 0x37: */
-			/*     alt_enable = 1; */
-			/*     break; */
-		default:
-			kprint("%c", kbdmap
-				[i * 4 + (lshift_enable || rshift_enable)]);
-		}
-	}
-	else {                /* touche relachee */
-		i -= 0x80;
-		switch (i) {
-		case 0x29:
-			lshift_enable = 0;
-			break;
-		case 0x35:
-			rshift_enable = 0;
-			break;
-			/* case 0x1C: */
-			/*     ctrl_enable = 0; */
-			/*     break; */
-			/* case 0x37: */
-			/*     alt_enable = 0; */
-			/*     break; */
-		}
-	}
+    DrvKeyboard();
 }
 
 void com1_isr()
@@ -261,19 +204,9 @@ void com1_isr()
 	kprint("One byte received on COM port : %c\n", SerialRead());
 }
 
-void syscall_isr(int syscall_number)
+void syscall_isr(int syscallNumber, Context * context)
 {
-	char * message = NULL;
-
-	switch (syscall_number) {
-	case 1:
-		// On va chercher le param qu'on a passe dans ebx, sauvegarde sur la pile
-		asm("mov 44(%%ebp), %%eax; mov %%eax, %0" : "=m" (message));
-		kprint(message);
-		break;
-	default:
-		kprint("Unhandled syscall number !");
-	}
+    SyscallHanlder(syscallNumber, context);
 }
 
 static void DefaultExceptionHandler(ExceptionContext * context, const char * str)

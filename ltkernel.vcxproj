@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -76,6 +76,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NMakeOutput>ltkernel.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>C:\Users\guillaume.gas\Documents\prog\c\ltkernel;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <NMakeOutput>ltkernel.exe</NMakeOutput>
@@ -84,6 +85,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <NMakeOutput>ltkernel.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>C:\Users\guillaume.gas\Documents\prog\c\ltkernel;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
@@ -102,6 +104,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="kernel\debug\debug.c" />
+    <ClCompile Include="kernel\drivers\clock.c" />
+    <ClCompile Include="kernel\drivers\keyboard.c" />
     <ClCompile Include="kernel\drivers\screen.c" />
     <ClCompile Include="kernel\drivers\serial.c" />
     <ClCompile Include="kernel\init\gdt.c" />
@@ -118,11 +122,14 @@
     <ClCompile Include="kernel\logger.c" />
     <ClCompile Include="kernel\scheduler.c" />
     <ClCompile Include="kernel\user\process_manager.c" />
+    <ClCompile Include="kernel\user\syscall.c" />
     <ClCompile Include="kernel\user\user_tests.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\debug\debug.h" />
+    <ClInclude Include="kernel\drivers\clock.h" />
     <ClInclude Include="kernel\drivers\kbmap.h" />
+    <ClInclude Include="kernel\drivers\keyboard.h" />
     <ClInclude Include="kernel\drivers\proc_io.h" />
     <ClInclude Include="kernel\drivers\screen.h" />
     <ClInclude Include="kernel\drivers\serial.h" />
@@ -141,6 +148,7 @@
     <ClInclude Include="kernel\multiboot.h" />
     <ClInclude Include="kernel\scheduler.h" />
     <ClInclude Include="kernel\user\process_manager.h" />
+    <ClInclude Include="kernel\user\syscalls.h" />
     <ClInclude Include="kernel\user\user_tests.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

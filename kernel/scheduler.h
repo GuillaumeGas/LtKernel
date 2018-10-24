@@ -6,4 +6,4 @@ unsigned int g_clock = 0;
 extern unsigned int g_clock;
 #endif
 
-void schedule();
+void Schedules();

@@ -5,4 +5,14 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommandArguments>-f bochsrc.bxrc -q</LocalDebuggerCommandArguments>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerCommand>"C:\Program Files (x86)\Bochs-2.6.9\bochs.exe"</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>-q -f "C:\Users\guillaume.gas\Documents\prog\c\ltkernel\bochsrc.bxrc"</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerCommand>"C:\Program Files (x86)\Bochs-2.6.9\bochs.exe"</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>-q -f "C:\Users\guillaume.gas\Documents\prog\c\ltkernel\bochsrc.bxrc"</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>

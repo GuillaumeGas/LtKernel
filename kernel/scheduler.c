@@ -6,7 +6,7 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/init/gdt.h>
 
-void schedule()
+void Schedules()
 {
 	if (gCurrentProcess == NULL && ListTop(gProcessList) != NULL)
 	{
