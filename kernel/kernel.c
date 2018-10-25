@@ -12,7 +12,7 @@
 #include <kernel/drivers/proc_io.h>
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
-#include <kernel/drivers/ide.h>
+#include <kernel/drivers/disk.h>
 
 #include <kernel/user/process_manager.h>
 #include <kernel/user/user_tests.h>
@@ -46,13 +46,16 @@ void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	KernelInit(mbi, multibootMagicNumber);
 }
 
-void TestIde()
+void TestAta()
 {
     char * buf = (char*)kmalloc(512);
     StrCpy("Hello world !\n", buf);
 
+	AtaInfo ata1 = AtaCreate(ATA_MASTER, 0x170);
+	AtaIdentify(&ata1);
+
     kprint(buf);
-    IdeWrite(0, 2, 1, buf);
+    //IdeWrite(0, 2, 1, buf);
 
     kfree(buf);
 }
@@ -99,7 +102,7 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	//PmCreateProcess(TestTask1, 500);
 	//PmCreateProcess(TestTask2, 500);
 
-    TestIde();
+    TestAta();
 
     sti();
 

@@ -132,7 +132,7 @@
     <ClCompile Include="kernel\user\syscalls.c">
       <Filter>Fichiers sources\kernel\user</Filter>
     </ClCompile>
-    <ClCompile Include="kernel\drivers\ide.c">
+    <ClCompile Include="kernel\drivers\disk.c">
       <Filter>Fichiers sources\kernel\drivers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -212,7 +212,7 @@
     <ClInclude Include="kernel\init\isr.h">
       <Filter>Fichiers sources\kernel\init</Filter>
     </ClInclude>
-    <ClInclude Include="kernel\drivers\ide.h">
+    <ClInclude Include="kernel\drivers\disk.h">
       <Filter>Fichiers sources\kernel\drivers</Filter>
     </ClInclude>
   </ItemGroup>
