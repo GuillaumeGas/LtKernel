@@ -12,6 +12,7 @@
 #include <kernel/drivers/proc_io.h>
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
+#include <kernel/drivers/ide.h>
 
 #include <kernel/user/process_manager.h>
 #include <kernel/user/user_tests.h>
@@ -43,6 +44,17 @@ void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
          movl $0xA0000, %esp");
 
 	KernelInit(mbi, multibootMagicNumber);
+}
+
+void TestIde()
+{
+    char * buf = (char*)kmalloc(512);
+    StrCpy("Hello world !\n", buf);
+
+    kprint(buf);
+    IdeWrite(0, 2, 1, buf);
+
+    kfree(buf);
 }
 
 static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
@@ -79,15 +91,17 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	InitCleanCallbacksList();
 
-	PmCreateProcess(TestTask1, 500);
-	PmCreateProcess(TestTask2, 500);
-	PmCreateProcess(TestTask2, 500);
-	PmCreateProcess(TestTask1, 500);
-	PmCreateProcess(TestTask1, 500);
-	PmCreateProcess(TestTask1, 500);
-	PmCreateProcess(TestTask2, 500);
+	//PmCreateProcess(TestTask1, 500);
+	//PmCreateProcess(TestTask2, 500);
+	//PmCreateProcess(TestTask2, 500);
+	//PmCreateProcess(TestTask1, 500);
+	//PmCreateProcess(TestTask1, 500);
+	//PmCreateProcess(TestTask1, 500);
+	//PmCreateProcess(TestTask2, 500);
 
-	sti();
+    TestIde();
+
+    sti();
 
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     CleanKernel();

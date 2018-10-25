@@ -1,6 +1,7 @@
 #pragma once
 
 // Syntaxe : AT&T
+// Piqué sur pepin os !
 
 /* desactive les interruptions */
 #define cli() asm("cli"::)
@@ -22,3 +23,14 @@
 	    asm volatile ("inb %%dx, %%al" : "=a" (_v) : "d" (port));	\
 	    _v;								\
 	})
+
+/* ecrit un mot de 16 bits sur un port */
+#define outw(port,value) \
+	asm volatile ("outw %%ax, %%dx" :: "d" (port), "a" (value));
+
+/* lit un mot de 16 bits sur un port */
+#define inw(port) ({		\
+	u16 _v;			\
+	asm volatile ("inw %%dx, %%ax" : "=a" (_v) : "d" (port));	\
+        _v;			\
+})
