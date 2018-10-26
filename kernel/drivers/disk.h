@@ -2,6 +2,9 @@
 
 #include <kernel/lib/types.h>
 
+#define ATA_0 0x1F0
+#define ATA_1 0x170
+
 enum AtaType
 {
 	ATA_MASTER,
@@ -23,7 +26,7 @@ struct AtaInfo
 	u8 controlPort;
 } typedef AtaInfo;
 
-AtaInfo AtaCreate(AtaType type, u16 portBase);
+AtaInfo AtaCreate(u16 portBase, AtaType type);
 void AtaIdentify(AtaInfo * info);
 void AtaRead(AtaInfo * info, u32 sectorNum, int count, u8 * buffer);
 void AtaWrite(AtaInfo * info, u32 sectorNum, int count, u8 * buffer);

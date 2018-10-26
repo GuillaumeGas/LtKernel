@@ -186,6 +186,7 @@ void security_isr(ExceptionContext * context)
 void default_isr(ExceptionContext * context)
 {
 	//DefaultExceptionHandler(context, "[!] Unhandled interrupt !");
+    kprint("[!] Unhandled interrupt !\n");
 }
 
 void clock_isr(void)

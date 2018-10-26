@@ -9,7 +9,7 @@
 #define ATA_SLAVE_VALUE      0xB0
 #define ATA_IDENTIFY_COMMAND 0xEC
 
-AtaInfo AtaCreate(AtaType type, u16 portBase)
+AtaInfo AtaCreate(u16 portBase, AtaType type)
 {
 	AtaInfo info = { 0 };
 
@@ -34,13 +34,13 @@ void AtaIdentify(AtaInfo * info)
 	outb(info->devicePort, info->type);
 	outb(info->controlPort, 0);
 
-	//outb(info->devicePort, 0xA0);
-	//status = inb(info->commandPort);
-	//if (status == 0xFF)
-	//{
-	//	kprint("[ATA][INFO] : AtaIdentify() retuned for 0xA0 command, status == 0xFF\n");
-	//	return;
-	//}
+	outb(info->devicePort, 0xA0);
+	status = inb(info->commandPort);
+	if (status == 0xFF)
+	{
+		kprint("[ATA][INFO] : AtaIdentify() retuned for 0xA0 command, status == 0xFF\n");
+		return;
+	}
 
 	outb(info->devicePort, info->type);
 	outb(info->sectorCountPort, 0);

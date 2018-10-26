@@ -15,10 +15,9 @@ PicInit:
 	;;  - avec ICW4 (1) ou sans (0)
 	mov al, 0x11
 	out 0x20, al
+
 	jmp tmp1
 tmp1:	
-	
-	;; outb (0xA0, 0x11);
 	
 	;; ICW2, port 0x21 (et 0xA1 pour esclave)
 	;; x x x x x 0 0 0
@@ -29,29 +28,36 @@ tmp1:
 	;; Sous archi type x86, les 32 premiers vecteurs sont réservés à la gestion des exceptions.
 	mov al, 0x20
 	out 0x21, al
+    mov al, 0x70
+    out 0xA1, al
+
 	jmp tmp2
 tmp2:	
-	;; outb (0xA1, 0x70);
-
-	;; On utilise pas de controlleur esclave pour le moment, donc pas besoin de renseigner les
-	;; registres ICW3 et ICW4
-	
-	;; finalement si
-	;; outb (0x21, 0x04);
-	;; outb (0xA1, 0x01);
-	
-	;; outb (0x21, 0x01);
-	;; outb (0xA1, 0x01);
     
+    mov al, 0x04
+    out 0x21, al
+    mov al, 0x02
+    out 0xA1, al
+
+    jmp tmp3
+tmp3:
+	
+    mov al, 0x01
+    out 0x21, al
+    out 0xA1, al
+
+    jmp tmp4
+tmp4:
+
 	;; OCW1, port 0x21 (et 0xA1 pour esclave)
 	;; x x x x x x x x
 	;; Chaque bit permet de masquer une interruption (1) ou non (0)
 	;; 1 1 1 0 1 1 0 0 ;; on masque tout sauf l'horloge système (IRQ0), le clavier (IRQ1) et le port COM1 (IRQ4)
-	;; mov al, 0xEC
-	mov al, 0xEC
+	
+    mov al, 0xEC
 	out 0x21, al
-	;; outb (0x21, 0xFC);
-	;; outb (0xA1, 0xFF);
+    mov al, 0x7F
+    out 0xA1, al
 
 	ret
 

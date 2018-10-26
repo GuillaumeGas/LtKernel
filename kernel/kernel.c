@@ -51,7 +51,7 @@ void TestAta()
     char * buf = (char*)kmalloc(512);
     StrCpy("Hello world !\n", buf);
 
-	AtaInfo ata1 = AtaCreate(ATA_MASTER, 0x170);
+	AtaInfo ata1 = AtaCreate(ATA_1, ATA_MASTER);
 	AtaIdentify(&ata1);
 
     kprint(buf);
@@ -102,9 +102,9 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	//PmCreateProcess(TestTask1, 500);
 	//PmCreateProcess(TestTask2, 500);
 
-    TestAta();
-
     sti();
+
+    TestAta();
 
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     CleanKernel();
