@@ -2,13 +2,13 @@
 
 #include <kernel/lib/types.h>
 
-#define ATA_0 0x1F0
-#define ATA_1 0x170
+#define ATA_PRIMARY   0x1F0
+#define ATA_SECONDARY 0x170
 
 enum AtaType
 {
-	ATA_MASTER,
-	ATA_SLAVE
+	ATA_MASTER = 0xA0,
+	ATA_SLAVE  = 0xB0
 };
 typedef enum AtaType AtaType;
 

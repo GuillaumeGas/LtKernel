@@ -4,16 +4,26 @@
 #include <kernel/lib/stdio.h>
 
 // Base : https://github.com/AlgorithMan-de/wyoos/commit/fa076f542ab5f16a32bd141e4b44c62ab0bac9b8
+//        https://github.com/levex/osdev/blob/master/drivers/ata.c
 
 #define ATA_MASTER_VALUE     0xA0
 #define ATA_SLAVE_VALUE      0xB0
 #define ATA_IDENTIFY_COMMAND 0xEC
 
+#define ATA_STATUS_BUSY          0x80
+#define ATA_STATUS_DRIVE_READY   0x40
+#define ATA_STATUS_WRITE_FAULT   0x20
+#define ATA_STATUS_SEEK_COMPLETE 0x10
+#define ATA_STATUS_REQ_READY     0x08
+#define ATA_STATUS_CORRECTED     0x04
+#define ATA_STATUS_INDEX         0x02
+#define ATA_STATUS_ERROR         0x01
+
 AtaInfo AtaCreate(u16 portBase, AtaType type)
 {
 	AtaInfo info = { 0 };
 
-	info.type = type == ATA_MASTER ? ATA_MASTER_VALUE : ATA_SLAVE_VALUE;
+	info.type = type;
 	info.dataPort = portBase;
 	info.errorPort = portBase + 0x1;
 	info.sectorCountPort = portBase + 0x2;
@@ -31,41 +41,26 @@ void AtaIdentify(AtaInfo * info)
 {
 	u8 status = 0;
 
-	outb(info->devicePort, info->type);
-	outb(info->controlPort, 0);
+    // Selecting drive...
+    outb(info->devicePort, info->type);
+    kprint("Drive selected\n");
 
-	outb(info->devicePort, 0xA0);
-	status = inb(info->commandPort);
-	if (status == 0xFF)
-	{
-		kprint("[ATA][INFO] : AtaIdentify() retuned for 0xA0 command, status == 0xFF\n");
-		return;
-	}
-
-	outb(info->devicePort, info->type);
+    // We send '0' on the following ports before sending the IDENTIFY command, according to the ATA specs
 	outb(info->sectorCountPort, 0);
 	outb(info->lbaLowPort, 0);
 	outb(info->lbaMidPort, 0);
 	outb(info->lbaHiPort, 0);
+
 	outb(info->commandPort, ATA_IDENTIFY_COMMAND);
 
 	status = inb(info->commandPort);
 	if (status == 0x00)
 	{
-		kprint("[ATA][INFO] : AtaIdentify() retuned for identify command, status == 0xFF\n");
+		kprint("[ATA][INFO] : AtaIdentify() retuned 0 for identify command\n");
 		return;
 	}
 
-	while (((status & 0x80) == 0x80) && ((status & 0x01) != 0x01))
-	{
-		status = inb(info->commandPort);
-	}
-
-	if (status & 0x01)
-	{
-		kprint("[ATA][ERROR] : Identify() failed ! status & 0x01 == 1\n");
-		return;
-	}
+    kprint("%s %s is connected.\n", info->devicePort == ATA_PRIMARY ? "Primary" : "Secondary", info->type == ATA_MASTER ? "Master" : "Slave");
 
 	{
 		int i = 0;

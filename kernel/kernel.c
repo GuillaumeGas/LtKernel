@@ -51,7 +51,8 @@ void TestAta()
     char * buf = (char*)kmalloc(512);
     StrCpy("Hello world !\n", buf);
 
-	AtaInfo ata1 = AtaCreate(ATA_1, ATA_MASTER);
+    kprint("Ata test\n");
+	AtaInfo ata1 = AtaCreate(ATA_SECONDARY, ATA_MASTER);
 	AtaIdentify(&ata1);
 
     kprint(buf);
