@@ -35,7 +35,7 @@ static List * CleanCallbacksList = NULL;
 
 void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 {
-	cli();
+	DISABLE_IRQ();
 
 	GdtInit();
 
@@ -54,6 +54,8 @@ void TestAta()
     kprint("Ata test\n");
 	AtaInfo ata1 = AtaCreate(ATA_SECONDARY, ATA_MASTER);
 	AtaIdentify(&ata1);
+
+	AtaWrite(&ata1, 1, 1, (u8 *)buf);
 
     kprint(buf);
     //IdeWrite(0, 2, 1, buf);
@@ -103,7 +105,7 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	//PmCreateProcess(TestTask1, 500);
 	//PmCreateProcess(TestTask2, 500);
 
-    sti();
+    ENABLE_IRQ();
 
     TestAta();
 

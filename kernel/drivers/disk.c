@@ -1,5 +1,6 @@
 #include "disk.h"
 
+#include <kernel/lib/stdlib.h>
 #include <kernel/drivers/proc_io.h>
 #include <kernel/lib/stdio.h>
 
@@ -19,6 +20,8 @@
 #define ATA_STATUS_INDEX         0x02
 #define ATA_STATUS_ERROR         0x01
 
+#define SECTOR_SIZE 512
+
 AtaInfo AtaCreate(u16 portBase, AtaType type)
 {
 	AtaInfo info = { 0 };
@@ -36,6 +39,95 @@ AtaInfo AtaCreate(u16 portBase, AtaType type)
 
 	return info;
 }
+
+
+// COPY
+
+#define ATA_REG_ALTSTATUS 0x0C
+#define ATA_REG_STATUS 0x07
+
+#define ATA_SR_BSY     0x80
+#define ATA_SR_DRDY    0x40
+#define ATA_SR_DF      0x20
+#define ATA_SR_DSC     0x10
+#define ATA_SR_DRQ     0x08
+#define ATA_SR_CORR    0x04
+#define ATA_SR_IDX     0x02
+#define ATA_SR_ERR 0x01
+
+#define ATA_REG_DATA       0x00
+#define ATA_REG_ERROR      0x01
+#define ATA_REG_FEATURES   0x01
+#define ATA_REG_SECCOUNT0  0x02
+#define ATA_REG_LBA0       0x03
+#define ATA_REG_LBA1       0x04
+#define ATA_REG_LBA2       0x05
+#define ATA_REG_HDDEVSEL   0x06
+#define ATA_REG_COMMAND    0x07
+#define ATA_REG_STATUS     0x07
+#define ATA_REG_SECCOUNT1  0x08
+#define ATA_REG_LBA3       0x09
+#define ATA_REG_LBA4       0x0A
+#define ATA_REG_LBA5       0x0B
+#define ATA_REG_CONTROL    0x0C
+#define ATA_REG_ALTSTATUS  0x0C
+#define ATA_REG_DEVADDRESS 0x0D
+
+#define ATA_CMD_READ_PIO          0x20
+#define ATA_CMD_READ_PIO_EXT      0x24
+#define ATA_CMD_READ_DMA          0xC8
+#define ATA_CMD_READ_DMA_EXT      0x25
+#define ATA_CMD_WRITE_PIO         0x30
+#define ATA_CMD_WRITE_PIO_EXT     0x34
+#define ATA_CMD_WRITE_DMA         0xCA
+#define ATA_CMD_WRITE_DMA_EXT     0x35
+#define ATA_CMD_CACHE_FLUSH       0xE7
+#define ATA_CMD_CACHE_FLUSH_EXT   0xEA
+#define ATA_CMD_PACKET            0xA0
+#define ATA_CMD_IDENTIFY_PACKET   0xA1
+#define ATA_CMD_IDENTIFY 0xEC
+
+void
+ata_io_wait(int io_base) {
+	inb(io_base + ATA_REG_ALTSTATUS);
+	inb(io_base + ATA_REG_ALTSTATUS);
+	inb(io_base + ATA_REG_ALTSTATUS);
+	inb(io_base + ATA_REG_ALTSTATUS);
+}
+
+int
+ata_status_wait(int io_base, int timeout) {
+	int status;
+
+	if (timeout > 0) {
+		int i = 0;
+		while ((status = inb(io_base + ATA_REG_STATUS)) & ATA_SR_BSY && (i < timeout)) i++;
+	}
+	else {
+		while ((status = inb(io_base + ATA_REG_STATUS)) & ATA_SR_BSY);
+	}
+	return status;
+}
+
+int
+ata_wait(int io, int adv)
+{
+	u8 status = 0;
+
+	ata_io_wait(io);
+
+	status = ata_status_wait(io, -1);
+
+	if (adv) {
+		status = inb(io + ATA_REG_STATUS);
+		if (status & ATA_SR_ERR) return 1;
+		if (status & ATA_SR_DF)  return 1;
+		if (!(status & ATA_SR_DRQ)) return 1;
+	}
+
+	return 0;
+}
+// END COPY
 
 void AtaIdentify(AtaInfo * info)
 {
@@ -62,22 +154,60 @@ void AtaIdentify(AtaInfo * info)
 
     kprint("%s %s is connected.\n", info->devicePort == ATA_PRIMARY ? "Primary" : "Secondary", info->type == ATA_MASTER ? "Master" : "Slave");
 
-	{
-		int i = 0;
-		for (; i < 256; i++)
-		{
-			u16 data = inw(info->dataPort);
-			char * text = "  \0";
-			text[0] = (data >> 8) & 0xFF;
-			text[1] = data & 0xFF;
-			kprint(text);
-		}
-		kprint("\n");
+	//int i = 0;
+	//for (; i < 256; i++)
+	//{
+	//	inw(info->dataPort);
+	//}
+
+	// TODO : 'register' l'ATA device et le mettre à disposition
+}
+
+static void AtaWriteSector(AtaInfo * info, u32 sectorNum, u8 * buffer)
+{
+	u8 cmd = 0xE0;
+
+	outb(info->dataPort + 0x0C, 0x02);
+
+	ata_wait(info->dataPort, 0);
+
+	outb(info->dataPort + ATA_REG_HDDEVSEL, (cmd | (u8)((lba >> 24 & 0x0F))));
+	ata_wait(info->dataPort, 0);
+	outb(info->dataPort + ATA_REG_FEATURES, 0x00);
+	outb(info->dataPort + ATA_REG_SECCOUNT0, 1);
+	outb(info->dataPort + ATA_REG_LBA0, info->lbaLowPort);
+	outb(info->dataPort + ATA_REG_LBA1, info->lbaMidPort);
+	outb(info->dataPort + ATA_REG_LBA2, info->lbaHiPort);
+	outb(info->dataPort + ATA_REG_COMMAND, ATA_CMD_WRITE_PIO);
+	ata_wait(info->dataPort, 0);
+
+	for (int i = 0; i < 256; i++) {
+		outw(info->dataPort, buffer[i]);
+		asm("nop; nop; nop");
 	}
+	outb(info->dataPort + 0x07, ATA_CMD_CACHE_FLUSH);
+
+	ata_wait(info->dataPort, 0);
+}
+
+void AtaWrite(AtaInfo * info, u32 sectorNum, int count, u8 * buffer) 
+{
+	if (buffer == NULL)
+		return;
+
+	DISABLE_IRQ();
+
+	unsigned int i = 0;
+	for (; i < count; i++)
+	{
+		AtaWriteSector(info, sectorNum, buffer);
+		buffer += SECTOR_SIZE;
+	}
+
+	ENABLE_IRQ();
 }
 
 void AtaRead(AtaInfo * info, u32 sectorNum, int count, u8 * buffer) {}
-void AtaWrite(AtaInfo * info, u32 sectorNum, int count, u8 * buffer) {}
 
 //void IdeCommon(int drive, int blockNumber, int count)
 //{

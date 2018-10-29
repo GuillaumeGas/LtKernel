@@ -4,10 +4,10 @@
 // Piqué sur pepin os !
 
 /* desactive les interruptions */
-#define cli() asm("cli"::)
+#define DISABLE_IRQ() asm("cli"::)
 
 /* reactive les interruptions */
-#define sti() asm("sti"::)
+#define ENABLE_IRQ() asm("sti"::)
 
 /* ecrit un octet sur un port */
 #define outb(port,value)						\
