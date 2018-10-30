@@ -2,6 +2,8 @@
 
 #include <kernel/init/vmm.h>
 
+#include <kernel/user/process.h>
+
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/types.h>
 #include <kernel/lib/list.h>
@@ -15,29 +17,6 @@
 #define USER_CODE_SEG_SELECTOR 0x1B
 #define USER_STACK_SEG_SELECTOR 0x23
 #define USER_DATA_SEG_SELECTOR 0x23
-
-struct process
-{
-	int pid;
-	unsigned int startExcecutionTime;
-	struct page_directory pageDirectory;
-	
-	struct
-	{
-		u32 esp0;
-		u16 ss0;
-	} kstack;
-	
-	struct
-	{
-		u32 eax, ebx, ecx, edx;
-		u32 ebp, esp, esi, edi;
-		u32 eip, eflags;
-		u32 cs : 16, ss : 16, ds : 16, es : 16, fs : 16, gs : 16;
-		u32 cr3;
-	} regs;
-};
-typedef struct process Process;
 
 enum ExecMode { KERNEL, USER };
 typedef enum ExecMode ExecMode;

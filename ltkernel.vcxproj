@@ -121,6 +121,8 @@
     <ClCompile Include="kernel\lib\stdlib.c" />
     <ClCompile Include="kernel\logger.c" />
     <ClCompile Include="kernel\scheduler.c" />
+    <ClCompile Include="kernel\user\console.c" />
+    <ClCompile Include="kernel\user\process.c" />
     <ClCompile Include="kernel\user\process_manager.c" />
     <ClCompile Include="kernel\user\syscalls.c" />
     <ClCompile Include="kernel\user\user_tests.c" />
@@ -148,6 +150,8 @@
     <ClInclude Include="kernel\logger.h" />
     <ClInclude Include="kernel\multiboot.h" />
     <ClInclude Include="kernel\scheduler.h" />
+    <ClInclude Include="kernel\user\console.h" />
+    <ClInclude Include="kernel\user\process.h" />
     <ClInclude Include="kernel\user\process_manager.h" />
     <ClInclude Include="kernel\user\syscalls.h" />
     <ClInclude Include="kernel\user\user_tests.h" />

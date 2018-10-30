@@ -132,6 +132,12 @@
     <ClCompile Include="kernel\user\syscalls.c">
       <Filter>Fichiers sources\kernel\user</Filter>
     </ClCompile>
+    <ClCompile Include="kernel\user\console.c">
+      <Filter>Fichiers sources\kernel\user</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\user\process.c">
+      <Filter>Fichiers sources\kernel\user</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\logger.h">
@@ -208,6 +214,12 @@
     </ClInclude>
     <ClInclude Include="kernel\init\isr.h">
       <Filter>Fichiers sources\kernel\init</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\user\console.h">
+      <Filter>Fichiers sources\kernel\user</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\user\process.h">
+      <Filter>Fichiers sources\kernel\user</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

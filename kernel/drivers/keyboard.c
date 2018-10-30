@@ -6,6 +6,8 @@
 #include <kernel/lib/types.h>
 #include <kernel/lib/stdio.h>
 
+#include <kernel/user/console.h>
+
 void DrvKeyboard()
 {
     uchar i;
@@ -39,8 +41,7 @@ void DrvKeyboard()
                 /*     alt_enable = 1; */
                 /*     break; */
             default:
-                kprint("%c", kbdmap
-                    [i * 4 + (lshift_enable || rshift_enable)]);
+                CnslHandleKey(kbdmap[i * 4 + (lshift_enable || rshift_enable)]);
         }
     }
     else

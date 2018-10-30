@@ -79,13 +79,7 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	InitCleanCallbacksList();
 
-	PmCreateProcess(TestTask1, 500);
-	PmCreateProcess(TestTask2, 500);
-	PmCreateProcess(TestTask2, 500);
-	PmCreateProcess(TestTask1, 500);
-	PmCreateProcess(TestTask1, 500);
-	PmCreateProcess(TestTask1, 500);
-	PmCreateProcess(TestTask2, 500);
+	PmCreateProcess(TestConsole, 500);
 
 	sti();
 
