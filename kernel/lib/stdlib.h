@@ -4,6 +4,8 @@
 
 #define FlagOn(a, b) ((a & b) != 0)
 #define NULL 0
+#define TRUE 1
+#define FALSE 0
 
 void Pause ();
 void Halt();

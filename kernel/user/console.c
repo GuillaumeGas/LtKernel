@@ -22,8 +22,14 @@ void CnslHandleKey(const char key)
 {
     if (gConsole.ownerProcess != NULL)
     {
+		Process * p = gConsole.ownerProcess;
+		p->console.consoleBuffer[p->console.bufferIndex++] = key;
         kprint("%c", key);
-        //ProcessHandleInput(key);
+
+		if (key == '\n')
+		{
+			p->console.readyToBeFlushed = TRUE;
+		}
     }
 }
 

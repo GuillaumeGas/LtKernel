@@ -2,6 +2,8 @@
 
 #include <kernel/init/vmm.h>
 
+#define PROCESS_CONSOLE_BUFFER_SIZE 512
+
 struct Process
 {
     int pid;
@@ -22,6 +24,14 @@ struct Process
         u32 cs : 16, ss : 16, ds : 16, es : 16, fs : 16, gs : 16;
         u32 cr3;
     } regs;
+
+	struct
+	{
+		char consoleBuffer[PROCESS_CONSOLE_BUFFER_SIZE];
+		unsigned int bufferIndex;
+		BOOL readyToBeFlushed;
+	} console;
+
 } typedef Process;
 
 Process * GetCurrentProcess();

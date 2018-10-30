@@ -100,6 +100,10 @@ void PmCreateProcess(void * taskAddr, unsigned int size)
 	newProcess->kstack.esp0 = (u32)kernelStackPage.vAddr + PAGE_SIZE;
 	newProcess->kstack.ss0 = 0x10;
 
+	MmSet((u8 *)newProcess->console.consoleBuffer, 0, PROCESS_CONSOLE_BUFFER_SIZE);
+	newProcess->console.bufferIndex = 0;
+	newProcess->console.readyToBeFlushed = FALSE;
+
 	ListPush(gProcessList, (void*)newProcess);
 
 	gNbProcess++;

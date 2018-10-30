@@ -9,7 +9,7 @@
 #include <kernel/lib/stdlib.h>
 
 static void SysPrint(const char * str);
-static void SysScanf(const char * buffer);
+static void SysScanf(char * buffer);
 
 enum SyscallId
 {
@@ -37,7 +37,7 @@ static void SysPrint(const char * str)
     kprint(str);
 }
 
-static void SysScanf(const char * buffer)
+static void SysScanf(char * buffer)
 {
     Process * currentProcess = GetCurrentProcess();
 
@@ -45,16 +45,26 @@ static void SysScanf(const char * buffer)
     {
         CnslSetOwnerProcess(currentProcess);
     }
-    else
-    {
-        Process * currentCnslOwner = CnslGetOwnerProcess();
+	else
+	{
+		Process * currentCnslOwner = CnslGetOwnerProcess();
 
-        if (currentCnslOwner != currentProcess)
-        {
-            while (!CnslIsAvailable());
+		if (currentCnslOwner != currentProcess)
+		{
+			while (!CnslIsAvailable());
 
-            // TODO : Add lock/mutex whatever !
-            CnslGetOwnerProcess(currentProcess);
-        }
-    }
+			// TODO : Add lock/mutex whatever ?
+			CnslSetOwnerProcess(currentProcess);
+		}
+	}
+
+	while (!currentProcess->console.readyToBeFlushed);
+
+	MmCopy((u8 *)currentProcess->console.consoleBuffer, (u8 *)buffer, currentProcess->console.bufferIndex + 1);
+	buffer[currentProcess->console.bufferIndex] = '\0';
+
+	CnslFreeOwnerProcess();
+
+	currentProcess->console.bufferIndex = 0;
+	currentProcess->console.readyToBeFlushed = FALSE;
 }

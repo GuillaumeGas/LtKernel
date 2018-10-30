@@ -44,12 +44,17 @@ void TestConsole()
     char * begin = (char *)TMP_DATA_ADDR;
     char * buffer = (char *)TMP_DATA_ADDR + 4;
 
-    begin[0] = '>';
-    begin[1] = ' ';
-    begin[2] = '\0';
+	while (1)
+	{
+		begin[0] = '>';
+		begin[1] = ' ';
+		begin[2] = '\0';
 
-    PRINTF(begin);
-    SCANF(buffer);
+		PRINTF(begin);
+		SCANF(buffer);
+
+		PRINTF(buffer);
+	}
 
     PAUSE();
 }
