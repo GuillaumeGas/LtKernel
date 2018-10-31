@@ -50,6 +50,8 @@ Le noyau décrit les **segments** suivant :
  - si une tâche est en cours d'exécution, on sauvegarde son contexte et on permute sur la tâche suivante
  - sinon on ne fait rien
 
-**L'appel système** implémenté permet d'afficher une chaîne depuis une tâche utilisateur. La commutation de tâche est effectuée en utilisant le fonctionnement de l'instruction iret.
+**Les appels système** :
+ - [0] : printf
+ - [1] : scanf
 
 Un **logger** permet de rediriger l'affichage de texte soit vers **l'écran** soit vers le **port série** (**COM 1**)
