@@ -38,7 +38,9 @@ void ListDestroyEx(List * list, CleanFunPtr cleaner)
 			cleaner(elem->data);
 		kfree(elem);
 		elem = next;
-		next = next->next;
+
+        if (next != NULL)
+            next = next->next;
 	}
 }
 
@@ -108,4 +110,22 @@ void * ListPop(List ** list)
     kfree(*list);
     *list = (List *)next;
     return data;
+}
+
+void ListEnumerate(List * list, EnumerateFunPtr callback, void * Context)
+{
+    if (list == NULL || callback == NULL)
+        return;
+
+    ListElem * elem = list;
+    ListElem * next = list->next;
+
+    while (elem != NULL)
+    {
+        callback(elem->data, Context);
+        elem = next;
+
+        if (next != NULL)
+            next = next->next;
+    }
 }

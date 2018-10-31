@@ -2,6 +2,7 @@
 
 global _init_vmm
 global _setCurrentPagesDirectory
+global _getCurrentPagesDirectory
 
 ;;; Place l'adresse du page directory passé en paramètre dans cr3
 ;;; Met le bit de pagination (31) à 1 dans cr0 pour activer la pagination
@@ -30,3 +31,12 @@ _setCurrentPagesDirectory:
 
 	leave
 	ret
+
+_getCurrentPagesDirectory:
+    push ebp
+    mov ebp, esp
+
+    mov eax, cr3
+
+    leave
+    ret

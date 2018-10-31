@@ -7,7 +7,7 @@ BOOT=../boot/bootsector.o
 ROOT=kernel.o logger.o scheduler.o
 DEBUG=debug.o
 DRIVERS=screen.o serial.o clock.o keyboard.o
-INIT=gdt.o gdt_loader.o idt.o idt_loader.o int.o isr.o vmm.o pic.o vmm_loader.o heap.o
+INIT=gdt.o gdt_loader.o idt.o idt_loader.o int.o isr.o vmm.o pic.o vmm_utils.o heap.o
 LIB=kmalloc.o list.o stdio.o stdlib.o panic.o
 USER=process.o process_manager.o process_starter.o syscalls.o console.o user_tests.o
 
@@ -72,7 +72,7 @@ vmm.o: init/vmm.c
 pic.o: init/pic.asm
 	$(ASM) -o $@ $^
 
-vmm_loader.o: init/vmm_loader.asm
+vmm_utils.o: init/vmm.asm
 	$(ASM) -o $@ $^
 
 heap.o: init/heap.c

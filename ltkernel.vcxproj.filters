@@ -55,9 +55,6 @@
     <None Include="kernel\init\pic.asm">
       <Filter>Fichiers sources\kernel\init</Filter>
     </None>
-    <None Include="kernel\init\vmm_loader.asm">
-      <Filter>Fichiers sources\kernel\init</Filter>
-    </None>
     <None Include="kernel\user\process_starter.asm">
       <Filter>Fichiers sources\kernel\user</Filter>
     </None>
@@ -66,6 +63,9 @@
     </None>
     <None Include="kernel\linker.ld">
       <Filter>Fichiers sources\kernel</Filter>
+    </None>
+    <None Include="kernel\init\vmm.asm">
+      <Filter>Fichiers sources\kernel\init</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

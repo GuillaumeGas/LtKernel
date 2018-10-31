@@ -96,7 +96,7 @@
     <None Include="kernel\init\idt_loader.asm" />
     <None Include="kernel\init\int.asm" />
     <None Include="kernel\init\pic.asm" />
-    <None Include="kernel\init\vmm_loader.asm" />
+    <None Include="kernel\init\vmm.asm" />
     <None Include="kernel\linker.ld" />
     <None Include="kernel\Makefile" />
     <None Include="kernel\user\process_starter.asm" />

@@ -25,7 +25,7 @@ void PmInit()
 	 - réserve une page pour y stocker le code de la tâche
 	 - initialise les répertoire et table de pages
 */
-void PmCreateProcess(void * taskAddr, unsigned int size)
+void PmCreateProcess(void * taskAddr, unsigned int size, Process * parent)
 {
 	PageDirectory userPd = { 0 };
 	Process * newProcess = NULL;
@@ -39,6 +39,7 @@ void PmCreateProcess(void * taskAddr, unsigned int size)
 	vUserCodePtr = (u8 *)USER_TASK_V_ADDR;
 
 	// On utilise maintenant le répertoire de pages de la tâche utilisateur pour le mettre correctement à jour
+    PageDirectoryEntry * currentKernelPd = _getCurrentPagesDirectory();
 	_setCurrentPagesDirectory(userPd.pdEntry);
 
 	// Tant qu'on a du code à copier en mémoire...
@@ -78,6 +79,7 @@ void PmCreateProcess(void * taskAddr, unsigned int size)
 	newProcess = (Process *)kmalloc(sizeof(Process));
 	newProcess->pid = gNbProcess;
 	newProcess->pageDirectory = userPd;
+    newProcess->state = PROCESS_STATE_ALIVE;
     
     newProcess->regs.ss = USER_STACK_SEG_SELECTOR;
     newProcess->regs.cs = USER_CODE_SEG_SELECTOR;
@@ -104,12 +106,15 @@ void PmCreateProcess(void * taskAddr, unsigned int size)
 	newProcess->console.bufferIndex = 0;
 	newProcess->console.readyToBeFlushed = FALSE;
 
-	ListPush(gProcessList, (void*)newProcess);
+    newProcess->children = ListCreate();
+    newProcess->parent = parent;
 
-	gNbProcess++;
+    ListPush(gProcessList, (void*)newProcess);
+
+    gNbProcess++;
 
 	// On revient sur le répertoire de pages initial du noyau
-	_setCurrentPagesDirectory(gKernelInfo.pPageDirectory.pdEntry);
+	_setCurrentPagesDirectory(currentKernelPd);
 }
 
 void PmStartProcess(int pid)
@@ -165,7 +170,7 @@ void PmCleanCallback()
 	ListDestroyEx(gProcessList, CleanProcessCallback);
 }
 
-void DumpProcess(Process * process)
+void PmDumpProcess(Process * process)
 {
     kprint("== Process %d ==\n", process->pid);
     kprint(" - kstack_esp0 : %x\n", process->kstack.esp0);
@@ -188,4 +193,27 @@ void DumpProcess(Process * process)
     kprint(" - fs : %x\n", process->regs.fs);
     kprint(" - gs : %x\n", process->regs.gs);
     kprint(" - cs : %x\n", process->regs.cs);
+}
+
+static void PrintProcessCallback(void * _process, void * _context)
+{
+    UNREFERENCED_PARAMETER(_context);
+
+    Process * process = (Process *)_process;
+
+    if (process == NULL)
+        return;
+
+    kprint("Process %d, state : %s, start exec time : %d\n",
+        process->pid,
+        process->state == PROCESS_STATE_ALIVE ? "ALIVE" : (process->state == PROCESS_STATE_PAUSE ? "PAUSE" : "DEAD"),
+        process->startExcecutionTime
+    );
+}
+
+void PmPrintProcessList()
+{
+    List * processList = gProcessList;
+
+    ListEnumerate(processList, PrintProcessCallback, NULL);
 }
