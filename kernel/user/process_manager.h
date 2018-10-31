@@ -32,12 +32,14 @@ extern unsigned int gNbProcess;
 #endif
 
 void PmInit();
-void PmCreateProcess(void * task_addr, unsigned int size);
+int PmCreateProcess(void * task_addr, unsigned int size, Process * parent);
 void PmStartProcess(int pid);
 void PmCleanCallback();
 void PmDumpProcess(Process * process);
+void PmPrintProcessList();
 
 void _start_process(PageDirectoryEntry * pd, u32 ss, u32 esp, u32 eflags, u32 cs, u32 eip,
 	u32 eax, u32 ecx, u32 edx, u32 ebx, u32 ebp, u32 esi, u32 edi, u32 ds, u32 es, u32 fs, u32 gs,
 	ExecMode execMode);
 void _setCurrentPagesDirectory(PageDirectoryEntry * pd);
+PageDirectoryEntry * _getCurrentPagesDirectory();

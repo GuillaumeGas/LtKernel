@@ -7,6 +7,8 @@
 #define TRUE 1
 #define FALSE 0
 
+#define UNREFERENCED_PARAMETER(param) param=param
+
 void Pause ();
 void Halt();
 

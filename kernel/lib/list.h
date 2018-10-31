@@ -9,6 +9,7 @@ struct ListElem
 typedef ListElem List;
 
 typedef void(*CleanFunPtr)(void*);
+typedef void(*EnumerateFunPtr)(void*, void*);
 
 List * ListCreate();
 void ListDestroy(List * list);
@@ -17,3 +18,4 @@ void ListPush(List * list, void * data);
 void * ListGet(List * list, unsigned int index);
 void * ListTop(List * list);
 void * ListPop(List ** list);
+void ListEnumerate(List * list, EnumerateFunPtr callback, void * Context);
