@@ -11,18 +11,20 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
 
-static void SysPrint(const char * str);
-static void SysScanf(char * buffer);
-static void SysExec(void * funAddr);
-static void SysExit();
-static void SysDebugListProcess();
+static int SysPrint(const char * str);
+static int SysScanf(char * buffer);
+static int SysExec(void * funAddr);
+static int SysWait(int pid);
+static int SysExit();
+static int SysDebugListProcess();
 
 enum SyscallId
 {
     SYSCALL_PRINT = 1,
     SYSCALL_SCANF = 2,
     SYSCALL_EXEC  = 3,
-    SYSCALL_EXIT  = 4,
+	SYSCALL_WAIT  = 4,
+    SYSCALL_EXIT  = 5,
 
     SYSCALL_DEBUG_LIST_PROCESS   = 10,
     SYSCALL_DEBUG_DUMP_REGISTERS = 11
@@ -30,34 +32,41 @@ enum SyscallId
 
 void SyscallHandler(int syscallNumber, InterruptContext * context)
 {
+	int ret = 0;
+
     switch (syscallNumber)
     {
         case SYSCALL_PRINT:
-            SysPrint((char *)context->ebx);
+            ret = SysPrint((char *)context->ebx);
             break;
         case SYSCALL_SCANF:
-            SysScanf((char *)context->ebx);
+            ret = SysScanf((char *)context->ebx);
             break;
         case SYSCALL_EXEC:
-            SysExec((void *)context->ebx);
+            ret = SysExec((void *)context->ebx);
             break;
+		case SYSCALL_WAIT:
+			ret = SysWait((int)context->ebx);
+			break;
         case SYSCALL_EXIT:
-            SysExit();
+            ret = SysExit();
             break;
         case SYSCALL_DEBUG_LIST_PROCESS:
-            SysDebugListProcess();
+            ret = SysDebugListProcess();
             break;
         default:
             kprint("SyscallHandler() : unknown system call !\n");
     }
+	context->eax = ret;
 }
 
-static void SysPrint(const char * str)
+static int SysPrint(const char * str)
 {
     kprint(str);
+	return STATUS_SUCCESS;
 }
 
-static void SysScanf(char * buffer)
+static int SysScanf(char * buffer)
 {
     Process * currentProcess = GetCurrentProcess();
 
@@ -87,14 +96,16 @@ static void SysScanf(char * buffer)
 
 	currentProcess->console.bufferIndex = 0;
 	currentProcess->console.readyToBeFlushed = FALSE;
+
+	return STATUS_SUCCESS;
 }
 
-static void SysExec(void * funAddr)
+static int SysExec(void * funAddr)
 {
     if (funAddr == NULL)
     {
         kprint("Error in syscall.c!SysExec(), invalid funAddr parameter (value : %x)\n", (u8 *)funAddr);
-        return;
+        return STATUS_INVALID_PARAMETER;
     }
 
     Process * currentProcess = GetCurrentProcess();
@@ -102,31 +113,72 @@ static void SysExec(void * funAddr)
     if (currentProcess == NULL)
     {
         kprint("Error in syscall.c!SysExec(), GetCurrentProcess() returned NULL !\n");
-        return;
+        return STATUS_PROCESS_NOT_FOUND;
     }
 
     int newProcPid = PmCreateProcess(funAddr, 500 /*tmp !*/, currentProcess);
-	Process * newProcess = GetProcessFromPid(newProcPid);
+	/*Process * newProcess = GetProcessFromPid(newProcPid);*/
 	
 	// TODO, implémenter syscall_wait !
-	while (newProcess->state != PROCESS_STATE_DEAD);
+	//while (newProcess->state != PROCESS_STATE_DEAD);
+
+	return newProcPid;
 }
 
-static void SysExit()
+static int SysWait(int pid)
+{
+	// On empêche d'attendre sur le processus system pour l'instant...
+	if (pid == 0)
+	{
+		// TODO : ajouter des logs de debug qui s'affichent que si nécessaire...
+		kprint("Can't wait on system process !\n");
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	Process * currentProc = GetCurrentProcess();
+	Process * process = GetProcessFromPid(pid);
+
+	if (currentProc == NULL)
+	{
+		kprint("SysWait() : GetCurrentProcess() returned NULL !\n");
+		return STATUS_FAILURE;
+	}
+
+	if (currentProc->pid == pid)
+	{
+		kprint("SysWait() : a process can't wait its own death !\n");
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	if (process == NULL)
+	{
+		kprint("SysWait() : can't find process with pid : %d\n", pid);
+		return STATUS_PROCESS_NOT_FOUND;
+	}
+
+	while (process->state == PROCESS_STATE_ALIVE);
+
+	return STATUS_SUCCESS;
+}
+
+static int SysExit()
 {
     Process * currentProcess = GetCurrentProcess();
 
     if (currentProcess == NULL)
     {
         kprint("Error in syscall.c!SysExit(), GetCurrentProcess() returned NULL !\n");
-        return;
+		return STATUS_FAILURE;
     }
 
     currentProcess->state = PROCESS_STATE_DEAD;
 	gNbProcess--;
+
+	return STATUS_SUCCESS;
 }
 
-static void SysDebugListProcess()
+static int SysDebugListProcess()
 {
     PmPrintProcessList();
+	return STATUS_SUCCESS;
 }

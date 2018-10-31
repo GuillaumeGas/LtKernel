@@ -144,6 +144,7 @@
     <ClInclude Include="kernel\lib\kmalloc.h" />
     <ClInclude Include="kernel\lib\list.h" />
     <ClInclude Include="kernel\lib\panic.h" />
+    <ClInclude Include="kernel\lib\status.h" />
     <ClInclude Include="kernel\lib\stdio.h" />
     <ClInclude Include="kernel\lib\stdlib.h" />
     <ClInclude Include="kernel\lib\types.h" />

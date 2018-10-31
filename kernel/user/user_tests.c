@@ -1,10 +1,12 @@
 #define PRINTF(str)      asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30" :: "m" (str));
 #define SCANF(buffer)    asm("mov %0, %%ebx; mov $0x02, %%eax; int $0x30" :: "m" (buffer));
 #define EXEC(addr)       asm("mov %0, %%ebx; mov $0x03, %%eax; int $0x30" :: "m" (addr));
-#define EXIT()           asm("mov $0x04, %%eax; int $0x30" ::);
+#define WAIT(pid)        asm("mov %0, %%ebx; mov $0x04, %%eax; int $0x30" :: "m" (pid));
+#define EXIT()           asm("mov $0x05, %%eax; int $0x30" ::);
 #define LIST_PROCESS()   asm("mov $0x0A, %%eax; int $0x30" ::);
 
 #define PAUSE() while(1);
+#define GET_RET(ret) asm("mov %%eax, %0" : "=m" (ret) :)
 
 #define EXEC_CMD               'e'
 #define DEBUG_LIST_PROCESS_CMD 'p'
@@ -54,6 +56,7 @@ void TestConsole()
     char * begin = (char *)TMP_DATA_ADDR;
     char * buffer = (char *)TMP_DATA_ADDR + 4;
     void * addr = TestTask1;
+	int pid = -1;
 
 	begin[0] = '>';
 	begin[1] = ' ';
@@ -68,6 +71,8 @@ void TestConsole()
         {
             case EXEC_CMD:
                 EXEC(addr);
+				GET_RET(pid);
+				WAIT(pid);
                 break;
             case DEBUG_LIST_PROCESS_CMD:
                 LIST_PROCESS();

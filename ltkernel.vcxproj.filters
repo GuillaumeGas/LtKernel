@@ -221,5 +221,8 @@
     <ClInclude Include="kernel\user\process.h">
       <Filter>Fichiers sources\kernel\user</Filter>
     </ClInclude>
+    <ClInclude Include="kernel\lib\status.h">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

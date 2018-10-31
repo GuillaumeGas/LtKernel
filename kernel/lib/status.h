@@ -1,0 +1,6 @@
+#pragma once
+
+#define STATUS_FAILURE 0
+#define STATUS_SUCCESS 1
+#define STATUS_INVALID_PARAMETER 2
+#define STATUS_PROCESS_NOT_FOUND 3
