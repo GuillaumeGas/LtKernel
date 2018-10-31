@@ -51,3 +51,4 @@ struct Process
 } typedef Process;
 
 Process * GetCurrentProcess();
+Process * GetProcessFromPid(int pid);

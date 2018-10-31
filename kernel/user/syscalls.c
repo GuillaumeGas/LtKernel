@@ -105,7 +105,11 @@ static void SysExec(void * funAddr)
         return;
     }
 
-    PmCreateProcess(funAddr, 500 /*tmp !*/, currentProcess);
+    int newProcPid = PmCreateProcess(funAddr, 500 /*tmp !*/, currentProcess);
+	Process * newProcess = GetProcessFromPid(newProcPid);
+	
+	// TODO, implémenter syscall_wait !
+	while (newProcess->state != PROCESS_STATE_DEAD);
 }
 
 static void SysExit()
@@ -119,6 +123,7 @@ static void SysExit()
     }
 
     currentProcess->state = PROCESS_STATE_DEAD;
+	gNbProcess--;
 }
 
 static void SysDebugListProcess()

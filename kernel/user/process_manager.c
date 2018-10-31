@@ -25,7 +25,7 @@ void PmInit()
 	 - réserve une page pour y stocker le code de la tâche
 	 - initialise les répertoire et table de pages
 */
-void PmCreateProcess(void * taskAddr, unsigned int size, Process * parent)
+int PmCreateProcess(void * taskAddr, unsigned int size, Process * parent)
 {
 	PageDirectory userPd = { 0 };
 	Process * newProcess = NULL;
@@ -115,6 +115,8 @@ void PmCreateProcess(void * taskAddr, unsigned int size, Process * parent)
 
 	// On revient sur le répertoire de pages initial du noyau
 	_setCurrentPagesDirectory(currentKernelPd);
+
+	return newProcess->pid;
 }
 
 void PmStartProcess(int pid)

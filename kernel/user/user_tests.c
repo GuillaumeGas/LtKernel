@@ -55,12 +55,12 @@ void TestConsole()
     char * buffer = (char *)TMP_DATA_ADDR + 4;
     void * addr = TestTask1;
 
+	begin[0] = '>';
+	begin[1] = ' ';
+	begin[2] = '\0';
+
 	while (1)
 	{
-		begin[0] = '>';
-		begin[1] = ' ';
-		begin[2] = '\0';
-
 		PRINTF(begin);
 		SCANF(buffer);
 
@@ -73,8 +73,6 @@ void TestConsole()
                 LIST_PROCESS();
                 break;
         }
-
-		PRINTF(buffer);
 	}
 
     PAUSE();

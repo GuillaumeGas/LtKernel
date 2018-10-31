@@ -16,8 +16,10 @@ static int GetNextProcessPid()
         if (p->state == PROCESS_STATE_ALIVE)
             return nextPid;
         nextPid = (nextPid + 1) % gNbProcess;
-        if (gCurrentProcess->pid == nextPid)
-            return nextPid;
+		if (gCurrentProcess->pid == nextPid)
+		{
+			return nextPid;
+		}
     } while (1);
 }
 
@@ -28,7 +30,7 @@ void Schedules()
 		gCurrentProcess = (Process *)ListTop(gProcessList);
 		PmStartProcess(gCurrentProcess->pid);
 	}
-	else if (gCurrentProcess != NULL && gNbProcess > 1)
+	else if (gCurrentProcess != NULL && (gNbProcess > 1 || gCurrentProcess->state != PROCESS_STATE_ALIVE))
 	{
 		u32 * stack_ptr = NULL;
 
