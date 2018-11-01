@@ -135,6 +135,9 @@
     <ClCompile Include="kernel\drivers\disk.c">
       <Filter>Fichiers sources\kernel\drivers</Filter>
     </ClCompile>
+    <ClCompile Include="kernel\drivers\ata.c">
+      <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\logger.h">
@@ -213,6 +216,9 @@
       <Filter>Fichiers sources\kernel\init</Filter>
     </ClInclude>
     <ClInclude Include="kernel\drivers\disk.h">
+      <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\drivers\ata.h">
       <Filter>Fichiers sources\kernel\drivers</Filter>
     </ClInclude>
   </ItemGroup>

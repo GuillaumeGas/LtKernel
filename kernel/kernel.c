@@ -12,7 +12,7 @@
 #include <kernel/drivers/proc_io.h>
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
-#include <kernel/drivers/disk.h>
+#include <kernel/drivers/ata.h>
 
 #include <kernel/user/process_manager.h>
 #include <kernel/user/user_tests.h>
@@ -52,10 +52,12 @@ void TestAta()
     StrCpy("Hello world !\n", buf);
 
     kprint("Ata test\n");
-	AtaInfo ata1 = AtaCreate(ATA_SECONDARY, ATA_MASTER);
+	/*AtaInfo ata1 = AtaCreate(ATA_SECONDARY, ATA_MASTER);
 	AtaIdentify(&ata1);
 
-	AtaWrite(&ata1, 1, 1, (u8 *)buf);
+	AtaWrite(&ata1, 2, 1, (u8 *)buf);*/
+
+	ata_init();
 
     kprint(buf);
     //IdeWrite(0, 2, 1, buf);

@@ -2,8 +2,6 @@
 
 #include <kernel/lib/types.h>
 
-//#define CLOCK_DEBUG   
-
 #ifdef __CLOCK__
 u32 gClockTic = 0;
 u32 gClockSec = 0;
