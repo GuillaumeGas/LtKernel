@@ -150,4 +150,7 @@ void kprint(const char * format, ...)
 	}
 
 	va_end(ap);
+
+	if (ScIsCursorEnabled())
+		ScShowCursor();
 }

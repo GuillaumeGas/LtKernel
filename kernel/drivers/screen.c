@@ -1,8 +1,11 @@
 #include "screen.h"
 
+#include <kernel/drivers/proc_io.h>
+
 static int _line = 1;
 static int _column = 1;
 static u8 _color = 0x0F;
+static int _isCursorEnabled = 0;
 
 void ScPrintChar(char c)
 {
@@ -50,8 +53,8 @@ void ScClear()
 {
 	int i = 0;
 	u8 * screen_ptr = (u8*)SCREEN_PTR;
-	for (; i < (LINES*COLUMNS) * 2; i++)
-		*(screen_ptr + i) = 0;
+	for (; i < (LINES*COLUMNS) * 2; i += 2)
+		screen_ptr[i] = ' ';
 	_line = 0;
 	_column = 0;
 }
@@ -101,4 +104,52 @@ void ScSetBackground(u8 color)
 
 	for (; screen_ptr <= screen_end_ptr; screen_ptr += 2)
 		*screen_ptr = (*screen_ptr & 0x8F) | ((color & 0x7) << 4);
+}
+
+void ScEnableCursor()
+{
+	outb(0x3D4, 0x0A);
+	outb(0x3D5, (inb(0x3D5) & 0xC0) | 13);
+
+	outb(0x3D4, 0x0B);
+	outb(0x3D5, (inb(0x3D5) & 0xE0) | 15);
+
+	_isCursorEnabled = 1;
+
+	ScShowCursor();
+}
+
+void ScDisableCursor()
+{
+	outb(0x3D4, 0x0A);
+	outb(0x3D5, 0x20);
+
+	_isCursorEnabled = 0;
+}
+
+void ScMoveCursor(u8 x, u8 y)
+{
+	u16 c_pos;
+
+	c_pos = y * COLUMNS + x;
+
+	outb(0x3d4, 0x0f);
+	outb(0x3d5, (u8)c_pos & 0xFF);
+	outb(0x3d4, 0x0e);
+	outb(0x3d5, (u8)(c_pos >> 8) & 0xFF);
+}
+
+void ScShowCursor(void)
+{
+	ScMoveCursor(_column, _line);
+}
+
+void ScHideCursor(void)
+{
+	ScMoveCursor(-1, -1);
+}
+
+int ScIsCursorEnabled()
+{
+	return _isCursorEnabled;
 }

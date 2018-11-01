@@ -1,6 +1,7 @@
 #include "syscalls.h"
 
 #include <kernel/drivers/clock.h>
+#include <kernel/drivers/screen.h>
 
 #include <kernel/user/process.h>
 #include <kernel/user/console.h>
@@ -70,6 +71,8 @@ static int SysScanf(char * buffer)
 {
     Process * currentProcess = GetCurrentProcess();
 
+	ScEnableCursor();
+
     if (CnslIsAvailable())
     {
         CnslSetOwnerProcess(currentProcess);
@@ -88,6 +91,8 @@ static int SysScanf(char * buffer)
 	}
 
 	while (!currentProcess->console.readyToBeFlushed);
+
+	ScDisableCursor();
 
 	MmCopy((u8 *)currentProcess->console.consoleBuffer, (u8 *)buffer, currentProcess->console.bufferIndex + 1);
 	buffer[currentProcess->console.bufferIndex] = '\0';

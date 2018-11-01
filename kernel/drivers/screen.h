@@ -38,5 +38,11 @@ void ScSetColor (u8 color);
 void ScSetColorEx (u8, u8, u8, u8);
 void ScScrollUp ();
 void ScSetBackground (u8 color);
+void ScMoveCursor(u8 x, u8 y);
+void ScEnableCursor();
+void ScDisableCursor();
+int ScIsCursorEnabled();
+void ScShowCursor(void);
+void ScHideCursor(void);
 
 #endif
