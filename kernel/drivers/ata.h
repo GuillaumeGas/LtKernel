@@ -1,5 +1,7 @@
 #pragma once
 
+// Source exemple : https://github.com/levex/levos7/blob/d04d594defa767181c5eb938ee7d116fbd9b6802/drivers/ata.c
+
 #define ATA_SR_BSY     0x80
 #define ATA_SR_DRDY    0x40
 #define ATA_SR_DF      0x20
@@ -31,9 +33,6 @@
 #define ATA_CMD_PACKET            0xA0
 #define ATA_CMD_IDENTIFY_PACKET   0xA1
 #define ATA_CMD_IDENTIFY          0xEC
-
-#define      ATAPI_CMD_READ       0xA8
-#define      ATAPI_CMD_EJECT      0x1B
 
 #define ATA_IDENT_DEVICETYPE   0
 #define ATA_IDENT_CYLINDERS    2
@@ -72,34 +71,37 @@
 #define      ATA_READ      0x00
 #define      ATA_WRITE     0x013
 
-struct device
+struct AtaDevice
 {
-#define DEV_TYPE_UNKNOWN 0
-#define DEV_TYPE_BLOCK   1
-#define DEV_TYPE_CHAR    2
-	int type;
-
-#define DEV_TYPE_BLOCK_UNKNOWN 0
-#define DEV_TYPE_BLOCK_ATA     1
-
-#define DEV_TYPE_CHAR_VT_TTY 1
-#define DEV_TYPE_CHAR_NOVT_TTY 2
-	int subtype;
-
+	u8 type; // master or slave
+	u16 dataPort;
+	u8 errorPort;
+	u8 sectorCountPort;
+	u8 lbaLowPort;
+	u8 lbaMidPort;
+	u8 lbaHiPort;
+	u8 devicePort;
+	u8 commandPort;
+	u8 controlPort;
 	unsigned long pos;
+} typedef AtaDevice;
 
-	char *name;
-	void *priv;
+enum AtaIoPort
+{
+	ATA_PRIMARY   = 0x1F0,
+	ATA_SECONDARY = 0x170
 };
+typedef enum AtaIoPort AtaIoPort;
 
-extern struct device *block_devices[];
-#define for_each_blockdev(dev) \
-        for (int __i__ = 0; \
-                (dev = block_devices[__i__]) != NULL && __i__ < 32;\
-                __i__++)
+enum AtaType
+{
+	ATA_MASTER = 0xA0,
+	ATA_SLAVE  = 0xB0
+};
+typedef enum AtaType AtaType;
 
-void device_register(struct device *);
-void dev_init(void);
-void dev_seek(struct device *, int);
+int AtaInit(AtaDevice * ataDevice);
+AtaDevice AtaCreate(AtaIoPort ioPort, AtaType type);
 
-void ata_init(void);
+int AtaWritePio(AtaDevice * device, void * buf, int count);
+int AtaReadPio(AtaDevice * dev, void * buf, int count);

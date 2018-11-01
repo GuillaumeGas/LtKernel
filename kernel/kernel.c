@@ -52,15 +52,16 @@ void TestAta()
     StrCpy("Hello world !\n", buf);
 
     kprint("Ata test\n");
-	/*AtaInfo ata1 = AtaCreate(ATA_SECONDARY, ATA_MASTER);
-	AtaIdentify(&ata1);
-
-	AtaWrite(&ata1, 2, 1, (u8 *)buf);*/
-
-	ata_init();
-
-    kprint(buf);
-    //IdeWrite(0, 2, 1, buf);
+	AtaDevice ata1 = AtaCreate(ATA_SECONDARY, ATA_MASTER);
+	
+	if (!AtaInit(&ata1))
+	{
+		kprint("Ata1 initialization failed !\n");
+	}
+	else
+	{
+		AtaWritePio(&ata1, buf, 1);
+	}
 
     kfree(buf);
 }
