@@ -49,7 +49,7 @@ void kmain(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 void TestAta()
 {
     char * buf = (char*)kmalloc(512);
-    StrCpy("Hello world !\n", buf);
+    //StrCpy("Hello world !\n", buf);
 
     kprint("Ata test\n");
 	AtaDevice ata1 = AtaCreate(ATA_SECONDARY, ATA_MASTER);
@@ -60,8 +60,11 @@ void TestAta()
 	}
 	else
 	{
-		AtaWritePio(&ata1, buf, 1);
+		//AtaWritePio(&ata1, buf, 1);
+        AtaReadPio(&ata1, buf, 1);
 	}
+
+    kprint(buf);
 
     kfree(buf);
 }

@@ -75,14 +75,14 @@ struct AtaDevice
 {
 	u8 type; // master or slave
 	u16 dataPort;
-	u8 errorPort;
-	u8 sectorCountPort;
-	u8 lbaLowPort;
-	u8 lbaMidPort;
-	u8 lbaHiPort;
-	u8 devicePort;
-	u8 commandPort;
-	u8 controlPort;
+    u16 errorPort;
+    u16 sectorCountPort;
+	u16 lbaLowPort;
+	u16 lbaMidPort;
+	u16 lbaHiPort;
+	u16 devicePort;
+	u16 commandPort;
+	u16 controlPort;
 	unsigned long pos;
 } typedef AtaDevice;
 

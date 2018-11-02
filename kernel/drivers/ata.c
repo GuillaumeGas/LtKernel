@@ -5,6 +5,8 @@
 
 #include "ata.h"
 
+// Un exemple qui a l'air pas mal : https://github.com/CHOSTeam/CHicago/blob/master/kernel/arch/x86/io/ide.c
+
 #define EIO 5
 #define ENOSYS 35
 #define ENOMEM 12
@@ -150,95 +152,35 @@ int AtaWritePio(AtaDevice * device, void * buf, int count)
 	{
 		AtaWriteSectorPio(device, buf, pos + i);
 		buf += 512;
-		for (int j = 0; j < 1000; j++)
-			;
+		for (int j = 0; j < 1000; j++);
 	}
 	device->pos += count;
 	ENABLE_IRQ();
 	return count;
 }
 
-#define ATA_PRIMARY_IRQ 14
-#define ATA_PRIMARY_IO 0x1F0
-#define ATA_PRIMARY_DCR_AS 0x3F6
-
-#define ATA_SECONDARY_IRQ 15
-#define ATA_SECONDARY_IO 0x170
-#define ATA_SECONDARY_DCR_AS 0x376
-
-#define ATA_PRIMARY 0x00
-#define ATA_SECONDARY 0x01
-
-#define ATA_MASTER 0x00
-#define ATA_SLAVE  0x01
-
 static int AtaIdentify(AtaDevice * device)
 {
-	u16 io = 0;
-	/* XXX: support multiple ATA devices */
-	io = 0x170;
-	outb(ATA_SECONDARY_IO + ATA_REG_HDDEVSEL, 0xA0);
-	outb(io + ATA_REG_SECCOUNT0, 0);
-	outb(io + ATA_REG_LBA0, 0);
-	outb(io + ATA_REG_LBA1, 0);
-	outb(io + ATA_REG_LBA2, 0);
-	outb(io + ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
+	outb(device->devicePort, device->type);
+	outb(device->sectorCountPort, 0);
+	outb(device->lbaLowPort, 0);
+	outb(device->lbaMidPort, 0);
+	outb(device->lbaHiPort, 0);
+	outb(device->commandPort, ATA_CMD_IDENTIFY);
 
-	u8 status = inb(io + ATA_REG_STATUS);
+	u8 status = inb(device->dataPort + ATA_REG_STATUS);
 	if (status)
 	{
-		/* read the IDENTIFY data */
-		void *ide_buf = kmalloc(512);
-		if (!ide_buf)
-			return -ENOMEM;
-
-		for (int i = 0; i < 256; i++)
-			*(u16 *)(ide_buf + i * 2) = inw(io + ATA_REG_DATA);
-
-		kfree(ide_buf);
+        for (int i = 0; i < 256; i++)
+            inw(device->dataPort);
 
 		return 1;
 	}
-	else {
+	else 
+	{
 		kprint("ata: IDENTIFY error on b0d0 -> no status\n");
 		return 0;
 	}
-
-	//outb(device->devicePort, device->type);
-	//outb(device->sectorCountPort, 0);
-	//outb(device->lbaLowPort, 0);
-	//outb(device->lbaMidPort, 0);
-	//outb(device->lbaHiPort, 0);
-	//outb(device->commandPort, ATA_CMD_IDENTIFY);
-
-	//u8 status = inb(device->dataPort + ATA_REG_STATUS);
-	//if (status)
-	//{
-	//	/* read the IDENTIFY data */
-	//	AtaDevice *dev;
-	//	void *ide_buf = kmalloc(512);
-	//	if (!ide_buf)
-	//		return -ENOMEM;
-
-	//	dev = kmalloc(sizeof(AtaDevice));
-	//	if (!dev) {
-	//		kfree(ide_buf);
-	//		return -ENOMEM;
-	//	}
-
-	//	for (int i = 0; i < 256; i++)
-	//		*(u16 *)(ide_buf + i * 2) = inw(device->dataPort);
-
-	//	kfree(ide_buf);
-
-	//	dev->pos = 0;
-	//	return 1;
-	//}
-	//else 
-	//{
-	//	kprint("ata: IDENTIFY error on b0d0 -> no status\n");
-	//	return 0;
-	//}
 }
 
 AtaDevice AtaCreate(AtaIoPort ioPort, AtaType type)
@@ -264,9 +206,4 @@ int AtaInit(AtaDevice * ataDevice)
 {
 	kprint("Ata %s %s using PIO mode\n", ataDevice->dataPort == ATA_PRIMARY ? "Primary" : "Secondary", ataDevice->type == ATA_MASTER ? "Master" : "Slave");
 	return AtaIdentify(ataDevice);
-
-	//struct device * device = ata_devices[0];
-	//char * buf = (char*)kmalloc(512);
-	//StrCpy("Hello world !\n", buf);
-	//AtaWritePio(device, buf, 1);
 }
