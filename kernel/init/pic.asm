@@ -26,7 +26,7 @@ tmp1:
 	;; Il correspondent en fait à un offset dans l'idt
 	;; Ici, on ne configure que le controleur maître, donc les IRQs 0-7, pour qu'il utilise
 	;; les interruptions à partir de l'offset 0x20 dans l'idt.
-	;; Sous archi type x86, les 32 premiers vecteurs sont réservés à la gestion des exceptions.
+	;; Sous archi type x86, les 32 premiers vecteurs sont réservés à la geENABLE_IRQon des exceptions.
 	mov al, 0x20
 	out 0x21, al
 	jmp tmp2

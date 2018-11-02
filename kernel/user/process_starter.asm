@@ -19,7 +19,7 @@ global _start_process
     ;; ainsi que le bit IF afin d'autoriser les interrupts une fois dans la tâche utilisateur.
 
 _start_process:
-	cli
+	DISABLE_IRQ
 
 	push ebp
 	mov esi, esp

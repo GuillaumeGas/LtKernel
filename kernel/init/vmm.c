@@ -162,7 +162,7 @@ void SetPageDirectoryEntry(PageDirectoryEntry * pd, u32 ptAddr, PAGE_FLAG flags)
 /*
 	Fait appel à la fonction d'initialisation d'un répertoire de pages
 
-	Permet de définir le champ de gestion du cache et le champ librement utilisable
+	Permet de définir le champ de geENABLE_IRQon du cache et le champ librement utilisable
 */
 void SetPageDirectoryEntryEx(PageDirectoryEntry * pd, u32 ptAddr, PAGE_FLAG flags, u8 global, u8 avail)
 {
@@ -199,7 +199,7 @@ void SetPageTableEntry(PageTableEntry * pt, u32 pageAddr, PAGE_FLAG flags)
 	Fait appel à la fonction d'initialisation d'un répertoire de pages car leur structure
 	 est identique.
 
-	Permet de définir le champ de gestion du cache et le champ librement utilisable
+	Permet de définir le champ de geENABLE_IRQon du cache et le champ librement utilisable
 */
 void SetPageTableEntryEx(PageTableEntry * pt, u32 pageAddr, PAGE_FLAG flags, u8 global, u8 avail)
 {
@@ -258,7 +258,7 @@ void * GetPhysicalAddress(void * vAddr)
 
 	if ((*pde & PAGE_PRESENT))
 	{
-		// On récupère maintenant un pointeur sur l'entrée de la table afin de savoir si la page en question est en mémoire.
+		// On récupère maintenant un pointeur sur l'entrée de la table afin de savoir si la page en queENABLE_IRQon est en mémoire.
 		// On a encore le trick (0xFFC00000) qui nous permet de pointer sur le début du répertoire dans un premier temps
 		// Ensuite, au lieu d'utiliser les 10 prochains bits comme un offset sur la table de page, ce sera sur le répertoire afin de pointer sur la bonne table
 		// Les derniers bits, au lieu de représenter un offset physique, représente l'offset dans la table de page, afin de pointer sur l'entrée qui nous intéresse

@@ -138,6 +138,9 @@
     <ClCompile Include="kernel\user\process.c">
       <Filter>Fichiers sources\kernel\user</Filter>
     </ClCompile>
+    <ClCompile Include="kernel\drivers\ata.c">
+      <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\logger.h">
@@ -223,6 +226,9 @@
     </ClInclude>
     <ClInclude Include="kernel\lib\status.h">
       <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\drivers\ata.h">
+      <Filter>Fichiers sources\kernel\drivers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

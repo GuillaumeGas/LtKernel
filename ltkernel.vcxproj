@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="kernel\debug\debug.c" />
+    <ClCompile Include="kernel\drivers\ata.c" />
     <ClCompile Include="kernel\drivers\clock.c" />
     <ClCompile Include="kernel\drivers\keyboard.c" />
     <ClCompile Include="kernel\drivers\screen.c" />
@@ -129,6 +130,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\debug\debug.h" />
+    <ClInclude Include="kernel\drivers\ata.h" />
     <ClInclude Include="kernel\drivers\clock.h" />
     <ClInclude Include="kernel\drivers\kbmap.h" />
     <ClInclude Include="kernel\drivers\keyboard.h" />
