@@ -102,5 +102,5 @@ typedef enum AtaType AtaType;
 int AtaInit(AtaDevice * ataDevice);
 AtaDevice AtaCreate(AtaIoPort ioPort, AtaType type);
 
-int AtaWrite(AtaDevice * device, void * buf, int count, unsigned long block);
-int AtaRead(AtaDevice * dev, void * buf, int count, unsigned long block);
+int AtaWrite(AtaDevice * device, void * buf, unsigned long offset, unsigned long size);
+int AtaRead(AtaDevice * dev, void * buf, unsigned long offset, unsigned long size);

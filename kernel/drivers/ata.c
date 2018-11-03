@@ -11,6 +11,8 @@
 #define ENOSYS 35
 #define ENOMEM 12
 
+#define ATA_BLOCK_SIZE 512
+
 static int AtaStatusWait(int io_base, int timeout)
 {
     int status;
@@ -54,7 +56,7 @@ static int AtaWait(int io, int adv)
     return 0;
 }
 
-static int AtaReadSectorPio(AtaDevice * device, char * buf, int lba)
+static int AtaReadSectorPio(AtaDevice * device, char * buf, int lba, unsigned long size)
 {
     u16 io = device->dataPort;
 
@@ -83,36 +85,60 @@ try_label:
         goto try_label;
     }
 
+	int limit = (size >= ATA_BLOCK_SIZE ? 256 : size / 2);
     for (int i = 0; i < 256; i++)
     {
-        u16 d = inw(device->dataPort);
-        *(u16 *)(buf + i * 2) = d;
+		u16 d = inw(device->dataPort);
+		
+		if (i < limit)
+		{
+			*(u16 *)(buf + i * 2) = d;
+		}
     }
 
     AtaWait(io, 0);
     return 0;
 }
 
-int AtaRead(AtaDevice * dev, void * buf, int count, unsigned long block)
+int AtaRead(AtaDevice * dev, void * buf, unsigned long offset, unsigned long size)
 {
     int rc = 0, read = 0;
+	int count = (size > ATA_BLOCK_SIZE ? size / ATA_BLOCK_SIZE : 1);
+	unsigned long block = offset / (unsigned long)ATA_BLOCK_SIZE;
+
+	if (offset % ATA_BLOCK_SIZE != 0)
+	{
+		kprint("ata.c!AtaRead() : invalid offset parameter, should be a multiple of 512 !\n");
+		return -1;
+	}
 
     DISABLE_IRQ();
 
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < count && size > 0; i++)
     {
-        rc = AtaReadSectorPio(dev, buf, block + i);
+        rc = AtaReadSectorPio(dev, buf, block + i, size);
         if (rc == -EIO)
             return -EIO;
-        buf += 512;
-        read += 512;
+
+		if (size >= ATA_BLOCK_SIZE)
+		{
+			size -= ATA_BLOCK_SIZE;
+			buf += ATA_BLOCK_SIZE;
+			read += ATA_BLOCK_SIZE;
+		}
+		else
+		{
+			buf += size;
+			read += size;
+			size = 0;
+		}
     }
 
     ENABLE_IRQ();
     return count;
 }
 
-static int AtaWriteSectorPio(AtaDevice * device, u16 * buf, int lba)
+static int AtaWriteSectorPio(AtaDevice * device, u16 * buf, int lba, unsigned long size)
 {
     u16 io = device->dataPort;
     u8 cmd = 0xE0;
@@ -131,9 +157,17 @@ static int AtaWriteSectorPio(AtaDevice * device, u16 * buf, int lba)
     outb(device->commandPort, ATA_CMD_WRITE_PIO);
     AtaWait(io, 0);
 
+	int limit = (size >= ATA_BLOCK_SIZE ? 256 : size / 2);
     for (int i = 0; i < 256; i++)
     {
-        outw(device->dataPort, buf[i]);
+		if (i < limit)
+		{
+			outw(device->dataPort, buf[i]);
+		}
+		else
+		{
+			outw(device->dataPort, 0);
+		}
         asm volatile("nop; nop; nop");
     }
     outb(device->commandPort, ATA_CMD_CACHE_FLUSH);
@@ -143,13 +177,35 @@ static int AtaWriteSectorPio(AtaDevice * device, u16 * buf, int lba)
     return 0;
 }
 
-int AtaWrite(AtaDevice * device, void * buf, int count, unsigned long block)
+int AtaWrite(AtaDevice * device, void * buf, unsigned long offset, unsigned long size)
 {
+	int count = (size > ATA_BLOCK_SIZE ? size / ATA_BLOCK_SIZE : 1);
+	unsigned long block = offset / (unsigned long)ATA_BLOCK_SIZE;
+
+	if (offset % ATA_BLOCK_SIZE != 0)
+	{
+		kprint("ata.c!AtaRead() : invalid offset parameter, should be a multiple of 512 !\n");
+		return -1;
+	}
+
+	kprint("count : %d, block : %d, size : %d, offset : %d\n", count, block, size, offset);
+
     DISABLE_IRQ();
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < count && size > 0; i++)
     {
-        AtaWriteSectorPio(device, buf, block + i);
-        buf += 512;
+		AtaWriteSectorPio(device, buf, block + i, size);
+		
+		if (size >= ATA_BLOCK_SIZE)
+		{
+			size -= ATA_BLOCK_SIZE;
+			buf += ATA_BLOCK_SIZE;
+		}
+		else
+		{
+			buf += size;
+			size = 0;
+		}
+
         for (int j = 0; j < 1000; j++);
     }
     ENABLE_IRQ();

@@ -88,9 +88,10 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 		kprint("[Kernel] Ata %s %s using PIO mode initialized\n", device.dataPort == ATA_PRIMARY ? "Primary" : "Secondary", device.type == ATA_MASTER ? "Master" : "Slave");
 
 		char * test = (char*)kmalloc(512);
-		StrCpy("test\n", test);
-		AtaWrite(&device, test, 1, 0);
-		AtaWrite(&device, test, 1, 0);
+		//StrCpy("test\n", test);
+		//AtaWrite(&device, test, 0, StrLen(test));
+		AtaRead(&device, test, 0, 5);
+		kprint(":%s\n", test);
 	}
 	/*  */
 
