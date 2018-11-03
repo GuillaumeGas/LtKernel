@@ -83,7 +83,6 @@ struct AtaDevice
     u16 devicePort;
     u16 commandPort;
     u16 controlPort;
-    unsigned long pos;
 } typedef AtaDevice;
 
 enum AtaIoPort
@@ -103,5 +102,5 @@ typedef enum AtaType AtaType;
 int AtaInit(AtaDevice * ataDevice);
 AtaDevice AtaCreate(AtaIoPort ioPort, AtaType type);
 
-int AtaWritePio(AtaDevice * device, void * buf, int count);
-int AtaReadPio(AtaDevice * dev, void * buf, int count);
+int AtaWrite(AtaDevice * device, void * buf, int count, unsigned long block);
+int AtaRead(AtaDevice * dev, void * buf, int count, unsigned long block);

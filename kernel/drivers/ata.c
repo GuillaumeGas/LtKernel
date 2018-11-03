@@ -93,22 +93,20 @@ try_label:
     return 0;
 }
 
-int AtaReadPio(AtaDevice * dev, void * buf, int count)
+int AtaRead(AtaDevice * dev, void * buf, int count, unsigned long block)
 {
-    unsigned long pos = dev->pos;
     int rc = 0, read = 0;
 
     DISABLE_IRQ();
 
     for (int i = 0; i < count; i++)
     {
-        rc = AtaReadSectorPio(dev, buf, pos + i);
+        rc = AtaReadSectorPio(dev, buf, block + i);
         if (rc == -EIO)
             return -EIO;
         buf += 512;
         read += 512;
     }
-    dev->pos += count;
 
     ENABLE_IRQ();
     return count;
@@ -145,18 +143,15 @@ static int AtaWriteSectorPio(AtaDevice * device, u16 * buf, int lba)
     return 0;
 }
 
-int AtaWritePio(AtaDevice * device, void * buf, int count)
+int AtaWrite(AtaDevice * device, void * buf, int count, unsigned long block)
 {
-    unsigned long pos = device->pos;
-
     DISABLE_IRQ();
     for (int i = 0; i < count; i++)
     {
-        AtaWriteSectorPio(device, buf, pos + i);
+        AtaWriteSectorPio(device, buf, block + i);
         buf += 512;
         for (int j = 0; j < 1000; j++);
     }
-    device->pos += count;
     ENABLE_IRQ();
     return count;
 }
@@ -199,7 +194,6 @@ AtaDevice AtaCreate(AtaIoPort ioPort, AtaType type)
     device.devicePort = ioPort + 0x6;
     device.commandPort = ioPort + 0x7;
     device.controlPort = ioPort + 0x206;
-    device.pos = 0;
 
     return device;
 }
