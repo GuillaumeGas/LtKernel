@@ -14,6 +14,8 @@
 #include <kernel/drivers/serial.h>
 #include <kernel/drivers/ata.h>
 
+#include <kernel/fs/fs_manager.h>
+
 #include <kernel/user/process_manager.h>
 #include <kernel/user/user_tests.h>
 
@@ -86,21 +88,18 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	else
 	{
 		kprint("[Kernel] Ata %s %s using PIO mode initialized\n", device.dataPort == ATA_PRIMARY ? "Primary" : "Secondary", device.type == ATA_MASTER ? "Master" : "Slave");
-
-		char * test = (char*)kmalloc(512);
-		//StrCpy("test\n", test);
-		//AtaWrite(&device, test, 0, StrLen(test));
-		AtaRead(&device, test, 0, 5);
-		kprint(":%s\n", test);
 	}
-	/*  */
+
+	FsInit(&device);
+	/* */
+
 
 	PmInit();
 	kprint("[Kernel] Process manager initialized\n\n");
 
 	InitCleanCallbacksList();
 
-	PmCreateProcess(TestConsole, 500, NULL);
+	//PmCreateProcess(TestConsole, 500, NULL);
 
 	ENABLE_IRQ();
 
@@ -156,6 +155,7 @@ static void InitCleanCallbacksList()
 
     ListPush(CleanCallbacksList, (CleanCallbackFun)VmmCleanCallback);
 	ListPush(CleanCallbacksList, (CleanCallbackFun)PmCleanCallback);
+	ListPush(CleanCallbacksList, (CleanCallbackFun)FsCleanCallback);
 }
 
 static void CleanKernel()

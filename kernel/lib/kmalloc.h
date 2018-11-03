@@ -2,7 +2,7 @@
 
 #include <kernel/init/vmm.h>
 
-struct mem_block * ksbrk(int n);
+MemBlock * ksbrk(int n);
 void * kmalloc(int size);
 void kfree(void * ptr);
 void dumpHeap();

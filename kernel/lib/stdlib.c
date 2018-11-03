@@ -37,3 +37,14 @@ void StrCpy(const char * src, char * dst)
 	while (*src != '\0')
 		*(dst++) = *(src++);
 }
+
+unsigned long StrLen(const char * str)
+{
+	if (str == NULL)
+		return 0;
+
+	unsigned long length = 0;
+	while (*(str++) != '\0')
+		length++;
+	return length;
+}

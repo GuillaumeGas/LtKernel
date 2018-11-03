@@ -9,6 +9,7 @@ DEBUG=debug.o
 DRIVERS=screen.o serial.o clock.o keyboard.o ata.o
 INIT=gdt.o gdt_loader.o idt.o idt_loader.o int.o isr.o vmm.o pic.o vmm_utils.o heap.o
 LIB=kmalloc.o list.o stdio.o stdlib.o panic.o
+FS=ext2.o fs_manager.o
 USER=process.o process_manager.o process_starter.o syscalls.o console.o user_tests.o
 
 all: $(OBJ) 
@@ -16,7 +17,7 @@ all: $(OBJ)
 clean:
 	rm -f $(OBJ) *.o
 
-kernel: $(BOOT) $(ROOT) $(DEBUG) $(DRIVERS) $(INIT) $(LIB) $(USER)
+kernel: $(BOOT) $(ROOT) $(DEBUG) $(DRIVERS) $(INIT) $(LIB) $(FS) $(USER)
 	$(LD) -m elf_i386 -nostdlib -T linker.ld $^ -o $@
 
 # GENERAL STUFF
@@ -95,6 +96,13 @@ stdlib.o: lib/stdlib.c
 	$(CC) -c $^
 
 panic.o: lib/panic.c
+	$(CC) -c $^
+
+# FS DIRECTORY
+ext2.o: fs/ext2.c
+	$(CC) -c $^
+
+fs_manager.o: fs/fs_manager.c
 	$(CC) -c $^
 
 # USER DIRECTORY

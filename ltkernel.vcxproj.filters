@@ -34,6 +34,9 @@
     <Filter Include="Fichiers sources\kernel\user">
       <UniqueIdentifier>{bcb0687d-4a2e-4eb6-a80e-dcdee957047e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers sources\kernel\fs">
+      <UniqueIdentifier>{a0c3dc7c-88e6-4f90-b1fb-694e97d0b5ad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
@@ -141,6 +144,12 @@
     <ClCompile Include="kernel\drivers\ata.c">
       <Filter>Fichiers sources\kernel\drivers</Filter>
     </ClCompile>
+    <ClCompile Include="kernel\fs\ext2.c">
+      <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\fs\fs_manager.c">
+      <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\logger.h">
@@ -229,6 +238,12 @@
     </ClInclude>
     <ClInclude Include="kernel\drivers\ata.h">
       <Filter>Fichiers sources\kernel\drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\fs\ext2.h">
+      <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\fs\fs_manager.h">
+      <Filter>Fichiers sources\kernel\fs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
