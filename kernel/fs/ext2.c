@@ -110,6 +110,13 @@ Ext2Inode * Ext2ReadInode(Ext2Disk * disk, int num)
 
 	offset = (disk->groupDec[inodeGroupIndex].inodeTable * disk->blockSize) + (inodeIndex * disk->superBlock->inodeSize);
 
+	//kprint("offset : %d\n", offset);
+	//kprint("inodeGroupIndex : %d\n", inodeGroupIndex);
+	//kprint("disk->groupDec[inodeGroupIndex].inodeTable : %d\n", disk->groupDec[inodeGroupIndex].inodeTable);
+	//kprint("disk->blockSize : %d\n", disk->blockSize);
+	//kprint("inodeIndex : %d\n", inodeIndex);
+	//kprint("disk->superBlock->inodeSize : %d\n", disk->superBlock->inodeSize);
+
 	ret = AtaRead(disk->device, inode, offset, disk->superBlock->inodeSize);
 
 	if (ret < 0)

@@ -150,6 +150,9 @@
     <ClCompile Include="kernel\fs\fs_manager.c">
       <Filter>Fichiers sources\kernel\fs</Filter>
     </ClCompile>
+    <ClCompile Include="kernel\fs\elf.c">
+      <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\logger.h">
@@ -243,6 +246,9 @@
       <Filter>Fichiers sources\kernel\fs</Filter>
     </ClInclude>
     <ClInclude Include="kernel\fs\fs_manager.h">
+      <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\fs\elf.h">
       <Filter>Fichiers sources\kernel\fs</Filter>
     </ClInclude>
   </ItemGroup>

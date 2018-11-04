@@ -109,7 +109,7 @@ int AtaRead(AtaDevice * dev, void * buf, unsigned long offset, unsigned long siz
 	if (offset % ATA_BLOCK_SIZE != 0)
 	{
 		kprint("ata.c!AtaRead() : invalid offset parameter, should be a multiple of 512 !\n");
-		return -1;
+		//return -1;
 	}
 
     DISABLE_IRQ();
