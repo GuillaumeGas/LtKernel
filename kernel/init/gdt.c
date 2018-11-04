@@ -64,10 +64,12 @@ static void TssInit ()
 GdtDescriptor * GdtGetDescriptor(u8 selector)
 {
 	if (selector <= ((GDT_SIZE - 1) * sizeof(GdtDescriptor)))
+	{
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
 		return (GdtDescriptor *)selector;
 #pragma GCC diagnostic pop
+	}
 	return (GdtDescriptor *) 0;
 }
 

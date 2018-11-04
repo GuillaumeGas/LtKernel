@@ -3,3 +3,13 @@
 - Ajouter exit() syscall
   -> Ajouter un processus system qui attend qu'il ne reste que lui d'actif pour terminer.
 - Vérifier que tout est bien nettoyé, pages, etc...
+
+== NOTES ==
+
+// Création image avec ext2 + ajout d'un fichier
+bximage
+mke2fs c.img
+e2ls c.img -i             // affiche le contenu avec les inodes
+e2cp a.out c.img:/    // ajoute le fichier à la racine
+
+Attention à mettre à jour les paramètres dans bochs ! 20 16 63

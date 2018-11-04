@@ -112,6 +112,7 @@
     <ClCompile Include="kernel\drivers\keyboard.c" />
     <ClCompile Include="kernel\drivers\screen.c" />
     <ClCompile Include="kernel\drivers\serial.c" />
+    <ClCompile Include="kernel\fs\elf.c" />
     <ClCompile Include="kernel\fs\ext2.c" />
     <ClCompile Include="kernel\fs\fs_manager.c" />
     <ClCompile Include="kernel\init\gdt.c" />
@@ -145,6 +146,7 @@
     <ClInclude Include="kernel\drivers\proc_io.h" />
     <ClInclude Include="kernel\drivers\screen.h" />
     <ClInclude Include="kernel\drivers\serial.h" />
+    <ClInclude Include="kernel\fs\elf.h" />
     <ClInclude Include="kernel\fs\ext2.h" />
     <ClInclude Include="kernel\fs\fs_manager.h" />
     <ClInclude Include="kernel\init\gdt.h" />

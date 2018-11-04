@@ -5,6 +5,12 @@
 #include <kernel/lib/kmalloc.h>
 
 #define MBR_RESERVED_SIZE 1024
+#define INODE_NB_DIRECT_PTR 12
+#define INODE_SINGLY_INDIRECT_PTR_INDEX 12
+#define INODE_DOUBLY_INDIRECT_PTR_INDEX 13
+#define INODE_TRIPLY_INDIRECT_PTR_INDEX 14
+
+// https://wiki.osdev.org/Ext2
 
 typedef Ext2Disk Disk;
 typedef AtaDevice Device;
@@ -98,10 +104,11 @@ Ext2Inode * Ext2ReadInode(Ext2Disk * disk, int num)
 		return NULL;
 	}
 
+	// https://wiki.osdev.org/Ext2#Inodes
 	inodeGroupIndex = (num - 1) / disk->superBlock->inodesPerGroup;
 	inodeIndex = (num - 1) % disk->superBlock->inodesPerGroup;
 
-	offset = (disk->groupDec[inodeGroupIndex].inodeTable * disk->blockSize) + (inodeIndex * disk->superBlock->inodeSize);
+	offset = disk->groupDec[inodeGroupIndex].inodeTable * disk->blockSize + inodeIndex * disk->superBlock->inodeSize;
 
 	ret = AtaRead(disk->device, inode, offset, disk->superBlock->inodeSize);
 
@@ -188,6 +195,184 @@ clean:
 	}
 
 	return NULL;
+}
+
+Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
+{
+	char * file = NULL;
+	Ext2File * res = NULL;
+	char * block = NULL;
+	u32 * singlyBlock = NULL;
+	u32 * doublyBlock = NULL;
+	u32 fileSize = 0;
+	unsigned int fileOffset = 0, size = 0;
+
+	fileSize = inode->size;
+	file = (char *)kmalloc(fileSize);
+
+	if (file == NULL)
+	{
+		kprint("ext2.c!Ext2ReadFile() : can't allocate memory for file, kmalloc() returned NULL\n");
+		return NULL;
+	}
+
+	block = (char *)kmalloc(disk->blockSize);
+	if (block == NULL)
+	{
+		kprint("ext2.c!Ext2ReadFile() : can't allocate memory for block buffer, kmalloc() returned NULL\n");
+		goto clean;
+	}
+
+	// Direct blocks ptr
+	for (int i = 0; i < INODE_NB_DIRECT_PTR && inode->block[i]; i++)
+	{
+		unsigned long offset = inode->block[i] * disk->blockSize;
+		int ret = AtaRead(disk->device, block, offset, disk->blockSize);
+
+		if (ret < 0)
+		{
+			kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for direct block ptr with code : %d\n", ret);
+			goto clean;
+		}
+
+		size = fileSize > disk->blockSize ? disk->blockSize : fileSize;
+		MmCopy((u8 *)block, (u8 *)(file + fileOffset), size);
+
+		fileOffset += size;
+		fileSize -= size;
+	}
+
+	// Singly Indirect block ptr
+	if (inode->block[INODE_SINGLY_INDIRECT_PTR_INDEX])
+	{
+		singlyBlock = (u32 *)kmalloc(disk->blockSize);
+		if (singlyBlock == NULL)
+		{
+			kprint("ext2.c!Ext2ReadFile() : can't allocate memory for singly block buffer, kmalloc() returned NULL\n");
+			goto clean;
+		}
+
+		unsigned long offset = inode->block[INODE_SINGLY_INDIRECT_PTR_INDEX] * disk->blockSize;
+		int ret = AtaRead(disk->device, singlyBlock, offset, disk->blockSize);
+
+		if (ret < 0)
+		{
+			kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for singly indirect block with code : %d\n", ret);
+			goto clean;
+		}
+
+		for (int i = 0; i < disk->blockSize / sizeof(u32) && singlyBlock[i]; i++)
+		{
+			offset = singlyBlock[i] * disk->blockSize;
+			int ret = AtaRead(disk->device, block, offset, disk->blockSize);
+
+			if (ret < 0)
+			{
+				kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for data in sinply indirect block ptr with code : %d\n", ret);
+				goto clean;
+			}
+
+			size = fileSize > disk->blockSize ? disk->blockSize : fileSize;
+			MmCopy((u8 *)block, (u8 *)(file + fileOffset), size);
+			fileOffset += size;
+			fileSize -= size;
+		}
+	}
+
+	// Double indirect block ptr
+	if (inode->block[INODE_DOUBLY_INDIRECT_PTR_INDEX])
+	{
+		if (singlyBlock == NULL)
+		{
+			singlyBlock = (u32 *)kmalloc(disk->blockSize);
+			if (singlyBlock == NULL)
+			{
+				kprint("ext2.c!Ext2ReadFile() : can't allocate memory for singly block buffer, kmalloc() returned NULL\n");
+				goto clean;
+			}
+		}
+
+		doublyBlock = (u32 *)kmalloc(disk->blockSize);
+		if (doublyBlock == NULL)
+		{
+			kprint("ext2.c!Ext2ReadFile() : can't allocate memory for doubly block buffer, kmalloc() returned NULL\n");
+			goto clean;
+		}
+
+		unsigned long offset = inode->block[INODE_DOUBLY_INDIRECT_PTR_INDEX] * disk->blockSize;
+		int ret = AtaRead(disk->device, singlyBlock, offset, disk->blockSize);
+
+		if (ret < 0)
+		{
+			kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for singly indirect block with code : %d\n", ret);
+			goto clean;
+		}
+
+		for (int i = 0; i < disk->blockSize / sizeof(u32) && singlyBlock[i]; i++)
+		{
+			offset = singlyBlock[i] * disk->blockSize;
+			ret = AtaRead(disk->device, doublyBlock, offset, disk->blockSize);
+
+			if (ret < 0)
+			{
+				kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for doubly indirect block ptr with code : %d\n", ret);
+				goto clean;
+			}
+
+			for (int j = 0; j < disk->blockSize / sizeof(u32) && doublyBlock[j]; j++)
+			{
+				offset = doublyBlock[i] * disk->blockSize;
+				int ret = AtaRead(disk->device, block, offset, disk->blockSize);
+
+				if (ret < 0)
+				{
+					kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for data in double direct block ptr with code : %d\n", ret);
+					goto clean;
+				}
+
+				size = fileSize > disk->blockSize ? disk->blockSize : fileSize;
+				MmCopy((u8 *)block, (u8 *)(file + fileOffset), size);
+				fileOffset += size;
+				fileSize -= size;
+			}
+		}
+	}
+
+	// TODO : triply indirect, mais faut faire du ménage, trop l'bordel
+	if (inode->block[INODE_TRIPLY_INDIRECT_PTR_INDEX])
+	{
+		kprint("[EXT2] : TRIPLY INDIRECT PTR NOT SUPPORTED !\n");
+	}
+
+	res = (Ext2File *)file;
+	file = NULL;
+
+clean:
+	if (file != NULL)
+	{
+		kfree(file);
+		file = NULL;
+	}
+
+	if (block != NULL)
+	{
+		kfree(block);
+		block = NULL;
+	}
+
+	if (singlyBlock != NULL)
+	{
+		kfree(singlyBlock);
+		singlyBlock = NULL;
+	}
+
+	if (doublyBlock != NULL)
+	{
+		kfree(doublyBlock);
+		doublyBlock = NULL;
+	}
+
+	return res;
 }
 
 void Ext2FreeDisk(Ext2Disk * disk)

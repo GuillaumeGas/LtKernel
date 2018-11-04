@@ -2,6 +2,9 @@
 #include "fs_manager.h"
 
 #include <kernel/lib/stdio.h>
+#include <kernel/lib/kmalloc.h>
+
+#include <kernel/fs/elf.h>
 
 void FsInit(AtaDevice * device)
 {
@@ -14,16 +17,32 @@ void FsInit(AtaDevice * device)
 	{
 		kprint("[Kernel] Ext2 file system initialized\n");
 
-		//Ext2Inode * inode = Ext2ReadInode(gExt2Disk, 1);
-		//if (inode == NULL)
-		//{
-		//	kprint("  Failed to retrieve inode 1 !\n");
-		//}
-		//else
-		//{
-		//	kprint("  Inode uid : %d\n", inode->uid);
-		//	kprint("  Inode size : %d\n", inode->size);
-		//}
+		Ext2Inode * inode = Ext2ReadInode(gExt2Disk, 12);
+		if (inode == NULL)
+		{
+			kprint("  Failed to retrieve inode 1 !\n");
+		}
+		else
+		{
+			ElfHeader * file = (ElfHeader *)Ext2ReadFile(gExt2Disk, inode);
+			if (file == NULL)
+			{
+				kprint("  Failed to read file !\n");
+			}
+			else
+			{
+				if (!ElfCheckIdent(file))
+				{
+					kprint("  Not a Elf file !\n");
+				}
+				else
+				{
+					kprint("  Bingo !\n");
+				}
+				kfree(file);
+			}
+			kfree(inode);
+		}
 	}
 }
 

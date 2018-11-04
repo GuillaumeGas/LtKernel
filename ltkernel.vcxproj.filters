@@ -158,6 +158,9 @@
     </ClCompile>
     <ClCompile Include="kernel\debug\ltdbgcom.c">
       <Filter>Fichiers sources\kernel\debug</Filter>
+	</ClCompile>
+    <ClCompile Include="kernel\fs\elf.c">
+      <Filter>Fichiers sources\kernel\fs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -262,6 +265,9 @@
     </ClInclude>
     <ClInclude Include="kernel\debug\ltdbgcom.h">
       <Filter>Fichiers sources\kernel\debug</Filter>
+	</ClInclude>
+    <ClInclude Include="kernel\fs\elf.h">
+      <Filter>Fichiers sources\kernel\fs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -140,6 +140,9 @@ struct DirectoryEntry
 } __attribute__((packed));
 typedef struct DirectoryEntry DirectoryEntry;
 
+typedef void Ext2File;
+
 Ext2Disk * Ext2ReadDiskOnDevice(AtaDevice * device);
 Ext2Inode * Ext2ReadInode(Ext2Disk * disk, int num);
+Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode);
 void Ext2FreeDisk(Ext2Disk * disk);
