@@ -5,6 +5,13 @@
 
 #include "ext2.h"
 
+// TMP
+struct File
+{
+	u8 field1;
+	u8 field2;
+} typedef File;
+
 void FsInit(AtaDevice * device);
 void FsCleanCallback();
 
