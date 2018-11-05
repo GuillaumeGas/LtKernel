@@ -1,5 +1,7 @@
 #pragma once
 
+#include <kernel/lib/types.h>
+
 // Source exemple : https://github.com/levex/levos7/blob/d04d594defa767181c5eb938ee7d116fbd9b6802/drivers/ata.c
 
 #define ATA_SR_BSY     0x80

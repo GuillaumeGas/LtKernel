@@ -103,39 +103,51 @@ try_label:
 int AtaRead(AtaDevice * dev, void * buf, unsigned long offset, unsigned long size)
 {
     int rc = 0, read = 0;
-	int count = (size > ATA_BLOCK_SIZE ? size / ATA_BLOCK_SIZE : 1);
-	unsigned long block = offset / (unsigned long)ATA_BLOCK_SIZE;
 
-	if (offset % ATA_BLOCK_SIZE != 0)
+	int nbBlocks = 0;
+	unsigned long blockBegin = 0, blockEnd = 0;
+	char * buffer = NULL, * bufferPtr = NULL;
+
+	blockBegin = offset / ATA_BLOCK_SIZE;
+	blockEnd = (offset + size) / ATA_BLOCK_SIZE;
+	nbBlocks = blockEnd - blockBegin + 1;
+
+	buffer = (char *)kmalloc(nbBlocks * ATA_BLOCK_SIZE);
+	if (buffer == NULL)
 	{
-		kprint("ata.c!AtaRead() : invalid offset parameter, should be a multiple of 512 !\n");
-		//return -1;
+		kprint("AtaRead() : Failed to allocate memory.\n");
+		return NULL;
 	}
+	bufferPtr = buffer;
 
     DISABLE_IRQ();
 
-    for (int i = 0; i < count && size > 0; i++)
+    for (int i = 0; i < nbBlocks && size > 0; i++)
     {
-        rc = AtaReadSectorPio(dev, buf, block + i, size);
+        rc = AtaReadSectorPio(dev, bufferPtr, blockBegin + i, size);
         if (rc == -EIO)
             return -EIO;
 
 		if (size >= ATA_BLOCK_SIZE)
 		{
 			size -= ATA_BLOCK_SIZE;
-			buf += ATA_BLOCK_SIZE;
+			bufferPtr += ATA_BLOCK_SIZE;
 			read += ATA_BLOCK_SIZE;
 		}
 		else
 		{
-			buf += size;
+			bufferPtr += size;
 			read += size;
 			size = 0;
 		}
     }
 
+
+	MmCopy((u8 *)(buffer + offset % ATA_BLOCK_SIZE), (u8 *)buf, read);
+	kfree(buffer);
+
     ENABLE_IRQ();
-    return count;
+    return size;
 }
 
 static int AtaWriteSectorPio(AtaDevice * device, u16 * buf, int lba, unsigned long size)

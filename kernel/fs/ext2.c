@@ -56,6 +56,12 @@ Disk * Ext2ReadDiskOnDevice(AtaDevice * device)
 
 	disk->groups = (i > j ? i : j);
 
+	//kprint("disk size : %d\n", disk->blockSize);
+	//kprint("groups : %d\n", disk->groups);
+	//kprint("blocksCount : %d\n", disk->superBlock->blocksCount);
+	//kprint("blocksPerGroup : %d\n", disk->superBlock->blocksPerGroup);
+	//kprint("errors : %d\n", disk->superBlock->errors);
+
 	groupDesc = ReadGroupDesc(disk);
 	if (groupDesc == NULL)
 	{
@@ -109,14 +115,14 @@ Ext2Inode * Ext2ReadInode(Ext2Disk * disk, int num)
 	inodeIndex = (num - 1) % disk->superBlock->inodesPerGroup;
 
 	offset = (disk->groupDec[inodeGroupIndex].inodeTable * disk->blockSize) + (inodeIndex * disk->superBlock->inodeSize);
-
-	//kprint("offset : %d\n", offset);
-	//kprint("inodeGroupIndex : %d\n", inodeGroupIndex);
-	//kprint("disk->groupDec[inodeGroupIndex].inodeTable : %d\n", disk->groupDec[inodeGroupIndex].inodeTable);
-	//kprint("disk->blockSize : %d\n", disk->blockSize);
-	//kprint("inodeIndex : %d\n", inodeIndex);
-	//kprint("disk->superBlock->inodeSize : %d\n", disk->superBlock->inodeSize);
-
+/*
+	kprint("offset : %d\n", offset);
+	kprint("inodeGroupIndex : %d\n", inodeGroupIndex);
+	kprint("disk->groupDec[inodeGroupIndex].inodeTable : %d\n", disk->groupDec[inodeGroupIndex].inodeTable);
+	kprint("disk->blockSize : %d\n", disk->blockSize);
+	kprint("inodeIndex : %d\n", inodeIndex);
+	kprint("disk->superBlock->inodeSize : %d\n", disk->superBlock->inodeSize);
+*/
 	ret = AtaRead(disk->device, inode, offset, disk->superBlock->inodeSize);
 
 	if (ret < 0)
@@ -124,6 +130,9 @@ Ext2Inode * Ext2ReadInode(Ext2Disk * disk, int num)
 		kprint("ext2.c!Ext2ReadInode() : AtaRead() returned %d\n", ret);
 		goto clean;
 	}
+
+	kprint("size : %d\n", inode->size);
+	inode->size = 0x1000;
 
 	return inode;
 
@@ -215,7 +224,14 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 	unsigned int fileOffset = 0, size = 0;
 
 	fileSize = inode->size;
-	file = (char *)kmalloc(fileSize);
+
+	if (fileSize <= 0)
+		return NULL;
+
+	kprint("try ?\n");
+	file = (char *)kmalloc(1000);
+
+	kprint("test file size : %d\n", fileSize);
 
 	if (file == NULL)
 	{

@@ -63,6 +63,10 @@ MemBlock * ksbrk(int n)
 void * kmalloc(int size)
 {
 	void * res = NULL;
+
+	if (size <= 0)
+		return NULL;
+
     res = _kmalloc((MemBlock*)gKernelInfo.vHeapBase, size + BLOCK_HEADER_SIZE);
 	gKMallocCount++;
 	return res;

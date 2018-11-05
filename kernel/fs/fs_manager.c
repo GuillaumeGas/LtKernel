@@ -8,7 +8,22 @@
 
 void FsInit(AtaDevice * device)
 {
-	gExt2Disk = Ext2ReadDiskOnDevice(device);
+	LtDisk * ltDisk = LtDiskCreate(device);
+	
+	if (ltDisk != NULL)
+	{
+		LtFile * file = LtReadFile(ltDisk, 0);
+		if (file == NULL)
+		{
+			kprint("Couldn't read file !\n");
+		}
+		else
+		{
+			kprint("File size : %d\n", file->size);
+		}
+	}
+
+	/*gExt2Disk = Ext2ReadDiskOnDevice(device);
 	if (gExt2Disk == NULL)
 	{
 		kprint("[Kernel] Failed to initialize file system !\n");
@@ -16,14 +31,6 @@ void FsInit(AtaDevice * device)
 	else
 	{
 		kprint("[Kernel] Ext2 file system initialized\n");
-
-		kprint("gExt2Disk->blockSize : %d\n", gExt2Disk->blockSize);
-		kprint("gExt2Disk->groups : %d\n", gExt2Disk->groups);
-		kprint("gExt2Disk->superBlock->blocksCount : %d\n", gExt2Disk->superBlock->blocksCount);
-		kprint("gExt2Disk->superBlock->blocksPerGroup : %d\n", gExt2Disk->superBlock->blocksPerGroup);
-		kprint("gExt2Disk->superBlock->inodesCount : %d\n", gExt2Disk->superBlock->inodesCount);
-		kprint("gExt2Disk->superBlock->inodeSize : %d\n", gExt2Disk->superBlock->inodeSize);
-		kprint("gExt2Disk->superBlock->error : %d\n", gExt2Disk->superBlock->errors);
 
 		Ext2Inode * inode = Ext2ReadInode(gExt2Disk, 12);
 		if (inode == NULL)
@@ -41,7 +48,7 @@ void FsInit(AtaDevice * device)
 			{
 				if (!ElfCheckIdent(file))
 				{
-					//kprint("  Not a Elf file !\n");
+					kprint("  Not a Elf file !\n");
 				}
 				else
 				{
@@ -52,7 +59,7 @@ void FsInit(AtaDevice * device)
 
 			kfree(file);
 		}
-	}
+	}*/
 }
 
 void FsCleanCallback()
