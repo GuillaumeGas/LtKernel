@@ -108,14 +108,7 @@ Ext2Inode * Ext2ReadInode(Ext2Disk * disk, int num)
 	inodeGroupIndex = (num - 1) / disk->superBlock->inodesPerGroup;
 	inodeIndex = (num - 1) % disk->superBlock->inodesPerGroup;
 
-	offset = (disk->groupDec[inodeGroupIndex].inodeTable * disk->blockSize) + (inodeIndex * disk->superBlock->inodeSize);
-
-	//kprint("offset : %d\n", offset);
-	//kprint("inodeGroupIndex : %d\n", inodeGroupIndex);
-	//kprint("disk->groupDec[inodeGroupIndex].inodeTable : %d\n", disk->groupDec[inodeGroupIndex].inodeTable);
-	//kprint("disk->blockSize : %d\n", disk->blockSize);
-	//kprint("inodeIndex : %d\n", inodeIndex);
-	//kprint("disk->superBlock->inodeSize : %d\n", disk->superBlock->inodeSize);
+	offset = disk->groupDec[inodeGroupIndex].inodeTable * disk->blockSize + inodeIndex * disk->superBlock->inodeSize;
 
 	ret = AtaRead(disk->device, inode, offset, disk->superBlock->inodeSize);
 
@@ -244,6 +237,7 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 
 		size = fileSize > disk->blockSize ? disk->blockSize : fileSize;
 		MmCopy((u8 *)block, (u8 *)(file + fileOffset), size);
+
 		fileOffset += size;
 		fileSize -= size;
 	}
@@ -345,8 +339,13 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 	}
 
 	// TODO : triply indirect, mais faut faire du ménage, trop l'bordel
+	if (inode->block[INODE_TRIPLY_INDIRECT_PTR_INDEX])
+	{
+		kprint("[EXT2] : TRIPLY INDIRECT PTR NOT SUPPORTED !\n");
+	}
 
 	res = (Ext2File *)file;
+	file = NULL;
 
 clean:
 	if (file != NULL)

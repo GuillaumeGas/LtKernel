@@ -17,14 +17,6 @@ void FsInit(AtaDevice * device)
 	{
 		kprint("[Kernel] Ext2 file system initialized\n");
 
-		kprint("gExt2Disk->blockSize : %d\n", gExt2Disk->blockSize);
-		kprint("gExt2Disk->groups : %d\n", gExt2Disk->groups);
-		kprint("gExt2Disk->superBlock->blocksCount : %d\n", gExt2Disk->superBlock->blocksCount);
-		kprint("gExt2Disk->superBlock->blocksPerGroup : %d\n", gExt2Disk->superBlock->blocksPerGroup);
-		kprint("gExt2Disk->superBlock->inodesCount : %d\n", gExt2Disk->superBlock->inodesCount);
-		kprint("gExt2Disk->superBlock->inodeSize : %d\n", gExt2Disk->superBlock->inodeSize);
-		kprint("gExt2Disk->superBlock->error : %d\n", gExt2Disk->superBlock->errors);
-
 		Ext2Inode * inode = Ext2ReadInode(gExt2Disk, 12);
 		if (inode == NULL)
 		{
@@ -41,16 +33,15 @@ void FsInit(AtaDevice * device)
 			{
 				if (!ElfCheckIdent(file))
 				{
-					//kprint("  Not a Elf file !\n");
+					kprint("  Not a Elf file !\n");
 				}
 				else
 				{
 					kprint("  Bingo !\n");
 				}
-				kprint("gExt2Disk->superBlock->error : %d\n", gExt2Disk->superBlock->errors);
+				kfree(file);
 			}
-
-			kfree(file);
+			kfree(inode);
 		}
 	}
 }
