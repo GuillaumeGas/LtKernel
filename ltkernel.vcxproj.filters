@@ -70,6 +70,9 @@
     <None Include="kernel\init\vmm.asm">
       <Filter>Fichiers sources\kernel\init</Filter>
     </None>
+    <None Include="kernel\debug\ltdbg_isr.asm">
+      <Filter>Fichiers sources\kernel\debug</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="kernel\kernel.c">
@@ -149,6 +152,9 @@
     </ClCompile>
     <ClCompile Include="kernel\fs\fs_manager.c">
       <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\debug\ltdbg.c">
+      <Filter>Fichiers sources\kernel\debug</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -244,6 +250,9 @@
     </ClInclude>
     <ClInclude Include="kernel\fs\fs_manager.h">
       <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\debug\ltdbg.h">
+      <Filter>Fichiers sources\kernel\debug</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -72,6 +72,8 @@ typedef struct idt Idt;
 
 void IdtInit (void);
 void PicInit (void);
+void IdtInitDescriptor(u32 isrAddr, u16 type, unsigned int index);
+void IdtReload();
 
 #ifdef __IDT__
 Idt gIdt;

@@ -21,6 +21,7 @@ struct KernelInfo
 	u32 vPagesHeapLimit;
 	u32 vHeapBase;
 	u32 vHeapLimit;
+	BOOL debug;
 } typedef KernelInfo;
 
 typedef void(*CleanCallbackFun)(void);

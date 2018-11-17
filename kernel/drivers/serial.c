@@ -1,42 +1,50 @@
 #include <kernel/drivers/proc_io.h>
+#include <kernel/lib/types.h>
 
 #include "serial.h"
 
-static int ReceivedData ();
-static int IsTransmitEmpty ();
+static int ReceivedData (u16 port);
+static int IsTransmitEmpty (u16 port);
+static void SerialInitPort(u16 port);
 
 void SerialInit ()
 {
-    outb (COM1_PORT + 1, 0x00); // Desactive les interruptions
-    outb (COM1_PORT + 3, 0x80); // Active le DLAB (Divisor Latch Access Bit)
-    outb (COM1_PORT + 0, 0x03); // 38400 baud (115200 / 3), bits de poid faible
-    outb (COM1_PORT + 1, 0x00); //                                       fort
-    outb (COM1_PORT + 3, 0x03); // 8 bits, pas de parite, un bit de stop
-    outb (COM1_PORT + 2, 0xC7);
-    outb (COM1_PORT + 4, 0x0B);
-    outb (COM1_PORT + 1, 0x01);
+	SerialInitPort(COM1_PORT);
+	SerialInitPort(COM2_PORT);
 }
 
-char SerialRead ()
+char SerialRead (u16 port)
 {
-    while (ReceivedData() == 0);
+    while (ReceivedData(port) == 0);
 
-    return inb (COM1_PORT);
+    return inb (port);
 }
 
-void SerialWrite (char c)
+void SerialWrite (u16 port, char c)
 {
-    while (IsTransmitEmpty() == 0);
+    while (IsTransmitEmpty(port) == 0);
 
-    outb (COM1_PORT, c);
+    outb (port, c);
 }
 
-static int ReceivedData()
+static void SerialInitPort(u16 port)
 {
-    return inb (COM1_PORT + 5) & 1;
+	outb(port + 1, 0x00); // Desactive les interruptions
+	outb(port + 3, 0x80); // Active le DLAB (Divisor Latch Access Bit)
+	outb(port + 0, 0x03); // 38400 baud (115200 / 3), bits de poid faible
+	outb(port + 1, 0x00); //                                       fort
+	outb(port + 3, 0x03); // 8 bits, pas de parite, un bit de stop
+	outb(port + 2, 0xC7);
+	outb(port + 4, 0x0B);
+	outb(port + 1, 0x01);
 }
 
-static int IsTransmitEmpty ()
+static int ReceivedData(u16 port)
 {
-    return inb (COM1_PORT + 5) & 0x20;
+    return inb (port + 5) & 1;
+}
+
+static int IsTransmitEmpty (u16 port)
+{
+    return inb (port + 5) & 0x20;
 }

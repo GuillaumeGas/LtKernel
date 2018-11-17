@@ -92,6 +92,7 @@
   <ItemGroup>
     <None Include="boot\bootsector.asm" />
     <None Include="boot\Makefile" />
+    <None Include="kernel\debug\ltdbg_isr.asm" />
     <None Include="kernel\init\gdt_loader.asm" />
     <None Include="kernel\init\idt_loader.asm" />
     <None Include="kernel\init\int.asm" />
@@ -104,6 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="kernel\debug\debug.c" />
+    <ClCompile Include="kernel\debug\ltdbg.c" />
     <ClCompile Include="kernel\drivers\ata.c" />
     <ClCompile Include="kernel\drivers\clock.c" />
     <ClCompile Include="kernel\drivers\keyboard.c" />
@@ -132,6 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\debug\debug.h" />
+    <ClInclude Include="kernel\debug\ltdbg.h" />
     <ClInclude Include="kernel\drivers\ata.h" />
     <ClInclude Include="kernel\drivers\clock.h" />
     <ClInclude Include="kernel\drivers\kbmap.h" />

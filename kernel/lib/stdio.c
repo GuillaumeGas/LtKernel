@@ -20,7 +20,7 @@ static void printChar(char c)
 	if (FlagOn(g_logType, LOG_SCREEN))
 		ScPrintChar(c);
 	if (FlagOn(g_logType, LOG_SERIAL))
-		SerialWrite(c);
+		SerialWrite(COM1_PORT, c);
 }
 
 static void printStr(char * str)

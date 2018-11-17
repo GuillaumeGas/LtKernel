@@ -5,7 +5,7 @@ LD=ld
 
 BOOT=../boot/bootsector.o
 ROOT=kernel.o logger.o scheduler.o
-DEBUG=debug.o
+DEBUG=debug.o ltdbg.o ltdbg_isr.o
 DRIVERS=screen.o serial.o clock.o keyboard.o ata.o
 INIT=gdt.o gdt_loader.o idt.o idt_loader.o int.o isr.o vmm.o pic.o vmm_utils.o heap.o
 LIB=kmalloc.o list.o stdio.o stdlib.o panic.o
@@ -34,6 +34,12 @@ scheduler.o: scheduler.c
 # DEBUG DIRECTORY
 debug.o: debug/debug.c
 	$(CC) -c $^
+
+ltdbg.o: debug/ltdbg.c
+	$(CC) -c $^
+
+ltdbg_isr.o: debug/ltdbg_isr.asm
+	$(ASM) -o $@ $^
 
 # DRIVERS DIRECTORY
 screen.o: drivers/screen.c

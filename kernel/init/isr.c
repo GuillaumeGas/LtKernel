@@ -185,7 +185,7 @@ void security_isr(ExceptionContext * context)
 
 void default_isr(ExceptionContext * context)
 {
-	DefaultExceptionHandler(context, "[!] Unhandled interrupt !");
+	//DefaultExceptionHandler(context, "[!] Unhandled interrupt !");
 }
 
 void clock_isr(void)
@@ -201,7 +201,7 @@ void keyboard_isr(void)
 
 void com1_isr()
 {
-	kprint("One byte received on COM port : %c\n", SerialRead());
+	//kprint("One byte received on COM port : %c\n", SerialRead());
 }
 
 void syscall_isr(int syscallNumber, InterruptContext * context)

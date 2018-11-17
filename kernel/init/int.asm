@@ -33,9 +33,7 @@ extern syscall_isr
 
 ;;; Processor exceptions & faults	
 global _asm_divided_by_zero_isr
-global _asm_debug_isr
 global _asm_non_maskable_int_isr
-global _asm_breakpoint_isr	
 global _asm_overflow_isr
 global _asm_bound_range_exceeded_isr
 global _asm_invalid_opcode_isr
@@ -61,6 +59,8 @@ global _asm_com1_isr
 
 ;;; Appels systeme
 global _asm_syscall_isr
+
+;;; TODO : faire un système un peu plus générique, j'ai dû copier coller ces macro dans le dbg...
 
 %macro  SAVE_REGS 0
     pushad
@@ -149,19 +149,9 @@ _asm_divided_by_zero_isr:
 	call divided_by_zero_isr
 	INT_EPILOG_EXCEPTION
 
-_asm_debug_isr:
-	INT_PROLOG_EXCEPTION
-	call debug_isr
-	INT_EPILOG_EXCEPTION
-
 _asm_non_maskable_int_isr:
 	INT_PROLOG_EXCEPTION
 	call non_maskable_int_isr
-	INT_EPILOG_EXCEPTION
-
-_asm_breakpoint_isr:
-	INT_PROLOG_EXCEPTION
-	call breakpoint_isr
 	INT_EPILOG_EXCEPTION
 
 _asm_overflow_isr:

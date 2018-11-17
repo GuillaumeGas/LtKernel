@@ -9,9 +9,12 @@
   le BDA (BIOS Data Area)
  */
 
+#include <kernel/lib/types.h>
+
 // Port COM1
 #define COM1_PORT 0x3F8
+#define COM2_PORT 0x2F8
 
 void SerialInit ();
-char SerialRead ();
-void SerialWrite (char c);
+char SerialRead (u16 port);
+void SerialWrite (u16 port, char c);

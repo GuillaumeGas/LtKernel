@@ -19,6 +19,8 @@
 #include <kernel/user/process_manager.h>
 #include <kernel/user/user_tests.h>
 
+#include <kernel/debug/ltdbg.h>
+
 #include <kernel/logger.h>
 
 #define __KERNEL__
@@ -26,6 +28,8 @@
 
 #define __MULTIBOOT__
 #include <kernel/multiboot.h>
+
+#define KERNEL_DEBUG
 
 static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
@@ -80,17 +84,17 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	/* Pour commencer... */
 	// Pour le test, on fait simple : vu qu'on file à bochs une image de cd avec le noyau dessus sur le channel 0, on place le disque en channel 1 en master
 	// TODO : détecter les autres devices possible, permettre d'y accéder simplement, etc...
-	AtaDevice device = AtaCreate(ATA_SECONDARY, ATA_MASTER);
-	if (!AtaInit(&device))
-	{
-		kprint("[Kernel] Ata driver initialization failed !\n");
-	}
-	else
-	{
-		kprint("[Kernel] Ata %s %s using PIO mode initialized\n", device.dataPort == ATA_PRIMARY ? "Primary" : "Secondary", device.type == ATA_MASTER ? "Master" : "Slave");
-	}
+	//AtaDevice device = AtaCreate(ATA_SECONDARY, ATA_MASTER);
+	//if (!AtaInit(&device))
+	//{
+	//	kprint("[Kernel] Ata driver initialization failed !\n");
+	//}
+	//else
+	//{
+	//	kprint("[Kernel] Ata %s %s using PIO mode initialized\n", device.dataPort == ATA_PRIMARY ? "Primary" : "Secondary", device.type == ATA_MASTER ? "Master" : "Slave");
+	//}
 
-	FsInit(&device);
+	//FsInit(&device);
 	/* */
 
 
@@ -102,6 +106,14 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	//PmCreateProcess(TestConsole, 500, NULL);
 
 	ENABLE_IRQ();
+
+	// On part du principe que le driver du port COM est opé
+	if (gKernelInfo.debug == TRUE)
+	{
+		LoggerInit(LOG_SCREEN); // on désactive la sortie de log du le port COM1 utilisé par le debugger
+		DbgInit();
+		asm("int $3");
+	}
 
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     CleanKernel();
@@ -147,6 +159,12 @@ static void InitKernelInfo()
 	gKernelInfo.vPagesHeapLimit = KERNEL_PAGES_HEAP_V_LIMIT_ADDR;
 	gKernelInfo.vHeapBase = KERNEL_HEAP_V_BASE_ADDR;
 	gKernelInfo.vHeapLimit = KERNEL_HEAP_V_LIMIT_ADDR;
+
+#ifdef KERNEL_DEBUG
+	gKernelInfo.debug = TRUE;
+#else
+	gKernelInfo.debug = FALSE;
+#endif
 }
 
 static void InitCleanCallbacksList()
