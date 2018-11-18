@@ -1,6 +1,8 @@
 #define __FS__
 #include "fs_manager.h"
 
+#include <kernel/lib/stdio.h>
+
 void FsInit(AtaDevice * device)
 {
 	gExt2Disk = Ext2ReadDiskOnDevice(device);

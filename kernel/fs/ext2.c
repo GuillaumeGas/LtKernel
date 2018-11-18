@@ -73,6 +73,8 @@ clean:
 		kfree(superBlock);
 		superBlock = NULL;
 	}
+
+	return NULL;
 }
 
 Ext2Inode * Ext2ReadInode(Ext2Disk * disk, int num)

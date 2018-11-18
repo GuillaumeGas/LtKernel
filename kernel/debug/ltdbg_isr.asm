@@ -8,7 +8,6 @@ global _asm_breakpoint_isr
 
 %macro  SAVE_REGS_DBG 0
     pushad
-	pushfd
     push ds
     push es
     push fs
@@ -38,7 +37,7 @@ global _asm_breakpoint_isr
     pop es
     pop ds
 	; pop eflags
-	pop ebx
+	; pop ebx
     popad
 %endmacro
 
