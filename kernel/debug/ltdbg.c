@@ -23,6 +23,7 @@ static BOOL StepCommand(DebugContext * context);
 static BOOL ContinueCommand(DebugContext * context);
 static BOOL RegistersCommand(DebugContext * context);
 static BOOL DisassCommand(DebugContext * context);
+static BOOL StackTraceCommand(DebugContext * context);
 
 void DbgInit()
 {
@@ -82,7 +83,7 @@ static void WaitForDbgCommand(DebugContext * context)
 
 		switch (cmd)
 		{
-		case 's':
+		case 'p':
 			_continue = StepCommand(context);
 			break;
 		case 'c':
@@ -93,6 +94,9 @@ static void WaitForDbgCommand(DebugContext * context)
 			break;
 		case 'd':
 			_continue = DisassCommand(context);
+			break;
+		case 's':
+			_continue = StackTraceCommand(context);
 			break;
 		default:
 			kprint("[DBG] Undefined debug command\n");
@@ -125,5 +129,16 @@ static BOOL DisassCommand(DebugContext * context)
 {
 	kprint("DisassCommand\n");
 	WriteBytes((u8*)context->eip, 20);
+	return FALSE;
+}
+
+static BOOL StackTraceCommand(DebugContext * context)
+{
+	kprint("StackTraceCommand\n");
+	u32 addrs[2];
+	u32 * ebp = (u32*)context->ebp;
+	addrs[0] = context->eip;
+	addrs[1] = ebp[1];
+	WriteBytes((u8*)addrs, 2 * sizeof(u32));
 	return FALSE;
 }
