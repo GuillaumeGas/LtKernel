@@ -18,12 +18,12 @@ static u8 ReadByte();
 static void WriteByte(u8 byte);
 static void WriteBytes(u8 * buffer, unsigned int bufferSize);
 
-static void WaitForDbgCommand(DebugContext * context);
-static BOOL StepCommand(DebugContext * context);
-static BOOL ContinueCommand(DebugContext * context);
-static BOOL RegistersCommand(DebugContext * context);
-static BOOL DisassCommand(DebugContext * context);
-static BOOL StackTraceCommand(DebugContext * context);
+static void WaitForDbgCommand(KeDebugContext * context);
+static BOOL StepCommand(KeDebugContext * context);
+static BOOL ContinueCommand(KeDebugContext * context);
+static BOOL RegistersCommand(KeDebugContext * context);
+static BOOL DisassCommand(KeDebugContext * context);
+static BOOL StackTraceCommand(KeDebugContext * context);
 
 void DbgInit()
 {
@@ -36,13 +36,13 @@ void DbgInit()
 	ENABLE_IRQ();
 }
 
-void DebugIsr(DebugContext * context)
+void DebugIsr(KeDebugContext * context)
 {
 	kprint("Debug interrupt !\n");
 	WaitForDbgCommand(context);
 }
 
-void BreakpointIsr(DebugContext * context)
+void BreakpointIsr(KeDebugContext * context)
 {
 	u8 byte = ReadByte();
 	if (byte != 1)
@@ -72,7 +72,7 @@ static void WriteBytes(u8 * buffer, unsigned int bufferSize)
 	}
 }
 
-static void WaitForDbgCommand(DebugContext * context)
+static void WaitForDbgCommand(KeDebugContext * context)
 {
 	char cmd = 0;
 	BOOL _continue = FALSE;
@@ -104,35 +104,36 @@ static void WaitForDbgCommand(DebugContext * context)
 	}
 }
 
-static BOOL StepCommand(DebugContext * context)
+static BOOL StepCommand(KeDebugContext * context)
 {
 	kprint("StepCommand\n");
 	context->eflags |= TRAP_FLAG_MASK;
 	return TRUE;
 }
 
-static BOOL ContinueCommand(DebugContext * context)
+static BOOL ContinueCommand(KeDebugContext * context)
 {
 	kprint("ContinueCommand\n");
 	context->eflags &= 0x0FEFF;
 	return TRUE;
 }
 
-static BOOL RegistersCommand(DebugContext * context)
+static BOOL RegistersCommand(KeDebugContext * context)
 {
 	kprint("RegistersCommand\n");
-	WriteBytes((u8*)context, sizeof(DebugContext));
+	WriteBytes((u8*)context, sizeof(KeDebugContext));
 	return FALSE;
 }
 
-static BOOL DisassCommand(DebugContext * context)
+static BOOL DisassCommand(KeDebugContext * context)
 {
 	kprint("DisassCommand\n");
+	WriteBytes((u8*)&context->eip, sizeof(unsigned int));
 	WriteBytes((u8*)context->eip, 20);
 	return FALSE;
 }
 
-static BOOL StackTraceCommand(DebugContext * context)
+static BOOL StackTraceCommand(KeDebugContext * context)
 {
 	kprint("StackTraceCommand\n");
 	u32 addrs[2];

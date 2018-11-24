@@ -12,6 +12,7 @@ global _asm_breakpoint_isr
     push es
     push fs
     push gs
+	push ss
 
 	mov ebx, cr0
 	push ebx
@@ -32,6 +33,7 @@ global _asm_breakpoint_isr
 	pop ebx
 	pop ebx
 	pop ebx
+	pop ss
     pop gs
     pop fs
     pop es
