@@ -106,7 +106,6 @@
   <ItemGroup>
     <ClCompile Include="kernel\debug\debug.c" />
     <ClCompile Include="kernel\debug\ltdbg.c" />
-    <ClCompile Include="kernel\debug\ltdbgcommands.c" />
     <ClCompile Include="kernel\drivers\ata.c" />
     <ClCompile Include="kernel\drivers\clock.c" />
     <ClCompile Include="kernel\drivers\keyboard.c" />

@@ -9,6 +9,8 @@
 
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
+#include <kernel/lib/list.h>
+#include <kernel/lib/kmalloc.h>
 
 #define TRAP_FLAG_MASK 0x100;
 
@@ -163,10 +165,44 @@ static BOOL DisassCommand(KeDebugContext * context)
 static BOOL StackTraceCommand(KeDebugContext * context)
 {
 	kprint("StackTraceCommand\n");
-	u32 addrs[2];
+
+	u8 * buffer = NULL;
+	List * list = ListCreate();
+	unsigned int nbPtr = 0;
 	u32 * ebp = (u32*)context->ebp;
-	addrs[0] = context->eip;
-	addrs[1] = ebp[1];
-	WriteBytes((u8*)addrs, 2 * sizeof(u32));
+	unsigned int bufferSize = 0;
+
+	ListPush(list, (void *)context->ebp);
+	nbPtr++;
+
+	while (ebp != NULL)
+	{
+		ListPush(list, (void *)ebp[1]);
+		ebp = (u32 *)ebp[0];
+		nbPtr++;
+	}
+
+	bufferSize = nbPtr * sizeof(u32);
+	
+	buffer = (u8 *)kmalloc(bufferSize);
+	if (buffer == NULL)
+	{
+		kprint("[DBG ERROR] StackTraceCommand() : Can't allocate %d bytes\n", bufferSize);
+		goto clean;
+	}
+
+	unsigned int index = 0;
+	unsigned int * addresses = (unsigned int *)buffer;
+	while (list != NULL)
+	{
+		addresses[index++] = (unsigned int)ListPop(&list);
+	}
+
+	WriteBytes((u8 *)&bufferSize, sizeof(unsigned int));
+	WriteBytes((u8 *)buffer, bufferSize);
+
+clean:
+	ListDestroy(list);
+
 	return FALSE;
 }
