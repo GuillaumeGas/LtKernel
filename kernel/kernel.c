@@ -103,7 +103,7 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	InitCleanCallbacksList();
 
-	//PmCreateProcess(TestConsole, 500, NULL);
+	//PmCreateProcess(TestConsole, 500, NULL); 
 
 	ENABLE_IRQ();
 

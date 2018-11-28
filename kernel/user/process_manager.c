@@ -169,6 +169,7 @@ static void CleanProcessCallback(void * param)
 
 void PmCleanCallback()
 {
+	asm("int $0x3"::);
 	ListDestroyEx(gProcessList, CleanProcessCallback);
 }
 

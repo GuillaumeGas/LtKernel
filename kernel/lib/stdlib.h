@@ -18,3 +18,4 @@ void MmSet(u8 * src, u8 byte, unsigned int size);
 
 void StrCpy(const char * src, char * dst);
 unsigned long StrLen(const char * str);
+int StrCmp(const char * src, const char * dst);

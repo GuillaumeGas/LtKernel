@@ -1,4 +1,5 @@
 #include "ltdbg.h"
+#include "ltdbgcommands.h"
 
 #include <kernel/init/idt.h> 
 #include <kernel/init/isr.h>
@@ -25,6 +26,9 @@ static BOOL RegistersCommand(KeDebugContext * context);
 static BOOL DisassCommand(KeDebugContext * context);
 static BOOL StackTraceCommand(KeDebugContext * context);
 
+static BOOL gDbgInitialized = FALSE;
+static CommandId gLastCommandId = CMD_UNKNOWN;
+
 void DbgInit()
 {
 	// Modifier les entrées 1 et 3 de l'idt (debug et breakpoint)
@@ -39,24 +43,41 @@ void DbgInit()
 void DebugIsr(KeDebugContext * context)
 {
 	kprint("Debug interrupt !\n");
+
+	DisassCommand(context);
+
 	WaitForDbgCommand(context);
 }
 
 void BreakpointIsr(KeDebugContext * context)
 {
-	u8 byte = ReadByte();
-	if (byte != 1)
-		kprint("Wrong startup byte !\n");
+	if (gDbgInitialized == FALSE)
+	{
+		u8 byte = ReadByte();
+		if (byte != 1)
+			kprint("Wrong startup byte !\n");
+		else
+			gDbgInitialized = TRUE;
 
-	WriteByte(1);
-	kprint("[DBG] LtDbg connected\n");
-	
+		WriteByte(1);
+		kprint("[DBG] LtDbg connected\n");
+	}
+
 	WaitForDbgCommand(context);
 }
 
 static u8 ReadByte()
 {
 	return SerialRead(COM2_PORT);
+}
+
+static void ReadBytes(u8 * buffer, unsigned int size)
+{
+	if (buffer == NULL)
+		return;
+
+	for (int i = 0; i < size; i++)
+		buffer[i] = ReadByte();
 }
 
 static void WriteByte(u8 byte)
@@ -74,33 +95,34 @@ static void WriteBytes(u8 * buffer, unsigned int bufferSize)
 
 static void WaitForDbgCommand(KeDebugContext * context)
 {
-	char cmd = 0;
 	BOOL _continue = FALSE;
 
 	while (_continue == FALSE)
 	{
-		cmd = ReadByte();
+		CommandId commandId = (CommandId)ReadByte();
 
-		switch (cmd)
+		switch (commandId)
 		{
-		case 'p':
+		case CMD_STEP:
 			_continue = StepCommand(context);
 			break;
-		case 'c':
+		case CMD_CONTINUE:
 			_continue = ContinueCommand(context);
 			break;
-		case 'r':
+		case CMD_REGISTERS:
 			_continue = RegistersCommand(context);
 			break;
-		case 'd':
+		case CMD_DISASS:
 			_continue = DisassCommand(context);
 			break;
-		case 's':
+		case CMD_STACK_TRACE:
 			_continue = StackTraceCommand(context);
 			break;
 		default:
 			kprint("[DBG] Undefined debug command\n");
 		}
+
+		gLastCommandId = commandId;
 	}
 }
 
@@ -127,9 +149,14 @@ static BOOL RegistersCommand(KeDebugContext * context)
 
 static BOOL DisassCommand(KeDebugContext * context)
 {
+	unsigned int size = 0;
+
 	kprint("DisassCommand\n");
+
+	ReadBytes((u8*)&size, sizeof(unsigned int));
+
 	WriteBytes((u8*)&context->eip, sizeof(unsigned int));
-	WriteBytes((u8*)context->eip, 20);
+	WriteBytes((u8*)context->eip, size * DEFAULT_ASM_BUFFER_SIZE);
 	return FALSE;
 }
 

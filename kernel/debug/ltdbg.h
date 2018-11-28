@@ -2,6 +2,8 @@
 
 #include <kernel/lib/types.h>
 
+#define DEFAULT_ASM_BUFFER_SIZE 20
+
 struct KeDebugContext
 {
 	u32 cr3, cr2, cr0;
