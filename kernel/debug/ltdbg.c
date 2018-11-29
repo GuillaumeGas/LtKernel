@@ -172,7 +172,7 @@ static BOOL StackTraceCommand(KeDebugContext * context)
 	u32 * ebp = (u32*)context->ebp;
 	unsigned int bufferSize = 0;
 
-	ListPush(list, (void *)context->ebp);
+	ListPush(list, (void *)context->eip);
 	nbPtr++;
 
 	while (ebp != NULL)
