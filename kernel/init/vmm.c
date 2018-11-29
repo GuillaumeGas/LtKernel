@@ -357,3 +357,24 @@ PageDirectory CreateProcessPageDirectory()
 
 	return pd;
 }
+
+BOOL IsVirtualAddressAvailable(u32 vAddr)
+{
+	u32 * pde = NULL; // adresse virtuelle de l'entrée du répertoire de pages
+	u32 * pte = NULL; // adresse virtuelle de l'entrée de la table de pages
+
+	// On vérifie que la page est bien présente (voir get_p_addr pour mieux comprendre l'algo)
+	pde = (u32 *)(0xFFFFF000 | PD_OFFSET(vAddr));
+	if (!FlagOn(*pde, PAGE_PRESENT))
+	{
+		return FALSE;
+	}
+
+	pte = (u32 *)(0xFFC00000 | ((vAddr & 0xFFFFF000) >> 10));
+	if (!FlagOn(*pte, PAGE_PRESENT))
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}

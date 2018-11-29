@@ -10,6 +10,7 @@
 	COMMAND(CMD_REGISTERS,   "r")		  \
 	COMMAND(CMD_DISASS,      "d")		  \
 	COMMAND(CMD_STACK_TRACE, "s")		  \
+	COMMAND(CMD_MEMORY,      "m")		  \
 	COMMAND(CMD_UNKNOWN,     "<unknown>") \
 	COMMAND(CMD_END,         "<end>" )    \
 

@@ -94,6 +94,7 @@ void SetPageTableEntryEx(PageTableEntry * pt, u32 pageAddr, PAGE_FLAG flags, u8 
 void * GetFreePage();
 void ReleasePage(void * pAddr);
 void * GetPhysicalAddress(void * vAddr);
+BOOL IsVirtualAddressAvailable(u32 vAddr);
 
 void AddPageToKernelPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags);
 void AddPageToPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags, PageDirectory pd);
@@ -101,3 +102,6 @@ void AddPageToPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags, PageDirecto
 PageDirectory CreateProcessPageDirectory();
 
 void VmmCleanCallback();
+
+void _setCurrentPagesDirectory(PageDirectoryEntry * pd);
+PageDirectoryEntry * _getCurrentPagesDirectory();

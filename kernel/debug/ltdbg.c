@@ -3,6 +3,7 @@
 
 #include <kernel/init/idt.h> 
 #include <kernel/init/isr.h>
+#include <kernel/init/vmm.h>
 
 #include <kernel/drivers/proc_io.h>
 #include <kernel/drivers/serial.h>
@@ -27,6 +28,7 @@ static BOOL ContinueCommand(KeDebugContext * context);
 static BOOL RegistersCommand(KeDebugContext * context);
 static BOOL DisassCommand(KeDebugContext * context);
 static BOOL StackTraceCommand(KeDebugContext * context);
+static BOOL MemoryCommand(KeDebugContext * context);
 
 static BOOL gDbgInitialized = FALSE;
 static CommandId gLastCommandId = CMD_UNKNOWN;
@@ -120,6 +122,9 @@ static void WaitForDbgCommand(KeDebugContext * context)
 		case CMD_STACK_TRACE:
 			_continue = StackTraceCommand(context);
 			break;
+		case CMD_MEMORY:
+			_continue = MemoryCommand(context);
+			break;
 		default:
 			kprint("[DBG] Undefined debug command\n");
 		}
@@ -204,5 +209,51 @@ static BOOL StackTraceCommand(KeDebugContext * context)
 clean:
 	ListDestroy(list);
 
+	return FALSE;
+}
+
+static BOOL MemoryCommand(KeDebugContext * context)
+{
+	unsigned int addr = 0;
+	unsigned int size = 0;
+	PageDirectoryEntry * currentPd = NULL;
+
+	ReadBytes((u8 *)&addr, sizeof(unsigned int));
+	ReadBytes((u8 *)&size, sizeof(unsigned int));
+
+	// Changer de répertoire de table de page (à récupérer dans cr3 ?)
+	// Garder en mémoire le courant
+	currentPd = _getCurrentPagesDirectory();
+	_setCurrentPagesDirectory((PageDirectoryEntry *)context->cr3);
+
+	// Vérifier si l'adresse demandée est accessible et renvoyer le résultat 1 ou 0
+	if (!IsVirtualAddressAvailable(addr))
+	{
+		WriteByte(FALSE);
+		goto clean;
+	}
+	else
+	{
+		WriteByte(TRUE);
+	}
+
+	// Vérifier si l'adresse de fin est également accessible
+	if (!IsVirtualAddressAvailable(addr + size - 1))
+	{
+		WriteByte(FALSE);
+		goto clean;
+	}
+	else
+	{
+		WriteByte(TRUE);
+	}
+
+	// Envoyer les données
+	WriteBytes((u8 *)addr, size);
+
+	// Restaurer répertoire de pages
+	_setCurrentPagesDirectory(currentPd);
+
+clean:
 	return FALSE;
 }
