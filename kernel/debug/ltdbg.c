@@ -232,23 +232,15 @@ static BOOL MemoryCommand(KeDebugContext * context)
 		WriteByte(FALSE);
 		goto clean;
 	}
-	else
-	{
-		WriteByte(TRUE);
-	}
-
+	
 	// Vérifier si l'adresse de fin est également accessible
 	if (!IsVirtualAddressAvailable(addr + size - 1))
 	{
 		WriteByte(FALSE);
 		goto clean;
 	}
-	else
-	{
-		WriteByte(TRUE);
-	}
-
-    kprint("Reading memory at 0x%x for %d bytes\n", addr, size);
+	
+	WriteByte(TRUE);
 
 	// Envoyer les données
 	WriteBytes((u8 *)addr, size);
