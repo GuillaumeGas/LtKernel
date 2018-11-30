@@ -248,12 +248,14 @@ static BOOL MemoryCommand(KeDebugContext * context)
 		WriteByte(TRUE);
 	}
 
+    kprint("Reading memory at 0x%x for %d bytes\n", addr, size);
+
 	// Envoyer les données
 	WriteBytes((u8 *)addr, size);
 
-	// Restaurer répertoire de pages
-	_setCurrentPagesDirectory(currentPd);
-
 clean:
+    // Restaurer répertoire de pages
+    _setCurrentPagesDirectory(currentPd);
+
 	return FALSE;
 }
