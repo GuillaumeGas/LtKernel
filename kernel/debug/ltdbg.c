@@ -22,16 +22,21 @@ static u8 ReadByte();
 static void WriteByte(u8 byte);
 static void WriteBytes(u8 * buffer, unsigned int bufferSize);
 
+static KeBreakpoint * BreakpointDefinedAt(u32 addr);
+
 static void WaitForDbgCommand(KeDebugContext * context);
+static void HandleBreakpoint(KeDebugContext * context, KeBreakpoint * bp);
 static BOOL StepCommand(KeDebugContext * context);
 static BOOL ContinueCommand(KeDebugContext * context);
 static BOOL RegistersCommand(KeDebugContext * context);
 static BOOL DisassCommand(KeDebugContext * context);
 static BOOL StackTraceCommand(KeDebugContext * context);
 static BOOL MemoryCommand(KeDebugContext * context);
+static BOOL BreakpointCommand(KeDebugContext * context);
 
 static BOOL gDbgInitialized = FALSE;
 static CommandId gLastCommandId = CMD_UNKNOWN;
+static List * gBpList = NULL;
 
 void DbgInit()
 {
@@ -42,6 +47,8 @@ void DbgInit()
 	DISABLE_IRQ();
 	IdtReload();
 	ENABLE_IRQ();
+
+	gBpList = ListCreate();
 }
 
 void DebugIsr(KeDebugContext * context)
@@ -49,6 +56,18 @@ void DebugIsr(KeDebugContext * context)
 	kprint("Debug interrupt !\n");
 
 	DisassCommand(context);
+
+	KeBreakpoint * bp = (KeBreakpoint *)BreakpointDefinedAt(context->eip - 1);
+	if (bp != NULL)
+	{
+		HandleBreakpoint(context, bp);
+		//WriteByte(TRUE);
+	}
+	else
+	{
+		// Not a breakpoint
+		//WriteByte(FALSE);
+	}
 
 	WaitForDbgCommand(context);
 }
@@ -65,6 +84,20 @@ void BreakpointIsr(KeDebugContext * context)
 
 		WriteByte(1);
 		kprint("[DBG] LtDbg connected\n");
+	}
+	else
+	{
+		KeBreakpoint * bp = (KeBreakpoint *)BreakpointDefinedAt(context->eip - 1);
+		if (bp != NULL)
+		{
+			HandleBreakpoint(context, bp);
+			//WriteByte(TRUE);
+		}
+		else
+		{
+			// not a breakpoint
+			//WriteByte(FALSE);
+		}
 	}
 
 	WaitForDbgCommand(context);
@@ -125,12 +158,50 @@ static void WaitForDbgCommand(KeDebugContext * context)
 		case CMD_MEMORY:
 			_continue = MemoryCommand(context);
 			break;
+		case CMD_BP:
+			_continue = BreakpointCommand(context);
+			break;
 		default:
 			kprint("[DBG] Undefined debug command\n");
 		}
 
 		gLastCommandId = commandId;
 	}
+}
+
+static KeBreakpoint * BreakpointDefinedAt(u32 addr)
+{
+	ListElem * elem = gBpList;
+	ListElem * next = NULL;
+
+	if (elem == NULL)
+		return NULL;
+
+	next = elem->next;
+
+	while (elem != NULL)
+	{
+		KeBreakpoint * bp = (KeBreakpoint *)elem->data;
+		if (bp->addr == addr)
+			return bp;
+
+		elem = next;
+
+		if (next != NULL)
+			next = next->next;
+	}
+
+	return NULL;
+}
+
+static void HandleBreakpoint(KeDebugContext * context, KeBreakpoint * bp)
+{
+	// TODO : trouver un moyen de restaurer le breakpoint après coup
+
+	context->eip--;
+
+	u8 * instAddr = (u8 *)context->eip;
+	*instAddr = bp->savedInstByte;
 }
 
 static BOOL StepCommand(KeDebugContext * context)
@@ -249,5 +320,45 @@ clean:
     // Restaurer répertoire de pages
     _setCurrentPagesDirectory(currentPd);
 
+	return FALSE;
+}
+
+static BOOL BreakpointCommand(KeDebugContext * context)
+{
+	const u8 INT_3_INST = 0xCC;
+
+	u8 * addr = NULL;
+	static int breakpointId = 0;
+	KeBreakpoint * bp = NULL;
+
+	ReadBytes((u8 *)&addr, sizeof(u32));
+
+	if (!IsVirtualAddressAvailable((u32)addr))
+	{
+		WriteByte(FALSE);
+		goto clean;
+	}
+
+	bp = (KeBreakpoint *)kmalloc(sizeof(KeBreakpoint));
+	if (bp == NULL)
+	{
+		kprint("[DBG ERROR] BreakpointCommand() : Can't allocate %d bytes\n", sizeof(KeBreakpoint));
+		WriteByte(FALSE);
+		goto clean;
+	}
+
+	bp->addr = (u32)addr;
+	bp->id = breakpointId++;
+	bp->savedInstByte = *addr;
+	bp->state = BP_ENABLED;
+
+	ListPush(gBpList, bp);
+
+	// TODO : demander au debugger la taille de l'instruction
+	*addr = INT_3_INST;
+
+	WriteByte(TRUE);
+
+clean:
 	return FALSE;
 }
