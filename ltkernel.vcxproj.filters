@@ -156,6 +156,9 @@
     <ClCompile Include="kernel\debug\ltdbg.c">
       <Filter>Fichiers sources\kernel\debug</Filter>
     </ClCompile>
+    <ClCompile Include="kernel\debug\ltdbgcom.c">
+      <Filter>Fichiers sources\kernel\debug</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\logger.h">
@@ -255,6 +258,9 @@
       <Filter>Fichiers sources\kernel\debug</Filter>
     </ClInclude>
     <ClInclude Include="kernel\debug\ltdbgcommands.h">
+      <Filter>Fichiers sources\kernel\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\debug\ltdbgcom.h">
       <Filter>Fichiers sources\kernel\debug</Filter>
     </ClInclude>
   </ItemGroup>

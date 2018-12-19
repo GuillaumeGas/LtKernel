@@ -2,13 +2,22 @@
 
 #include <kernel/lib/types.h>
 
+#include "ltdbgcommands.h"
+
 #define DEFAULT_ASM_BUFFER_SIZE 20
 
-enum BpState 
+enum BpState
 {
 	BP_ENABLED,
 	BP_DISABLED
 } typedef BpState;
+
+enum KeDebugStatus
+{
+	DBG_STATUS_SUCCESS,
+	DBG_STATUS_FAILURE,
+	DBG_STATUS_ALREADY_CONNECTED,
+} typedef KeDebugStatus;
 
 struct KeDebugContext
 {
@@ -27,5 +36,32 @@ struct KeBreakpoint
 	u8 savedInstByte;
 	int id;
 } typedef KeBreakpoint;
+
+struct KeDebugPacket
+{
+	unsigned int size;
+	u8 * content; // KeDebugRequest ou KeDebugResponse
+} typedef KeDebugPacket;
+
+struct KeDebugRequest
+{
+	CommandId command;
+	unsigned int paramSize;
+	char * param;
+} typedef KeDebugRequest;
+
+struct KeDebugResponseHeader
+{
+	CommandId command;
+	KeDebugStatus status;
+	KeDebugContext context;
+	unsigned int dataSize;
+} typedef KeDebugResponseHeader;
+
+struct KeDebugResponse
+{
+	KeDebugResponseHeader header;
+	char * data;
+} typedef KeDebugResponse;
 
 void DbgInit();

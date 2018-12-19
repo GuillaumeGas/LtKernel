@@ -12,12 +12,12 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
 
-static int SysPrint(const char * str);
-static int SysScanf(char * buffer);
-static int SysExec(void * funAddr);
-static int SysWait(int pid);
-static int SysExit();
-static int SysDebugListProcess();
+static KeStatus SysPrint(const char * str);
+static KeStatus SysScanf(char * buffer);
+static KeStatus SysExec(void * funAddr);
+static KeStatus SysWait(int pid);
+static KeStatus SysExit();
+static KeStatus SysDebugListProcess();
 
 enum SyscallId
 {
@@ -61,13 +61,13 @@ void SyscallHandler(int syscallNumber, InterruptContext * context)
 	context->eax = ret;
 }
 
-static int SysPrint(const char * str)
+static KeStatus SysPrint(const char * str)
 {
     kprint(str);
 	return STATUS_SUCCESS;
 }
 
-static int SysScanf(char * buffer)
+static KeStatus SysScanf(char * buffer)
 {
     Process * currentProcess = GetCurrentProcess();
 
@@ -105,7 +105,7 @@ static int SysScanf(char * buffer)
 	return STATUS_SUCCESS;
 }
 
-static int SysExec(void * funAddr)
+static KeStatus SysExec(void * funAddr)
 {
     if (funAddr == NULL)
     {
@@ -130,7 +130,7 @@ static int SysExec(void * funAddr)
 	return newProcPid;
 }
 
-static int SysWait(int pid)
+static KeStatus SysWait(int pid)
 {
 	// On empêche d'attendre sur le processus system pour l'instant...
 	if (pid == 0)
@@ -166,7 +166,7 @@ static int SysWait(int pid)
 	return STATUS_SUCCESS;
 }
 
-static int SysExit()
+static KeStatus SysExit()
 {
     Process * currentProcess = GetCurrentProcess();
 
@@ -182,7 +182,7 @@ static int SysExit()
 	return STATUS_SUCCESS;
 }
 
-static int SysDebugListProcess()
+static KeStatus SysDebugListProcess()
 {
     PmPrintProcessList();
 	return STATUS_SUCCESS;
