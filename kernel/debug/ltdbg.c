@@ -94,16 +94,20 @@ static void WaitForConnectCommand(KeDebugContext * context)
 
 	WriteByte(1);
 
+	kprint("LtDbg trying to connect... waiting for a connect request command...\n");
+
 	status = RecvRequest(&request);
 	if (status != STATUS_SUCCESS)
 	{
 		// TODO : logger
+		kprint("RecvRequest() failed, status = %d\n", status);
 		return;
 	}
 
 	if (request.command != CMD_CONNECT)
 	{
 		// TODO : logger
+		kprint("wrong command : %d\n", request.command);
 		return;
 	}
 
@@ -112,6 +116,8 @@ static void WaitForConnectCommand(KeDebugContext * context)
 	response.header.dataSize = 0;
 	response.header.context = *context;
 	response.data = NULL;
+
+	kprint("Command request received, sending response...\n");
 
 	SendResponse(&response);
 

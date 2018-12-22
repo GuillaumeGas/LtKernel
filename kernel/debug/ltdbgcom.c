@@ -3,6 +3,7 @@
 #include <kernel/drivers/serial.h>
 #include <kernel/lib/kmalloc.h>
 #include <kernel/logger.h>
+#include <kernel/lib/stdio.h>
 
 u8 ReadByte()
 {
@@ -38,7 +39,10 @@ KeStatus RecvPacket(KeDebugPacket * packet)
 		return STATUS_NULL_PARAMETER;
 	}
 
+	kprint("Reading %d bytes...\n", sizeof(unsigned int));
 	ReadBytes((u8 *)&packet->size, sizeof(unsigned int));
+
+	kprint("Received size : %d\n", packet->size);
 
 	if (packet->size == 0)
 		return STATUS_SUCCESS;
@@ -52,6 +56,7 @@ KeStatus RecvPacket(KeDebugPacket * packet)
 	}
 
 	ReadBytes(packet->content, packet->size);
+	kprint("Packet received !\n");
 
 	return STATUS_SUCCESS;
 }
@@ -70,15 +75,32 @@ KeStatus SendPacket(KeDebugPacket * packet)
 		return STATUS_INVALID_PARAMETER;
 	}
 
-	WriteBytes((u8 *)packet->size, sizeof(unsigned int));
+	kprint("Sending %d bytes\n", packet->size);
+	WriteBytes((u8 *)&packet->size, sizeof(unsigned int));
 	WriteBytes(packet->content, packet->size);
 
 	return STATUS_SUCCESS;
 }
 
+void CleanupPacket(KeDebugPacket * packet)
+{
+	if (packet == NULL)
+	{
+		kprint("[DBG ERROR] Invalid packet parameter");
+		return;
+	}
+
+	if (packet->content != NULL)
+	{
+		kfree(packet->content);
+		packet->content = NULL;
+	}
+}
+
 KeStatus RecvRequest(KeDebugRequest * request)
 {
 	KeDebugPacket packet = { 0 };
+	KeDebugRequest * ptrRequest = NULL;
 	KeStatus status = STATUS_FAILURE;
 
 	status = RecvPacket(&packet);
@@ -94,13 +116,20 @@ KeStatus RecvRequest(KeDebugRequest * request)
 		return STATUS_SUCCESS;
 	}
 
-	if (packet.size != sizeof(KeDebugRequest))
+	ptrRequest = (KeDebugRequest *)packet.content;
+	request->command = ptrRequest->command;
+	request->paramSize = ptrRequest->paramSize;
+
+	request->param = (char *)kmalloc(request->paramSize);
+	if (request->param == NULL)
 	{
-		// TODO : logger, paquet mal formé
-		return STATUS_UNEXPECTED;
+		kprint("[DBG ERROR] Couldn't allocate memory for request->param\n");
+		return STATUS_ALLOC_FAILED;
 	}
 
-	MmCopy(packet.content, (u8 *)request, packet.size);
+	MmCopy(&(ptrRequest->param), request->param, request->paramSize);
+
+	CleanupPacket(&packet);
 
 	return STATUS_SUCCESS;
 }
@@ -131,8 +160,8 @@ KeStatus SendResponse(KeDebugResponse * response)
 		return STATUS_ALLOC_FAILED;
 	}
 
-	MmCopy((u8 *)&response->header, buffer, sizeof(KeDebugResponseHeader));
-	MmCopy((u8 *)response->data, buffer + sizeof(KeDebugResponseHeader), response->header.dataSize);
+	MmCopy(&response->header, buffer, sizeof(KeDebugResponseHeader));
+	MmCopy(response->data, buffer + sizeof(KeDebugResponseHeader), response->header.dataSize);
 
 	packet.content = buffer;
 

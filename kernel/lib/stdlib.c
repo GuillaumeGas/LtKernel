@@ -11,13 +11,16 @@ void Pause ()
     while (1) {}
 }
 
-void MmCopy(u8 * src, u8 * dst, unsigned int size)
+void MmCopy(void * src, void * dst, unsigned int size)
 {
 	if (src == NULL || size == 0)
 		return;
 
+	u8 * _dst = (u8 *)dst;
+	u8 * _src = (u8 *)src;
+
 	while ((size--) > 0)
-		*(dst++) = *(src++);
+		*(_dst++) = *(_src++);
 }
 
 void MmSet(u8 * src, u8 byte, unsigned int size)
