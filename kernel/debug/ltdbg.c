@@ -24,24 +24,20 @@ void _asm_breakpoint_isr();
 //static void WaitForDbgCommand(KeDebugContext * context);
 //static void HandleBreakpoint(KeDebugContext * context, KeBreakpoint * bp);
 //
-//static void SendContext(KeDebugContext * context);
-//static void SendResponseWithoutContext();
-//static void SendResponseWithContext(KeDebugContext * context);
-//static void SendResponseFailure();
-
 static void WaitForConnectCommand(KeDebugContext * context);
 static void WaitForPacket(KeDebugContext * context);
 
+static void CleanupKeDebugResponse(KeDebugResponse * response);
+
 //static BOOL StepCommand(KeDebugContext * context);
 //static BOOL ContinueCommand(KeDebugContext * context);
-//static BOOL RegistersCommand(KeDebugContext * context);
+static BOOL RegistersCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 //static BOOL DisassCommand(KeDebugContext * context);
 //static BOOL StackTraceCommand(KeDebugContext * context);
 //static BOOL MemoryCommand(KeDebugContext * context);
 //static BOOL BreakpointCommand(KeDebugContext * context);
 
 static BOOL gDbgInitialized = FALSE;
-static CommandId gLastCommandId = CMD_UNKNOWN;
 static List * gBpList = NULL;
 
 void DbgInit()
@@ -131,6 +127,7 @@ static void WaitForPacket(KeDebugContext * context)
 	KeDebugRequest request = { 0 };
 	KeDebugResponse response = { 0 };
 	KeStatus status = STATUS_FAILURE;
+	BOOL running = FALSE;
 
 	if (context == NULL)
 	{
@@ -138,111 +135,78 @@ static void WaitForPacket(KeDebugContext * context)
 		return;
 	}
 
-	status = RecvRequest(&request);
-	if (status != STATUS_SUCCESS)
+	while (running == FALSE)
+	{
+		status = RecvRequest(&request);
+		if (status != STATUS_SUCCESS)
+		{
+			// TODO : logger
+			return;
+		}
+
+		kprint("Param size: %d\n", request.paramSize);
+
+		switch (request.command)
+		{
+		case CMD_STEP:
+			kprint("[DBG] Step command\n");
+			break;
+		case CMD_CONTINUE:
+			kprint("[DBG] Continue command\n");
+			break;
+		case CMD_REGISTERS:
+			kprint("[DBG] Registers command\n");
+			running = RegistersCommand(&request, context, &response);
+			break;
+		case CMD_DISASS:
+			kprint("[DBG] Disass command\n");
+			break;
+		case CMD_STACK_TRACE:
+			kprint("[DBG] Stack trace command\n");
+			break;
+		case CMD_MEMORY:
+			kprint("[DBG] Memory command\n");
+			break;
+		case CMD_BP:
+			kprint("[DBG] Breakpoint command\n");
+			break;
+		default:
+			kprint("[DBG] Undefined debug command\n");
+			response.header.command = request.command;
+			response.header.context = *context;
+			response.header.dataSize = 0;
+			response.header.status = DBG_STATUS_FAILURE;
+			response.data = NULL;
+		}
+
+		status = SendResponse(&response);
+
+		if (status != STATUS_SUCCESS)
+		{
+			kprint("[DBG ERROR] SendResponse() failed with code : %d\n", status);
+			// TODO : logger
+		}
+
+		CleanupKeDebugResponse(&response);
+	}
+}
+
+static void CleanupKeDebugResponse(KeDebugResponse * response)
+{
+	if (response == NULL)
 	{
 		// TODO : logger
 		return;
 	}
 
-	kprint("Param size: %d\n", request.paramSize);
-
-	switch (request.command)
+	if (response->data == NULL)
 	{
-	case CMD_STEP:
-		kprint("[DBG] Step command\n");
-		break;
-	case CMD_CONTINUE:
-		kprint("[DBG] Continue command\n");
-		break;
-	case CMD_REGISTERS:
-		kprint("[DBG] Registers command\n");
-		break;
-	case CMD_DISASS:
-		kprint("[DBG] Disass command\n");
-		break;
-	case CMD_STACK_TRACE:
-		kprint("[DBG] Stack trace command\n");
-		break;
-	case CMD_MEMORY:
-		kprint("[DBG] Memory command\n");
-		break;
-	case CMD_BP:
-		kprint("[DBG] Breakpoint command\n");
-		break;
-	default:
-		kprint("[DBG] Undefined debug command\n");
+		return;
 	}
 
-	response.header.command = request.command;
-	response.header.context = *context;
-	response.header.dataSize = 0;
-	response.header.status = DBG_STATUS_SUCCESS;
-	response.data = NULL;
-
-	status = SendResponse(&response);
+	kfree(response->data);
 }
-//
-//static void WaitForDbgCommand(KeDebugContext * context)
-//{
-//	BOOL _continue = FALSE;
-//
-//	while (_continue == FALSE)
-//	{
-//		CommandId commandId = (CommandId)ReadByte();
-//
-//		switch (commandId)
-//		{
-//		case CMD_STEP:
-//			_continue = StepCommand(context);
-//			break;
-//		case CMD_CONTINUE:
-//			_continue = ContinueCommand(context);
-//			break;
-//		case CMD_REGISTERS:
-//			_continue = RegistersCommand(context);
-//			break;
-//		case CMD_DISASS:
-//			_continue = DisassCommand(context);
-//			break;
-//		case CMD_STACK_TRACE:
-//			_continue = StackTraceCommand(context);
-//			break;
-//		case CMD_MEMORY:
-//			_continue = MemoryCommand(context);
-//			break;
-//		case CMD_BP:
-//			_continue = BreakpointCommand(context);
-//			break;
-//		default:
-//			kprint("[DBG] Undefined debug command\n");
-//		}
-//
-//		gLastCommandId = commandId;
-//	}
-//}
-//
-//static void SendContext(KeDebugContext * context)
-//{
-//	WriteBytes((u8 *)context, sizeof(KeDebugContext));
-//}
-//
-//static void SendResponseWithoutContext()
-//{
-//	//WriteByte(KDBG_RESPONSE_WITHOUT_CONTEXT);
-//}
-//
-//static void SendResponseWithContext(KeDebugContext * context)
-//{
-//	//WriteByte(KDBG_RESPONSE_WITH_CONTEXT);
-//	SendContext(context);
-//}
-//
-//static void SendResponseFailure()
-//{
-//	//WriteByte(KDBG_RESPONSE_FAILURE);
-//}
-//
+
 //static KeBreakpoint * BreakpointDefinedAt(u32 addr)
 //{
 //	ListElem * elem = gBpList;
@@ -294,13 +258,18 @@ static void WaitForPacket(KeDebugContext * context)
 //	return TRUE;
 //}
 //
-//static BOOL RegistersCommand(KeDebugContext * context)
-//{
-//	kprint("RegistersCommand\n");
-//	SendResponseWithContext(context);
-//	return FALSE;
-//}
-//
+
+static BOOL RegistersCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response)
+{
+	response->header.command = CMD_REGISTERS;
+	response->header.context = *context;
+	response->header.dataSize = 0;
+	response->header.status = DBG_STATUS_SUCCESS;
+	response->data = NULL;
+
+	return FALSE;
+}
+
 //static BOOL DisassCommand(KeDebugContext * context)
 //{
 //	unsigned int size = 0;
