@@ -64,4 +64,18 @@ struct KeDebugResponse
 	char * data;
 } typedef KeDebugResponse;
 
+/* DISASS CMD */
+struct KeDebugDisassParamReq
+{
+	unsigned int nbInst;
+} typedef KeDebugDisassParamReq;
+
+struct KeDebugDisassParamRes
+{
+	unsigned int size;
+	unsigned int startingAddress;
+	char * data;
+} typedef KeDebugDisassParamRes;
+/* DISASS CMD */
+
 void DbgInit();

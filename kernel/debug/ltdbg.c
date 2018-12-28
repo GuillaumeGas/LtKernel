@@ -14,7 +14,11 @@
 #include <kernel/lib/list.h>
 #include <kernel/lib/kmalloc.h>
 
+#include <kernel/logger.h>
+
 #define TRAP_FLAG_MASK 0x100;
+
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("DBG", LOG_LEVEL, format, ##__VA_ARGS__)
 
 void _asm_debug_isr();
 void _asm_breakpoint_isr();
@@ -28,11 +32,12 @@ static void WaitForConnectCommand(KeDebugContext * context);
 static void WaitForPacket(KeDebugContext * context);
 
 static void CleanupKeDebugResponse(KeDebugResponse * response);
+static void CleanupKeDebugRequest(KeDebugRequest * request);
 
 //static BOOL StepCommand(KeDebugContext * context);
 //static BOOL ContinueCommand(KeDebugContext * context);
 static BOOL RegistersCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
-//static BOOL DisassCommand(KeDebugContext * context);
+static BOOL DisassCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 //static BOOL StackTraceCommand(KeDebugContext * context);
 //static BOOL MemoryCommand(KeDebugContext * context);
 //static BOOL BreakpointCommand(KeDebugContext * context);
@@ -55,7 +60,7 @@ void DbgInit()
 
 void DebugIsr(KeDebugContext * context)
 {
-	kprint("Debug interrupt !\n");
+	KLOG(LOG_DEBUG, "Debug interrupt !");
 }
 
 void BreakpointIsr(KeDebugContext * context)
@@ -78,32 +83,30 @@ static void WaitForConnectCommand(KeDebugContext * context)
 
 	if (context == NULL)
 	{
-		//TODO : logger
+		KLOG(LOG_ERROR, "Invalid context parameter");
 		return;
 	}
 
 	u8 byte = ReadByte();
 	if (byte != 1)
-		kprint("Wrong startup byte !\n");
+		KLOG(LOG_ERROR, "Wrong startup byte !");
 	else
 		gDbgInitialized = TRUE;
 
 	WriteByte(1);
 
-	kprint("LtDbg trying to connect... waiting for a connect request command...\n");
+	KLOG(LOG_INFO, "LtDbg trying to connect... waiting for a connect request...");
 
 	status = RecvRequest(&request);
 	if (status != STATUS_SUCCESS)
 	{
-		// TODO : logger
-		kprint("RecvRequest() failed, status = %d\n", status);
+		KLOG(LOG_ERROR, "RecvRequest() failed, status = %d", status);
 		return;
 	}
 
 	if (request.command != CMD_CONNECT)
 	{
-		// TODO : logger
-		kprint("wrong command : %d\n", request.command);
+		KLOG(LOG_ERROR, "Wrong command : %d (CMD_CONNECT expected)", request.command);
 		return;
 	}
 
@@ -113,13 +116,11 @@ static void WaitForConnectCommand(KeDebugContext * context)
 	response.header.context = *context;
 	response.data = NULL;
 
-	kprint("Command request received, sending response...\n");
-
 	SendResponse(&response);
 
 	gDbgInitialized = TRUE;
 
-	kprint("[DBG] LtDbg connected !\n");
+	KLOG(LOG_INFO, "LtDbg connected !");
 }
 
 static void WaitForPacket(KeDebugContext * context)
@@ -131,7 +132,7 @@ static void WaitForPacket(KeDebugContext * context)
 
 	if (context == NULL)
 	{
-		//TODO : logger
+		KLOG(LOG_ERROR, "Invalid context parameter");
 		return;
 	}
 
@@ -140,38 +141,37 @@ static void WaitForPacket(KeDebugContext * context)
 		status = RecvRequest(&request);
 		if (status != STATUS_SUCCESS)
 		{
-			// TODO : logger
+			KLOG(LOG_ERROR, "RecvRequest() failed (status = %d)", status);
 			return;
 		}
-
-		kprint("Param size: %d\n", request.paramSize);
 
 		switch (request.command)
 		{
 		case CMD_STEP:
-			kprint("[DBG] Step command\n");
+			KLOG(LOG_DEBUG, "Step command");
 			break;
 		case CMD_CONTINUE:
-			kprint("[DBG] Continue command\n");
+			KLOG(LOG_DEBUG, "Continue command");
 			break;
 		case CMD_REGISTERS:
-			kprint("[DBG] Registers command\n");
+			KLOG(LOG_DEBUG, "Registers command");
 			running = RegistersCommand(&request, context, &response);
 			break;
 		case CMD_DISASS:
-			kprint("[DBG] Disass command\n");
+			KLOG(LOG_DEBUG, "Disass command");
+			running = DisassCommand(&request, context, &response);
 			break;
 		case CMD_STACK_TRACE:
-			kprint("[DBG] Stack trace command\n");
+			KLOG(LOG_DEBUG, "Stack trace command");
 			break;
 		case CMD_MEMORY:
-			kprint("[DBG] Memory command\n");
+			KLOG(LOG_DEBUG, "Memory command");
 			break;
 		case CMD_BP:
-			kprint("[DBG] Breakpoint command\n");
+			KLOG(LOG_DEBUG, "Breakpoint command");
 			break;
 		default:
-			kprint("[DBG] Undefined debug command\n");
+			KLOG(LOG_DEBUG, "Undefined debug command");
 			response.header.command = request.command;
 			response.header.context = *context;
 			response.header.dataSize = 0;
@@ -183,10 +183,10 @@ static void WaitForPacket(KeDebugContext * context)
 
 		if (status != STATUS_SUCCESS)
 		{
-			kprint("[DBG ERROR] SendResponse() failed with code : %d\n", status);
-			// TODO : logger
+			KLOG(LOG_DEBUG, "SendResponse() failed with code : %d", status);
 		}
 
+		CleanupKeDebugRequest(&request);
 		CleanupKeDebugResponse(&response);
 	}
 }
@@ -195,7 +195,7 @@ static void CleanupKeDebugResponse(KeDebugResponse * response)
 {
 	if (response == NULL)
 	{
-		// TODO : logger
+		KLOG(LOG_ERROR, "Invalid response parameter");
 		return;
 	}
 
@@ -205,6 +205,22 @@ static void CleanupKeDebugResponse(KeDebugResponse * response)
 	}
 
 	kfree(response->data);
+}
+
+static void CleanupKeDebugRequest(KeDebugRequest * request)
+{
+	if (request == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid request parameter");
+		return;
+	}
+
+	if (request->param == NULL)
+	{
+		return;
+	}
+
+	kfree(request->param);
 }
 
 //static KeBreakpoint * BreakpointDefinedAt(u32 addr)
@@ -270,20 +286,47 @@ static BOOL RegistersCommand(KeDebugRequest * request, KeDebugContext * context,
 	return FALSE;
 }
 
-//static BOOL DisassCommand(KeDebugContext * context)
-//{
-//	unsigned int size = 0;
-//
-//	kprint("DisassCommand\n");
-//
-//	ReadBytes((u8*)&size, sizeof(unsigned int));
-//
-//	WriteBytes((u8*)&context->eip, sizeof(unsigned int));
-//	WriteBytes((u8*)context->eip, size * DEFAULT_ASM_BUFFER_SIZE);
-//
-//	SendResponseWithoutContext();
-//	return FALSE;
-//}
+static BOOL DisassCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response)
+{
+	KeDebugDisassParamRes * paramRes = NULL;
+	KeDebugDisassParamReq * paramReq = NULL;
+	unsigned int paramSize = 0;
+
+	response->header.command = CMD_DISASS;
+	response->header.context = *context;
+
+	if (request->paramSize == 0 || request->param == NULL)
+	{
+		KLOG(LOG_ERROR, "DisassCommand() paramSize == 0 or/and param == NULL");
+		response->header.status = DBG_STATUS_FAILURE;
+		return FALSE;
+	}
+
+	paramReq = (KeDebugDisassParamReq *)request->param;
+	if (paramReq->nbInst == 0)
+	{
+		response->header.status = DBG_STATUS_SUCCESS;
+		return FALSE;
+	}
+
+	paramSize = sizeof(KeDebugDisassParamRes) + (paramReq->nbInst * DEFAULT_ASM_BUFFER_SIZE);
+	response->header.dataSize = paramSize;
+	response->data = (char *)kmalloc(paramSize);
+	if (response->data == NULL)
+	{
+		KLOG(LOG_ERROR, "DisassCommand(), couldn't allocate memory for response->data");
+		response->header.status = DBG_STATUS_FAILURE;
+	}
+
+	paramRes = (KeDebugDisassParamRes *)response->data;
+	paramRes->size = paramReq->nbInst * DEFAULT_ASM_BUFFER_SIZE;
+	paramRes->startingAddress = context->eip;
+	MmCopy((void *)context->eip, &paramRes->data, paramRes->size);
+
+	response->header.status = DBG_STATUS_SUCCESS;	
+
+	return FALSE;
+}
 //
 //static BOOL StackTraceCommand(KeDebugContext * context)
 //{

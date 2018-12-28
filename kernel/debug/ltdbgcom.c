@@ -5,6 +5,8 @@
 #include <kernel/logger.h>
 #include <kernel/lib/stdio.h>
 
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("DBG", LOG_LEVEL, format, ##__VA_ARGS__)
+
 u8 ReadByte()
 {
 	return SerialRead(COM2_PORT);
@@ -39,10 +41,7 @@ KeStatus RecvPacket(KeDebugPacket * packet)
 		return STATUS_NULL_PARAMETER;
 	}
 
-	kprint("Reading %d bytes...\n", sizeof(unsigned int));
 	ReadBytes((u8 *)&packet->size, sizeof(unsigned int));
-
-	kprint("Received size : %d\n", packet->size);
 
 	if (packet->size == 0)
 		return STATUS_SUCCESS;
@@ -50,14 +49,12 @@ KeStatus RecvPacket(KeDebugPacket * packet)
 	packet->content = (u8 *)kmalloc(packet->size);
 	if (packet->content == NULL)
 	{
-		// TODO : logger
+		KLOG(LOG_ERROR, "Couldn't allocate %d bytes", packet->size);
 		packet->size = 0;
 		return STATUS_ALLOC_FAILED;
 	}
 
 	ReadBytes(packet->content, packet->size);
-	kprint("Packet received !\n");
-
 	return STATUS_SUCCESS;
 }
 
@@ -65,13 +62,19 @@ KeStatus SendPacket(KeDebugPacket * packet)
 {	
 	if (packet == NULL)
 	{
-		// TODO : logger
+		KLOG(LOG_ERROR, "Invalid packet parameter");
 		return STATUS_NULL_PARAMETER;
 	}
 
-	if (packet->content == NULL || packet->size == 0)
+	if (packet->content == NULL)
 	{
-		// TODO : logger
+		KLOG(LOG_ERROR, "packet->content is NULL");
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	if (packet->size == 0)
+	{
+		KLOG(LOG_ERROR, "packet->size == 0");
 		return STATUS_INVALID_PARAMETER;
 	}
 
@@ -86,7 +89,7 @@ void CleanupPacket(KeDebugPacket * packet)
 {
 	if (packet == NULL)
 	{
-		kprint("[DBG ERROR] Invalid packet parameter");
+		KLOG(LOG_ERROR, "Invalid packet parameter");
 		return;
 	}
 
@@ -106,13 +109,13 @@ KeStatus RecvRequest(KeDebugRequest * request)
 	status = RecvPacket(&packet);
 	if (status != STATUS_SUCCESS)
 	{
-		// TODO : logger
+		KLOG(LOG_ERROR, "RecvPacket() failed with status : %d", status);
 		return status;
 	}
 
 	if (packet.size == 0 || packet.content == NULL)
 	{
-		// TODO : logger
+		KLOG(LOG_DEBUG, "packet.size == %d || packet.content == %x", packet.size, packet.content);
 		return STATUS_SUCCESS;
 	}
 
@@ -123,7 +126,7 @@ KeStatus RecvRequest(KeDebugRequest * request)
 	request->param = (char *)kmalloc(request->paramSize);
 	if (request->param == NULL)
 	{
-		kprint("[DBG ERROR] Couldn't allocate memory for request->param\n");
+		KLOG(LOG_ERROR, "Couldn't allocate %d bytes for request->param", request->paramSize);
 		return STATUS_ALLOC_FAILED;
 	}
 
@@ -141,13 +144,13 @@ KeStatus SendResponse(KeDebugResponse * response)
 
 	if (response == NULL)
 	{
-		// TODO : logger
+		KLOG(LOG_ERROR, "Invalid response parameter");
 		return STATUS_NULL_PARAMETER;
 	}
 
 	if (response->header.dataSize != 0 && response->data == NULL)
 	{
-		//TODO : logger
+		KLOG(LOG_ERROR, "response->data shouldn't be NULL (dataSize : %d)", response->header.dataSize);
 		return STATUS_INVALID_PARAMETER;
 	}
 
@@ -156,7 +159,7 @@ KeStatus SendResponse(KeDebugResponse * response)
 	buffer = (u8 *)kmalloc(packet.size);
 	if (buffer == NULL)
 	{
-		//TODO : logger
+		KLOG(LOG_ERROR, "Couldn't allocate %d bytes", packet.size);
 		return STATUS_ALLOC_FAILED;
 	}
 
