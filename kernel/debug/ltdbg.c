@@ -83,6 +83,8 @@ void DebugIsr(KeDebugContext * context)
 
 void BreakpointIsr(KeDebugContext * context)
 {
+	KLOG(LOG_DEBUG, "Debug breakpoint !");
+
 	if (gDbgInitialized == FALSE)
 	{
 		WaitForConnectCommand(context);
@@ -90,8 +92,9 @@ void BreakpointIsr(KeDebugContext * context)
 	else
 	{
 		BreakpointHit(context);
-		WaitForPacket(context);
 	}
+
+	WaitForPacket(context);
 }
 
 static void WaitForConnectCommand(KeDebugContext * context)
