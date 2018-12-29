@@ -46,7 +46,7 @@ static void _KernelLogger(const char * fileName, const int lineNumber, const cha
 	{
 		kprint("[%s] ", moduleName);
 	}
-	kprint(format, args);
+	kprintEx(format, args);
 	kprint("\n");
 	ScSetColor(WHITE);
 }

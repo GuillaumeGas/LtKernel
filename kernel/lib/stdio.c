@@ -95,10 +95,16 @@ static void printBin(const int value, int nbBits)
 
 void kprint(const char * format, ...)
 {
-	int nbBits = 8;
-	int value;
 	va_list ap;
 	va_start(ap, format);
+	kprintEx(format, ap);
+	va_end(ap);
+}
+
+void kprintEx(const char * format, va_list ap)
+{
+	int nbBits = 8;
+	int value;
 
 	while (*format != '\0') 
 	{
@@ -148,8 +154,6 @@ void kprint(const char * format, ...)
 
 		format++;
 	}
-
-	va_end(ap);
 
 	if (ScIsCursorEnabled())
 		ScShowCursor();
