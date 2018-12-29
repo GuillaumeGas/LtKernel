@@ -36,7 +36,7 @@ static BOOL QuitCommand(KeDebugRequest * request, KeDebugContext * context, KeDe
 static BOOL StepCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 static BOOL RegistersCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 static BOOL DisassCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
-//static BOOL StackTraceCommand(KeDebugContext * context);
+static BOOL StackTraceCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 //static BOOL MemoryCommand(KeDebugContext * context);
 //static BOOL BreakpointCommand(KeDebugContext * context);
 
@@ -191,6 +191,7 @@ static void WaitForPacket(KeDebugContext * context)
 			break;
 		case CMD_STACK_TRACE:
 			KLOG(LOG_DEBUG, "Stack trace command");
+			running = StackTraceCommand(&request, context, &response);
 			break;
 		case CMD_MEMORY:
 			KLOG(LOG_DEBUG, "Memory command");
@@ -385,50 +386,52 @@ static BOOL DisassCommand(KeDebugRequest * request, KeDebugContext * context, Ke
 
 	return FALSE;
 }
-//
-//static BOOL StackTraceCommand(KeDebugContext * context)
-//{
-//	kprint("StackTraceCommand\n");
-//
-//	u8 * buffer = NULL;
-//	List * list = ListCreate();
-//	unsigned int nbPtr = 0;
-//	u32 * ebp = (u32*)context->ebp;
-//	unsigned int bufferSize = 0;
-//
-//	ListPush(list, (void *)context->eip);
-//	nbPtr++;
-//
-//	while (ebp != NULL)
-//	{
-//		ListPush(list, (void *)ebp[1]);
-//		ebp = (u32 *)ebp[0];
-//		nbPtr++;
-//	}
-//
-//	bufferSize = nbPtr * sizeof(u32);
-//	
-//	buffer = (u8 *)kmalloc(bufferSize);
-//	if (buffer == NULL)
-//	{
-//		kprint("[DBG ERROR] StackTraceCommand() : Can't allocate %d bytes\n", bufferSize);
-//		goto clean;
-//	}
-//
-//	unsigned int index = 0;
-//	unsigned int * addresses = (unsigned int *)buffer;
-//	while (list != NULL)
-//	{
-//		addresses[index++] = (unsigned int)ListPop(&list);
-//	}
-//
-//	WriteBytes((u8 *)&bufferSize, sizeof(unsigned int));
-//	WriteBytes((u8 *)buffer, bufferSize);
-//
-//clean:
-//	ListDestroy(list);
-//	SendResponseWithoutContext();
-//	return FALSE;
+
+static BOOL StackTraceCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response)
+{
+	u8 * buffer = NULL;
+	List * list = ListCreate();
+	unsigned int nbPtr = 0;
+	u32 * ebp = (u32*)context->ebp;
+	unsigned int bufferSize = 0;
+	
+	ListPush(list, (void *)context->eip);
+	nbPtr++;
+	
+	while (ebp != NULL)
+	{
+		ListPush(list, (void *)ebp[1]);
+		ebp = (u32 *)ebp[0];
+		nbPtr++;
+	}
+	
+	bufferSize = nbPtr * sizeof(u32);
+		
+	buffer = (u8 *)kmalloc(bufferSize);
+	if (buffer == NULL)
+	{
+		KLOG(LOG_ERROR, "Can't allocate %d bytes\n", bufferSize);
+		goto clean;
+	}
+	
+	unsigned int index = 0;
+	unsigned int * addresses = (unsigned int *)buffer;
+	while (list != NULL)
+	{
+		addresses[index++] = (unsigned int)ListPop(&list);
+	}
+
+	response->header.command = CMD_STACK_TRACE;
+	response->header.context = *context;
+	response->header.dataSize = bufferSize;
+	response->header.status = DBG_STATUS_SUCCESS;
+	response->data = (char *)addresses;
+
+clean:
+	ListDestroy(list);
+	return FALSE;
+}
+
 //}
 //
 //static BOOL MemoryCommand(KeDebugContext * context)
