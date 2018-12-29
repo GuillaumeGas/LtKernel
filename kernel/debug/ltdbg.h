@@ -17,6 +17,7 @@ enum KeDebugStatus
 	DBG_STATUS_SUCCESS,
 	DBG_STATUS_FAILURE,
 	DBG_STATUS_ALREADY_CONNECTED,
+	DBG_STATUS_BREAKPOINT_REACHED,
 } typedef KeDebugStatus;
 
 struct KeDebugContext

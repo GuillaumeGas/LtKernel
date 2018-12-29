@@ -25,17 +25,15 @@ void _asm_breakpoint_isr();
 
 //static KeBreakpoint * BreakpointDefinedAt(u32 addr);
 
-//static void WaitForDbgCommand(KeDebugContext * context);
-//static void HandleBreakpoint(KeDebugContext * context, KeBreakpoint * bp);
-//
 static void WaitForConnectCommand(KeDebugContext * context);
 static void WaitForPacket(KeDebugContext * context);
 
 static void CleanupKeDebugResponse(KeDebugResponse * response);
 static void CleanupKeDebugRequest(KeDebugRequest * request);
 
-//static BOOL StepCommand(KeDebugContext * context);
-//static BOOL ContinueCommand(KeDebugContext * context);
+static BOOL ContinueCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
+static BOOL QuitCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
+static BOOL StepCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 static BOOL RegistersCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 static BOOL DisassCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 //static BOOL StackTraceCommand(KeDebugContext * context);
@@ -58,9 +56,29 @@ void DbgInit()
 	gBpList = ListCreate();
 }
 
+static void BreakpointHit(KeDebugContext * context)
+{
+	KeDebugResponse response = { 0 };
+	response.header.command = CMD_UNKNOWN;
+	response.header.context = *context;
+	response.header.dataSize = 0;
+	response.header.status = DBG_STATUS_BREAKPOINT_REACHED;
+	response.data = NULL;
+
+	SendResponse(&response);
+}
+
 void DebugIsr(KeDebugContext * context)
 {
 	KLOG(LOG_DEBUG, "Debug interrupt !");
+
+	if (gDbgInitialized == FALSE)
+	{
+		KLOG(LOG_ERROR, "Debugger uninitialized !");
+	}
+
+	BreakpointHit(context);
+	WaitForPacket(context);
 }
 
 void BreakpointIsr(KeDebugContext * context)
@@ -71,6 +89,7 @@ void BreakpointIsr(KeDebugContext * context)
 	}
 	else
 	{
+		BreakpointHit(context);
 		WaitForPacket(context);
 	}
 }
@@ -149,9 +168,15 @@ static void WaitForPacket(KeDebugContext * context)
 		{
 		case CMD_STEP:
 			KLOG(LOG_DEBUG, "Step command");
+			running = StepCommand(&request, context, &response);
 			break;
 		case CMD_CONTINUE:
 			KLOG(LOG_DEBUG, "Continue command");
+			running = ContinueCommand(&request, context, &response);
+			break;
+		case CMD_QUIT:
+			KLOG(LOG_DEBUG, "Quit command");
+			running = QuitCommand(&request, context, &response);
 			break;
 		case CMD_REGISTERS:
 			KLOG(LOG_DEBUG, "Registers command");
@@ -179,11 +204,18 @@ static void WaitForPacket(KeDebugContext * context)
 			response.data = NULL;
 		}
 
-		status = SendResponse(&response);
-
-		if (status != STATUS_SUCCESS)
+		if (running == FALSE)
 		{
-			KLOG(LOG_DEBUG, "SendResponse() failed with code : %d", status);
+			status = SendResponse(&response);
+
+			if (status != STATUS_SUCCESS)
+			{
+				KLOG(LOG_DEBUG, "SendResponse() failed with code : %d", status);
+			}
+		}
+		else
+		{
+			KLOG(LOG_DEBUG, "Continuing...");
 		}
 
 		CleanupKeDebugRequest(&request);
@@ -258,22 +290,45 @@ static void CleanupKeDebugRequest(KeDebugRequest * request)
 //	*instAddr = bp->savedInstByte;
 //}
 //
-//static BOOL StepCommand(KeDebugContext * context)
-//{
-//	kprint("StepCommand\n");
-//	context->eflags |= TRAP_FLAG_MASK;
-//	SendResponseWithoutContext();
-//	return TRUE;
-//}
-//
-//static BOOL ContinueCommand(KeDebugContext * context)
-//{
-//	kprint("ContinueCommand\n");
-//	context->eflags &= 0x0FEFF;
-//	SendResponseWithoutContext();
-//	return TRUE;
-//}
-//
+
+static BOOL StepCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response)
+{
+	context->eflags |= TRAP_FLAG_MASK;
+
+	response->header.command = CMD_STEP;
+	response->header.context = *context;
+	response->header.dataSize = 0;
+	response->header.status = DBG_STATUS_SUCCESS;
+	response->data = NULL;
+
+	return TRUE;
+}
+
+static BOOL ContinueCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response)
+{
+	context->eflags &= 0x0FEFF;
+
+	response->header.command = CMD_CONTINUE;
+	response->header.context = *context;
+	response->header.dataSize = 0;
+	response->header.status = DBG_STATUS_SUCCESS;
+	response->data = NULL;
+
+	return TRUE;
+}
+
+static BOOL QuitCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response)
+{
+	context->eflags &= 0x0FEFF;
+
+	response->header.command = CMD_QUIT;
+	response->header.context = *context;
+	response->header.dataSize = 0;
+	response->header.status = DBG_STATUS_SUCCESS;
+	response->data = NULL;
+
+	return TRUE;
+}
 
 static BOOL RegistersCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response)
 {

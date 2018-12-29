@@ -18,7 +18,9 @@ void ReadBytes(u8 * buffer, unsigned int size)
 		return;
 
 	for (int i = 0; i < size; i++)
+	{
 		buffer[i] = ReadByte();
+	}
 }
 
 void WriteByte(u8 byte)
@@ -41,7 +43,9 @@ KeStatus RecvPacket(KeDebugPacket * packet)
 		return STATUS_NULL_PARAMETER;
 	}
 
-	ReadBytes((u8 *)&packet->size, sizeof(unsigned int));
+	ReadBytes((u8 *)&(packet->size), sizeof(unsigned int));
+
+	KLOG(LOG_DEBUG, "Reading %d bytes...", packet->size);
 
 	if (packet->size == 0)
 		return STATUS_SUCCESS;
@@ -78,7 +82,6 @@ KeStatus SendPacket(KeDebugPacket * packet)
 		return STATUS_INVALID_PARAMETER;
 	}
 
-	kprint("Sending %d bytes\n", packet->size);
 	WriteBytes((u8 *)&packet->size, sizeof(unsigned int));
 	WriteBytes(packet->content, packet->size);
 

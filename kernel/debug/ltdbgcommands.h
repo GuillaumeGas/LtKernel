@@ -24,13 +24,3 @@ enum CommandId
 #undef COMMAND
 #undef COMMAND_KEYWORD
 } typedef CommandId;
-
-static CommandId GetCmdFromStr(const char * str) {
-#define COMMAND(name, value)			\
-	    if (StrCmp(str, value) == 0) return name;
-#define COMMAND_KEYWORD(x, y) COMMAND(x, y)
-	COMMANDS_LIST
-#undef LEX_TOKEN_KEYWORD
-#undef LEX_TOKEN
-		return CMD_UNKNOWN;
-}

@@ -114,7 +114,8 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 		DbgInit();
 		asm("int $3");
 	}
-
+	asm("int $3");
+	kprint("here !\n");
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     CleanKernel();
     CheckHeap();
@@ -178,6 +179,8 @@ static void InitCleanCallbacksList()
 
 static void CleanKernel()
 {
+	asm("int $3");
+
     while (CleanCallbacksList != NULL)
     {
         CleanCallbackFun callback = ListPop(&CleanCallbacksList);
