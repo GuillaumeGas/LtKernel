@@ -126,14 +126,17 @@ KeStatus RecvRequest(KeDebugRequest * request)
 	request->command = ptrRequest->command;
 	request->paramSize = ptrRequest->paramSize;
 
-	request->param = (char *)kmalloc(request->paramSize);
-	if (request->param == NULL)
+	if (request->paramSize > 0)
 	{
-		KLOG(LOG_ERROR, "Couldn't allocate %d bytes for request->param", request->paramSize);
-		return STATUS_ALLOC_FAILED;
-	}
+		request->param = (char *)kmalloc(request->paramSize);
+		if (request->param == NULL)
+		{
+			KLOG(LOG_ERROR, "Couldn't allocate %d bytes for request->param", request->paramSize);
+			return STATUS_ALLOC_FAILED;
+		}
 
-	MmCopy(&(ptrRequest->param), request->param, request->paramSize);
+		MmCopy(&(ptrRequest->param), request->param, request->paramSize);
+	}
 
 	CleanupPacket(&packet);
 
