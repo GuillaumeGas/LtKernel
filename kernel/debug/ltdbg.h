@@ -18,6 +18,8 @@ enum KeDebugStatus
 	DBG_STATUS_FAILURE,
 	DBG_STATUS_ALREADY_CONNECTED,
 	DBG_STATUS_BREAKPOINT_REACHED,
+	DBG_STATUS_WRONG_PARAMETER,
+	DBG_STATUS_MEMORY_UNAVAILABLE
 } typedef KeDebugStatus;
 
 struct KeDebugContext
@@ -78,5 +80,13 @@ struct KeDebugDisassParamRes
 	char * data;
 } typedef KeDebugDisassParamRes;
 /* DISASS CMD */
+
+/* MEMORY CMD*/
+struct KeDebugMemoryParamReq
+{
+	unsigned int nbBytes;
+	unsigned int startingAddress;
+} typedef KeDebugMemoryParamReq;
+/* MEMORY CMD*/
 
 void DbgInit();

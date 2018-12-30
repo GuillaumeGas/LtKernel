@@ -37,7 +37,7 @@ static BOOL StepCommand(KeDebugRequest * request, KeDebugContext * context, KeDe
 static BOOL RegistersCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 static BOOL DisassCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 static BOOL StackTraceCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
-//static BOOL MemoryCommand(KeDebugContext * context);
+static BOOL MemoryCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response);
 //static BOOL BreakpointCommand(KeDebugContext * context);
 
 static BOOL gDbgInitialized = FALSE;
@@ -195,6 +195,7 @@ static void WaitForPacket(KeDebugContext * context)
 			break;
 		case CMD_MEMORY:
 			KLOG(LOG_DEBUG, "Memory command");
+			running = MemoryCommand(&request, context, &response);
 			break;
 		case CMD_BP:
 			KLOG(LOG_DEBUG, "Breakpoint command");
@@ -432,47 +433,84 @@ clean:
 	return FALSE;
 }
 
-//}
-//
-//static BOOL MemoryCommand(KeDebugContext * context)
-//{
-//	unsigned int addr = 0;
-//	unsigned int size = 0;
-//	PageDirectoryEntry * currentPd = NULL;
-//
-//	ReadBytes((u8 *)&addr, sizeof(unsigned int));
-//	ReadBytes((u8 *)&size, sizeof(unsigned int));
-//
-//	// Changer de répertoire de table de page (à récupérer dans cr3 ?)
-//	// Garder en mémoire le courant
-//	currentPd = _getCurrentPagesDirectory();
-//	_setCurrentPagesDirectory((PageDirectoryEntry *)context->cr3);
-//
-//	// Vérifier si l'adresse demandée est accessible et renvoyer le résultat 1 ou 0
-//	if (!IsVirtualAddressAvailable(addr))
-//	{
-//		WriteByte(FALSE);
-//		goto clean;
-//	}
-//	
-//	// Vérifier si l'adresse de fin est également accessible
-//	if (!IsVirtualAddressAvailable(addr + size - 1))
-//	{
-//		WriteByte(FALSE);
-//		goto clean;
-//	}
-//	
-//	WriteByte(TRUE);
-//
-//	// Envoyer les données
-//	WriteBytes((u8 *)addr, size);
-//
-//clean:
-//    // Restaurer répertoire de pages
-//    _setCurrentPagesDirectory(currentPd);
-//	SendResponseWithoutContext();
-//	return FALSE;
-//}
+static BOOL MemoryCommand(KeDebugRequest * request, KeDebugContext * context, KeDebugResponse * response)
+{
+	unsigned int addr = 0;
+	unsigned int size = 0;
+	char * buffer = NULL;
+	PageDirectoryEntry * currentPd = NULL;
+
+	response->header.command = CMD_MEMORY;
+	response->header.context = *context;
+
+	KeDebugMemoryParamReq * reqParam = (KeDebugMemoryParamReq *)request->param;
+
+	if (request->paramSize != sizeof(KeDebugMemoryParamReq))
+	{
+		KLOG(LOG_ERROR, "Wrong param size");
+
+		response->header.dataSize = 0;
+		response->header.status = DBG_STATUS_WRONG_PARAMETER;
+		response->data = NULL;
+		return FALSE;
+	}
+
+	addr = reqParam->startingAddress;
+	size = reqParam->nbBytes;
+
+	// Changer de répertoire de table de page (à récupérer dans cr3 ?)
+	// Garder en mémoire le courant
+	currentPd = _getCurrentPagesDirectory();
+	_setCurrentPagesDirectory((PageDirectoryEntry *)context->cr3);
+	
+	// Vérifier si l'adresse demandée est accessible et renvoyer le résultat 1 ou 0
+	if (!IsVirtualAddressAvailable(addr))
+	{
+		KLOG(LOG_WARNING, "Memory unavailable (0x%x)", addr);
+
+		response->header.dataSize = 0;
+		response->header.status = DBG_STATUS_MEMORY_UNAVAILABLE;
+		response->data = NULL;
+
+		goto clean;
+	}
+		
+	// Vérifier si l'adresse de fin est également accessible
+	if (!IsVirtualAddressAvailable(addr + size - 1))
+	{
+		KLOG(LOG_WARNING, "Memory unavailable (0x%x)", addr + size - 1);
+
+		response->header.dataSize = 0;
+		response->header.status = DBG_STATUS_MEMORY_UNAVAILABLE;
+		response->data = NULL;
+
+		goto clean;
+	}
+	
+	buffer = (char *)kmalloc(size);
+	if (buffer == NULL)
+	{
+		KLOG(LOG_ERROR, "Couldn't allocate %d bytes", size);
+
+		response->header.dataSize = 0;
+		response->header.status = DBG_STATUS_FAILURE;
+		response->data = NULL;
+
+		goto clean;
+	}
+
+	MmCopy((void *)addr, buffer, size);
+
+	response->header.status = DBG_STATUS_SUCCESS;
+	response->header.dataSize = size;
+	response->data = buffer;
+	
+clean:
+	// Restaurer répertoire de pages
+	_setCurrentPagesDirectory(currentPd);
+	return FALSE;
+}
+
 //
 //static BOOL BreakpointCommand(KeDebugContext * context)
 //{
