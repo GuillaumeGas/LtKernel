@@ -8,6 +8,9 @@
 #include <kernel/init/heap.h>
 #include <kernel/user/process_manager.h>
 
+#include <kernel/logger.h>
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("VMM", LOG_LEVEL, format, ##__VA_ARGS__)
+
 #include "vmm.h"
 
 extern void _init_vmm(PageDirectoryEntry * pd0_addr);
@@ -282,7 +285,7 @@ void AddPageToKernelPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags)
 
 	if (vAddr > (u8 *)USER_TASK_V_ADDR)
 	{
-		kprint("ERROR: pd0_add_page(): %p is not in kernel space !\n", vAddr);
+		KLOG(LOG_ERROR, "%p is not in kernel space !", vAddr);
 		asm("hlt");
 		return;
 	}
@@ -292,6 +295,7 @@ void AddPageToKernelPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags)
 
 	if (!FlagOn(*pde, PAGE_PRESENT))
 	{
+		KLOG(LOG_ERROR, "Page not found (0x%x)", pde);
 		panic(PAGE_TABLE_NOTE_FOUND);
 	}
 

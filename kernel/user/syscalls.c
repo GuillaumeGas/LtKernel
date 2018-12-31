@@ -12,12 +12,15 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
 
-static KeStatus SysPrint(const char * str);
-static KeStatus SysScanf(char * buffer);
-static KeStatus SysExec(void * funAddr);
-static KeStatus SysWait(int pid);
-static KeStatus SysExit();
-static KeStatus SysDebugListProcess();
+#include <kernel/logger.h>
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("USER", LOG_LEVEL, format, ##__VA_ARGS__)
+
+static KeStatus SysPrint(const char * str, int * ret);
+static KeStatus SysScanf(char * buffer, int * ret);
+static KeStatus SysExec(void * funAddr, int * ret);
+static KeStatus SysWait(int pid, int * ret);
+static KeStatus SysExit(int * ret);
+static KeStatus SysDebugListProcess(int * ret);
 
 enum SyscallId
 {
@@ -34,42 +37,80 @@ enum SyscallId
 void SyscallHandler(int syscallNumber, InterruptContext * context)
 {
 	int ret = 0;
+	KeStatus status = STATUS_FAILURE;
 
     switch (syscallNumber)
     {
         case SYSCALL_PRINT:
-            ret = SysPrint((char *)context->ebx);
+			status = SysPrint((char *)context->ebx, &ret);
             break;
         case SYSCALL_SCANF:
-            ret = SysScanf((char *)context->ebx);
+			status = SysScanf((char *)context->ebx, &ret);
             break;
         case SYSCALL_EXEC:
-            ret = SysExec((void *)context->ebx);
+			status = SysExec((void *)context->ebx, &ret);
             break;
 		case SYSCALL_WAIT:
-			ret = SysWait((int)context->ebx);
+			status = SysWait((int)context->ebx, &ret);
 			break;
         case SYSCALL_EXIT:
-            ret = SysExit();
+			status = SysExit(&ret);
             break;
         case SYSCALL_DEBUG_LIST_PROCESS:
-            ret = SysDebugListProcess();
+			status = SysDebugListProcess(&ret);
             break;
         default:
-            kprint("SyscallHandler() : unknown system call !\n");
+            KLOG(LOG_ERROR, "Unknown system call !");
     }
 	context->eax = ret;
+
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "An error occured while executing syscall");
+	}
 }
 
-static KeStatus SysPrint(const char * str)
+static KeStatus SysPrint(const char * str, int * ret)
 {
+	if (str == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid str parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	if (ret == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid ret parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
     kprint(str);
+	*ret = 0;
+
 	return STATUS_SUCCESS;
 }
 
-static KeStatus SysScanf(char * buffer)
+static KeStatus SysScanf(char * buffer, int * ret)
 {
+	if (buffer == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid buffer parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	if (ret == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid ret parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
     Process * currentProcess = GetCurrentProcess();
+	if (currentProcess == NULL)
+	{
+		KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL");
+		*ret = -1; // TODO : definir quelques codes d'erreur de retour, types qui seront utilisés dans les libs userland
+		return STATUS_PROCESS_NOT_FOUND;
+	}
 
 	ScEnableCursor();
 
@@ -102,42 +143,71 @@ static KeStatus SysScanf(char * buffer)
 	currentProcess->console.bufferIndex = 0;
 	currentProcess->console.readyToBeFlushed = FALSE;
 
+	*ret = 0;
+
 	return STATUS_SUCCESS;
 }
 
-static KeStatus SysExec(void * funAddr)
+static KeStatus SysExec(void * funAddr, int * ret)
 {
+	KeStatus status = STATUS_FAILURE;
+
     if (funAddr == NULL)
     {
-        kprint("Error in syscall.c!SysExec(), invalid funAddr parameter (value : %x)\n", (u8 *)funAddr);
-        return STATUS_INVALID_PARAMETER;
+        KLOG(LOG_ERROR, "Invalid funAddr parameter");
+        return STATUS_NULL_PARAMETER;
     }
+
+	if (ret == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid ret parameter");
+		return STATUS_NULL_PARAMETER;
+	}
 
     Process * currentProcess = GetCurrentProcess();
-
     if (currentProcess == NULL)
     {
-        kprint("Error in syscall.c!SysExec(), GetCurrentProcess() returned NULL !\n");
-        return STATUS_PROCESS_NOT_FOUND;
+		KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL");
+		status = STATUS_PROCESS_NOT_FOUND;
+		*ret = -1;
+		goto clean;
     }
 
-    int newProcPid = PmCreateProcess(funAddr, 500 /*tmp !*/, currentProcess);
+	int newProcPid = -1;
+	status = PmCreateProcess(funAddr, 500 /*tmp !*/, currentProcess, &newProcPid);
+	if (FAILED(status) || newProcPid == -1)
+	{
+		KLOG(LOG_ERROR, "PmCreateProcess() failed with status : %d", status);
+		*ret = -1;
+		goto clean;
+	}
 	/*Process * newProcess = GetProcessFromPid(newProcPid);*/
 	
 	// TODO, implémenter syscall_wait !
 	//while (newProcess->state != PROCESS_STATE_DEAD);
 
-	return newProcPid;
+	*ret = newProcPid;
+
+clean:
+	return status;
 }
 
-static KeStatus SysWait(int pid)
+static KeStatus SysWait(int pid, int * ret)
 {
+	KeStatus status = STATUS_FAILURE;
+
+	if (ret == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid ret parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
 	// On empêche d'attendre sur le processus system pour l'instant...
 	if (pid == 0)
 	{
-		// TODO : ajouter des logs de debug qui s'affichent que si nécessaire...
-		kprint("Can't wait on system process !\n");
-		return STATUS_INVALID_PARAMETER;
+		KLOG(LOG_DEBUG, "Can't wait on system process !");
+		status = STATUS_INVALID_PARAMETER;
+		goto clean;
 	}
 
 	Process * currentProc = GetCurrentProcess();
@@ -145,45 +215,65 @@ static KeStatus SysWait(int pid)
 
 	if (currentProc == NULL)
 	{
-		kprint("SysWait() : GetCurrentProcess() returned NULL !\n");
-		return STATUS_FAILURE;
+		KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL");
+		status = STATUS_PROCESS_NOT_FOUND;
+		goto clean;
 	}
 
 	if (currentProc->pid == pid)
 	{
-		kprint("SysWait() : a process can't wait its own death !\n");
-		return STATUS_INVALID_PARAMETER;
+		KLOG(LOG_ERROR, "A process can't wait its own death !");
+		status = STATUS_FAILURE;
+		goto clean;
 	}
 
 	if (process == NULL)
 	{
-		kprint("SysWait() : can't find process with pid : %d\n", pid);
-		return STATUS_PROCESS_NOT_FOUND;
+		KLOG(LOG_ERROR, "Can't find process with pid : %d", pid);
+		status = STATUS_PROCESS_NOT_FOUND;
+		goto clean;
 	}
 
 	while (process->state == PROCESS_STATE_ALIVE);
 
-	return STATUS_SUCCESS;
+	status = STATUS_SUCCESS;
+	*ret = 0;
+
+clean:
+	return status;
 }
 
-static KeStatus SysExit()
+static KeStatus SysExit(int * ret)
 {
-    Process * currentProcess = GetCurrentProcess();
+	if (ret == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid ret parameter");
+		return STATUS_NULL_PARAMETER;
+	}
 
+    Process * currentProcess = GetCurrentProcess();
     if (currentProcess == NULL)
     {
-        kprint("Error in syscall.c!SysExit(), GetCurrentProcess() returned NULL !\n");
-		return STATUS_FAILURE;
+        KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL !");
+		return STATUS_PROCESS_NOT_FOUND;
     }
 
     currentProcess->state = PROCESS_STATE_DEAD;
 	gNbProcess--;
 
+	*ret = 0;
 	return STATUS_SUCCESS;
 }
 
-static KeStatus SysDebugListProcess()
+static KeStatus SysDebugListProcess(int * ret)
 {
+	if (ret == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid ret parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
     PmPrintProcessList();
+	*ret = 0;
 	return STATUS_SUCCESS;
 }

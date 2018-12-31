@@ -8,8 +8,13 @@
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/kmalloc.h>
 
+#include <kernel/logger.h>
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("USER", LOG_LEVEL, format, ##__VA_ARGS__)
+
 #define __PROCESS_MANAGER__
 #include "process_manager.h"
+
+static void ProcessInit(Process * process, int pid, PageDirectory * pageDirectory, u32 esp0, Process * parent);
 
 void PmInit()
 {
@@ -25,7 +30,7 @@ void PmInit()
 	 - réserve une page pour y stocker le code de la tâche
 	 - initialise les répertoire et table de pages
 */
-int PmCreateProcess(void * taskAddr, unsigned int size, Process * parent)
+KeStatus PmCreateProcess(void * taskAddr, unsigned int size, Process * parent, int * pid)
 {
 	PageDirectory userPd = { 0 };
 	Process * newProcess = NULL;
@@ -34,6 +39,25 @@ int PmCreateProcess(void * taskAddr, unsigned int size, Process * parent)
 	u8 * pUserStack = NULL;
     u8 * vUserStack = NULL;
 	unsigned int count = 0;
+	KeStatus status = STATUS_FAILURE;
+
+	if (taskAddr == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid taskAddr parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	if (size == 0)
+	{
+		KLOG(LOG_ERROR, "Invalid size parameter");
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	if (pid == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid pid parameter");
+		return STATUS_NULL_PARAMETER;
+	}
 
 	userPd = CreateProcessPageDirectory();
 	vUserCodePtr = (u8 *)USER_TASK_V_ADDR;
@@ -48,7 +72,12 @@ int PmCreateProcess(void * taskAddr, unsigned int size, Process * parent)
 		// On récupère une page physique libre dans laquelle on va y copier le code
 		u8 * pNewCodePage = (u8 *)GetFreePage();
 
-		//kprint("code page : %x\n", p_new_code_page);
+		if (pNewCodePage == NULL)
+		{
+			KLOG(LOG_ERROR, "Couldn't find a free page");
+			status = STATUS_FAILURE;
+			goto clean;
+		}
 
 		// On ajoute la page physique dans l'espace d'adressage de la tâche utilisateur
 		AddPageToPageDirectory(vUserCodePtr, pNewCodePage, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, userPd);
@@ -68,6 +97,12 @@ int PmCreateProcess(void * taskAddr, unsigned int size, Process * parent)
 	kernelStackPage = PageAlloc();
 
 	pUserStack = (u8 *)GetFreePage();
+	if (pUserStack == NULL)
+	{
+		KLOG(LOG_ERROR, "Couldn't find a free page");
+		goto clean;
+	}
+
     vUserStack = (u8 *)(USER_STACK_V_ADDR - PAGE_SIZE);
 	AddPageToPageDirectory(vUserStack, pUserStack, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, userPd);
 
@@ -77,58 +112,111 @@ int PmCreateProcess(void * taskAddr, unsigned int size, Process * parent)
     AddPageToPageDirectory(vUserData, pUserData, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, userPd);
 
 	newProcess = (Process *)kmalloc(sizeof(Process));
-	newProcess->pid = gNbProcess;
-	newProcess->pageDirectory = userPd;
-    newProcess->state = PROCESS_STATE_ALIVE;
-    
-    newProcess->regs.ss = USER_STACK_SEG_SELECTOR;
-    newProcess->regs.cs = USER_CODE_SEG_SELECTOR;
-    newProcess->regs.ds = USER_DATA_SEG_SELECTOR;
-    newProcess->regs.es = USER_DATA_SEG_SELECTOR;
-    newProcess->regs.fs = USER_DATA_SEG_SELECTOR;
-    newProcess->regs.gs = USER_DATA_SEG_SELECTOR;
-    
-    newProcess->regs.eax = 0;
-    newProcess->regs.ebp = 0;
-    newProcess->regs.ecx = 0;
-    newProcess->regs.edx = 0;
-    newProcess->regs.edi = 0;
-    newProcess->regs.esi = 0;
+	if (newProcess == NULL)
+	{
+		KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(Process));
+		status = STATUS_ALLOC_FAILED;
+		goto clean;
+	}
 
-	newProcess->regs.esp = USER_STACK_V_ADDR;
-	newProcess->regs.eip = USER_TASK_V_ADDR;
-
-	newProcess->regs.eflags = 0x200 & 0xFFFFBFFF;
-	newProcess->kstack.esp0 = (u32)kernelStackPage.vAddr + PAGE_SIZE;
-	newProcess->kstack.ss0 = 0x10;
-
-	MmSet((u8 *)newProcess->console.consoleBuffer, 0, PROCESS_CONSOLE_BUFFER_SIZE);
-	newProcess->console.bufferIndex = 0;
-	newProcess->console.readyToBeFlushed = FALSE;
-
-    newProcess->children = ListCreate();
-    newProcess->parent = parent;
-
-    ListPush(gProcessList, (void*)newProcess);
+	ProcessInit(newProcess, gNbProcess, &userPd, (u32)kernelStackPage.vAddr + PAGE_SIZE, parent);
+	ListPush(gProcessList, (void*)newProcess);
 
     gNbProcess++;
 
 	// On revient sur le répertoire de pages initial du noyau
 	_setCurrentPagesDirectory(currentKernelPd);
 
-	return newProcess->pid;
+	*pid = newProcess->pid;
+	pUserStack = NULL;
+	pUserData = NULL;
+
+	status = STATUS_SUCCESS;
+
+clean:
+	if (pUserStack != NULL)
+	{
+		ReleasePage(pUserStack);
+		pUserStack = NULL;
+	}
+
+	if (pUserData != NULL)
+	{
+		ReleasePage(pUserData);
+		pUserData = NULL;
+	}
+
+	return status;
+}
+
+static void ProcessInit(Process * process, int pid, PageDirectory * pageDirectory, u32 esp0, Process * parent)
+{
+	if (process == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid process parameter");
+		return;
+	}
+
+	if (pageDirectory == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid pageDirectory parameter");
+		return;
+	}
+
+	process->pid = pid;
+	process->pageDirectory = *pageDirectory;
+	process->state = PROCESS_STATE_ALIVE;
+
+	process->regs.ss = USER_STACK_SEG_SELECTOR;
+	process->regs.cs = USER_CODE_SEG_SELECTOR;
+	process->regs.ds = USER_DATA_SEG_SELECTOR;
+	process->regs.es = USER_DATA_SEG_SELECTOR;
+	process->regs.fs = USER_DATA_SEG_SELECTOR;
+	process->regs.gs = USER_DATA_SEG_SELECTOR;
+
+	process->regs.eax = 0;
+	process->regs.ebp = 0;
+	process->regs.ecx = 0;
+	process->regs.edx = 0;
+	process->regs.edi = 0;
+	process->regs.esi = 0;
+
+	process->regs.esp = USER_STACK_V_ADDR;
+	process->regs.eip = USER_TASK_V_ADDR;
+
+	process->regs.eflags = 0x200 & 0xFFFFBFFF;
+	process->kstack.esp0 = esp0;
+	process->kstack.ss0 = 0x10;
+
+	MmSet((u8 *)process->console.consoleBuffer, 0, PROCESS_CONSOLE_BUFFER_SIZE);
+	process->console.bufferIndex = 0;
+	process->console.readyToBeFlushed = FALSE;
+
+	process->children = ListCreate();
+	if (process->children == NULL)
+	{
+		KLOG(LOG_ERROR, "ListCreate() returned NULL");
+	}
+
+	process->parent = parent;
 }
 
 void PmStartProcess(int pid)
 {
 	if (pid == -1)
 	{
-		kprint("[Process Manager] : start_process() failed, pid = -1\n");
+		KLOG(LOG_ERROR, "Invalid pid parameter");
 		return;
 	}
 	else
 	{
 		gCurrentProcess = ListGet(gProcessList, pid);
+		if (gCurrentProcess == NULL)
+		{
+			KLOG(LOG_ERROR, "Process %d not found", pid);
+			return;
+		}
+
 		gCurrentProcess->startExcecutionTime = g_clock;
 	
 		gTss.esp0 = gCurrentProcess->kstack.esp0;
@@ -160,7 +248,10 @@ void PmStartProcess(int pid)
 static void CleanProcessCallback(void * param)
 {
 	if (param == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid parameter");
 		return;
+	}
 
 	Process * process = (Process *)param;
     ListDestroy(process->pageDirectory.pageTableList);
@@ -175,6 +266,12 @@ void PmCleanCallback()
 
 void PmDumpProcess(Process * process)
 {
+	if (process == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid process parameter");
+		return;
+	}
+
     kprint("== Process %d ==\n", process->pid);
     kprint(" - kstack_esp0 : %x\n", process->kstack.esp0);
     kprint(" - page_directory : %x\n", process->pageDirectory.pdEntry);
@@ -202,10 +299,13 @@ static void PrintProcessCallback(void * _process, void * _context)
 {
     UNREFERENCED_PARAMETER(_context);
 
-    Process * process = (Process *)_process;
+	if (_process == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid _process parameter");
+		return;
+	}
 
-    if (process == NULL)
-        return;
+    Process * process = (Process *)_process;
 
     kprint("Process %d, state : %s, start exec time : %d\n",
         process->pid,
@@ -217,6 +317,12 @@ static void PrintProcessCallback(void * _process, void * _context)
 void PmPrintProcessList()
 {
     List * processList = gProcessList;
+
+	if (processList == NULL)
+	{
+		KLOG(LOG_ERROR, "processList is NULL");
+		return;
+	}
 
     ListEnumerate(processList, PrintProcessCallback, NULL);
 }

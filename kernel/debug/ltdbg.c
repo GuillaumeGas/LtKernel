@@ -18,7 +18,14 @@
 
 #define TRAP_FLAG_MASK 0x100;
 
+// #define DEBUG_DEBUGGER
+
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("DBG", LOG_LEVEL, format, ##__VA_ARGS__)
+#ifdef DEBUG_DEBUGGER
+#define DKLOG(LOG_LEVEL, format, ...) KLOGGER("DBG", LOG_LEVEL, format, ##__VA_ARGS__)
+#else
+#define DKLOG(LOG_LEVEL, format, ...)
+#endif
 
 void _asm_debug_isr();
 void _asm_breakpoint_isr();
@@ -70,7 +77,7 @@ static void BreakpointHit(KeDebugContext * context)
 
 void DebugIsr(KeDebugContext * context)
 {
-	KLOG(LOG_DEBUG, "Debug interrupt !");
+	DKLOG(LOG_DEBUG, "Debug interrupt !");
 
 	if (gDbgInitialized == FALSE)
 	{
@@ -83,7 +90,7 @@ void DebugIsr(KeDebugContext * context)
 
 void BreakpointIsr(KeDebugContext * context)
 {
-	KLOG(LOG_DEBUG, "Debug breakpoint !");
+	DKLOG(LOG_DEBUG, "Debug breakpoint !");
 
 	if (gDbgInitialized == FALSE)
 	{
@@ -170,38 +177,38 @@ static void WaitForPacket(KeDebugContext * context)
 		switch (request.command)
 		{
 		case CMD_STEP:
-			KLOG(LOG_DEBUG, "Step command");
+			DKLOG(LOG_DEBUG, "Step command");
 			running = StepCommand(&request, context, &response);
 			break;
 		case CMD_CONTINUE:
-			KLOG(LOG_DEBUG, "Continue command");
+			DKLOG(LOG_DEBUG, "Continue command");
 			running = ContinueCommand(&request, context, &response);
 			break;
 		case CMD_QUIT:
-			KLOG(LOG_DEBUG, "Quit command");
+			DKLOG(LOG_DEBUG, "Quit command");
 			running = QuitCommand(&request, context, &response);
 			break;
 		case CMD_REGISTERS:
-			KLOG(LOG_DEBUG, "Registers command");
+			DKLOG(LOG_DEBUG, "Registers command");
 			running = RegistersCommand(&request, context, &response);
 			break;
 		case CMD_DISASS:
-			KLOG(LOG_DEBUG, "Disass command");
+			DKLOG(LOG_DEBUG, "Disass command");
 			running = DisassCommand(&request, context, &response);
 			break;
 		case CMD_STACK_TRACE:
-			KLOG(LOG_DEBUG, "Stack trace command");
+			DKLOG(LOG_DEBUG, "Stack trace command");
 			running = StackTraceCommand(&request, context, &response);
 			break;
 		case CMD_MEMORY:
-			KLOG(LOG_DEBUG, "Memory command");
+			DKLOG(LOG_DEBUG, "Memory command");
 			running = MemoryCommand(&request, context, &response);
 			break;
 		case CMD_BP:
-			KLOG(LOG_DEBUG, "Breakpoint command");
+			DKLOG(LOG_DEBUG, "Breakpoint command");
 			break;
 		default:
-			KLOG(LOG_DEBUG, "Undefined debug command");
+			DKLOG(LOG_DEBUG, "Undefined debug command");
 			response.header.command = request.command;
 			response.header.context = *context;
 			response.header.dataSize = 0;
@@ -215,12 +222,12 @@ static void WaitForPacket(KeDebugContext * context)
 
 			if (status != STATUS_SUCCESS)
 			{
-				KLOG(LOG_DEBUG, "SendResponse() failed with code : %d", status);
+				DKLOG(LOG_DEBUG, "SendResponse() failed with code : %d", status);
 			}
 		}
 		else
 		{
-			KLOG(LOG_DEBUG, "Continuing...");
+			DKLOG(LOG_DEBUG, "Continuing...");
 		}
 
 		CleanupKeDebugRequest(&request);

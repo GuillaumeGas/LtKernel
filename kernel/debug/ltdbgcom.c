@@ -5,7 +5,14 @@
 #include <kernel/logger.h>
 #include <kernel/lib/stdio.h>
 
+// #define DEBUG_DEBUGGER
+
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("DBG", LOG_LEVEL, format, ##__VA_ARGS__)
+#ifdef DEBUG_DEBUGGER
+#define DKLOG(LOG_LEVEL, format, ...) KLOGGER("DBG", LOG_LEVEL, format, ##__VA_ARGS__)
+#else
+#define DKLOG(LOG_LEVEL, format, ...)
+#endif
 
 u8 ReadByte()
 {
@@ -45,7 +52,7 @@ KeStatus RecvPacket(KeDebugPacket * packet)
 
 	ReadBytes((u8 *)&(packet->size), sizeof(unsigned int));
 
-	KLOG(LOG_DEBUG, "Reading %d bytes...", packet->size);
+	DKLOG(LOG_DEBUG, "Reading %d bytes...", packet->size);
 
 	if (packet->size == 0)
 		return STATUS_SUCCESS;
@@ -118,7 +125,7 @@ KeStatus RecvRequest(KeDebugRequest * request)
 
 	if (packet.size == 0 || packet.content == NULL)
 	{
-		KLOG(LOG_DEBUG, "packet.size == %d || packet.content == %x", packet.size, packet.content);
+		DKLOG(LOG_DEBUG, "packet.size == %d || packet.content == %x", packet.size, packet.content);
 		return STATUS_SUCCESS;
 	}
 

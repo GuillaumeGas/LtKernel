@@ -5,7 +5,7 @@
 
 #include "ext2.h"
 
-void FsInit(AtaDevice * device);
+KeStatus FsInit(AtaDevice * device);
 void FsCleanCallback();
 
 #ifdef __FS__

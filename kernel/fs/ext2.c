@@ -4,6 +4,9 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/kmalloc.h>
 
+#include <kernel/logger.h>
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("EXT2", LOG_LEVEL, format, ##__VA_ARGS__)
+
 #define MBR_RESERVED_SIZE 1024
 #define INODE_NB_DIRECT_PTR 12
 #define INODE_SINGLY_INDIRECT_PTR_INDEX 12
@@ -15,63 +18,76 @@
 typedef Ext2Disk Disk;
 typedef AtaDevice Device;
 
-static Ext2SuperBlock * ReadSuperBlock(Device * device);
-static Ext2GroupDesc * ReadGroupDesc(Disk * disk);
+static KeStatus ReadSuperBlock(Device * device, Ext2SuperBlock ** superBlock);
+static KeStatus ReadGroupDesc(Ext2Disk * disk, Ext2GroupDesc ** groupDesc);
 
-Disk * Ext2ReadDiskOnDevice(AtaDevice * device) 
+KeStatus Ext2ReadDiskOnDevice(AtaDevice * device, Ext2Disk ** disk)
 {
-	Disk * disk = NULL;
+	Ext2Disk * localDisk = NULL;
 	Ext2SuperBlock * superBlock = NULL;
 	Ext2GroupDesc * groupDesc = NULL;
+    KeStatus status = STATUS_FAILURE;
 	u32 i = 0, j = 0;
 
 	if (device == NULL)
 	{
-		kprint("ext2.c!Ext2ReadDiskOnDevice() : invalid device parameter\n");
-		return NULL;
+		KLOG(LOG_ERROR, "Invalid device parameter");
+        return STATUS_NULL_PARAMETER;
 	}
 
-	disk = (Disk *)kmalloc(sizeof(Disk));
-	if (disk == NULL)
+    if (disk == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid disk parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    *disk = NULL;
+
+    localDisk = (Disk *)kmalloc(sizeof(Disk));
+	if (localDisk == NULL)
 	{
-		kprint("ext2.c!Ext2ReadDiskOnDevice() : kmalloc() returned NULL !\n");
-		return NULL;
+        KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(Disk));
+        status = STATUS_ALLOC_FAILED;
 	}
 
-	superBlock = ReadSuperBlock(device);
-	if (superBlock == NULL)
+	status = ReadSuperBlock(device, &superBlock);
+	if (FAILED(status) || superBlock == NULL)
 	{
-		kprint("ext2.c!Ext2ReadDiskOnDevice() : ReadSuperBlock() returned NULL !\n");
+		KLOG(LOG_ERROR, "ReadSuperBlock() failed with status %d", status);
 		goto clean;
 	}
 
-	disk->device = device;
-	disk->superBlock = superBlock;
-	disk->blockSize = 1024 << superBlock->logBlockSize;
+    localDisk->device = device;
+    localDisk->superBlock = superBlock;
+    localDisk->blockSize = 1024 << superBlock->logBlockSize;
 
 	i = (superBlock->blocksCount / superBlock->blocksPerGroup)
 		+ ((superBlock->blocksCount % superBlock->blocksPerGroup) ? 1 : 0);
 	j = (superBlock->inodesCount / superBlock->inodesPerGroup)
 		+ ((superBlock->inodesCount % superBlock->inodesPerGroup) ? 1 : 0);
 
-	disk->groups = (i > j ? i : j);
+    localDisk->groups = (i > j ? i : j);
 
-	groupDesc = ReadGroupDesc(disk);
+	status = ReadGroupDesc(localDisk, &groupDesc);
 	if (groupDesc == NULL)
 	{
-		kprint("ext2.c!Ext2ReadDiskOnDevice() : ReadGroupDesc() returned NULL !\n");
+		KLOG(LOG_ERROR, "ReadGroupDesc() failed with status %d", status);
 		goto clean;
 	}
 
-	disk->groupDec = groupDesc;
+    localDisk->groupDec = groupDesc;
 
-	return disk;
+    *disk = localDisk;
+    localDisk = NULL;
+    superBlock = NULL;
+
+    status = STATUS_SUCCESS;
 
 clean:
-	if (disk != NULL)
+	if (localDisk != NULL)
 	{
-		kfree(disk);
-		disk = NULL;
+		kfree(localDisk);
+		localDisk = NULL;
 	}
 
 	if (superBlock != NULL)
@@ -80,28 +96,37 @@ clean:
 		superBlock = NULL;
 	}
 
-	return NULL;
+	return status;
 }
 
-Ext2Inode * Ext2ReadInode(Ext2Disk * disk, int num)
+KeStatus Ext2ReadInode(Ext2Disk * disk, int num, Ext2Inode ** inode)
 {
-	Ext2Inode * inode = NULL;
+	Ext2Inode * localInode = NULL;
 	int ret = 0;
 	int inodeGroupIndex = 0;
 	int inodeIndex = 0;
 	int offset = 0;
+    KeStatus status = STATUS_FAILURE;
+
+    if (inode == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid inode parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    *inode = NULL;
 
 	if (num < 1)
 	{
-		kprint("ext2.c!Ext2ReadInode() : inode number must be > 0 !\n");
-		return NULL;
+		KLOG(LOG_ERROR, "Inode number must be > 0 !");
+		return STATUS_INVALID_PARAMETER;
 	}
 
-	inode = (Ext2Inode *)kmalloc(sizeof(Ext2Inode));
-	if (inode == NULL)
+    localInode = (Ext2Inode *)kmalloc(sizeof(Ext2Inode));
+	if (localInode == NULL)
 	{
-		kprint("ext2.c!Ext2ReadInode() : kmalloc() returned NULL\n");
-		return NULL;
+		KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(Ext2Inode));
+        status = STATUS_ALLOC_FAILED;
 	}
 
 	// https://wiki.osdev.org/Ext2#Inodes
@@ -110,117 +135,183 @@ Ext2Inode * Ext2ReadInode(Ext2Disk * disk, int num)
 
 	offset = disk->groupDec[inodeGroupIndex].inodeTable * disk->blockSize + inodeIndex * disk->superBlock->inodeSize;
 
-	ret = AtaRead(disk->device, inode, offset, disk->superBlock->inodeSize);
+	ret = AtaRead(disk->device, localInode, offset, disk->superBlock->inodeSize);
 
 	if (ret < 0)
 	{
-		kprint("ext2.c!Ext2ReadInode() : AtaRead() returned %d\n", ret);
+		KLOG(LOG_ERROR, "AtaRead() returned %d", ret);
+        status = STATUS_FAILURE;
 		goto clean;
 	}
 
-	return inode;
+    *inode = localInode;
+    localInode = NULL;
+
+    status = STATUS_SUCCESS;
 
 clean:
-	if (inode != NULL)
+	if (localInode != NULL)
 	{
-		kfree(inode);
-		inode = NULL;
+		kfree(localInode);
+        localInode = NULL;
 	}
 
-	return NULL;
+	return status;
 }
 
-static Ext2SuperBlock * ReadSuperBlock(Device * device)
+static KeStatus ReadSuperBlock(Device * device, Ext2SuperBlock ** superBlock)
 {
-	Ext2SuperBlock * superBlock = NULL;
+	Ext2SuperBlock * localSuperBlock = NULL;
 	const unsigned int offset = MBR_RESERVED_SIZE;
 	int ret = 0;
+    KeStatus status = STATUS_FAILURE;
 
-	superBlock = (Ext2SuperBlock *)kmalloc(sizeof(Ext2SuperBlock));
-	if (superBlock == NULL)
+    if (device == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid device parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    if (superBlock == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid superBlock parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    *superBlock = NULL;
+
+	localSuperBlock = (Ext2SuperBlock *)kmalloc(sizeof(Ext2SuperBlock));
+	if (localSuperBlock == NULL)
 	{
-		kprint("ext2.c!ReadSuperBlock() : kmalloc() returned NULL\n");
-		return NULL;
+		KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(Ext2SuperBlock));
+        status = STATUS_ALLOC_FAILED;
+        goto clean;
 	}
 
-	ret = AtaRead(device, superBlock, sizeof(Ext2SuperBlock), offset);
+	ret = AtaRead(device, localSuperBlock, sizeof(Ext2SuperBlock), offset);
 
 	if (ret < 0)
 	{
-		kprint("ext2.c!ReadSuperBlock() : AtaRead() returned %d\n", ret);
-		goto clean;
+		KLOG(LOG_ERROR, "AtaRead() returned %d", ret);
+        status = STATUS_FAILURE;
+        goto clean;
 	}
 
-	return superBlock;
+    *superBlock = localSuperBlock;
+    localSuperBlock = NULL;
+
+    status = STATUS_SUCCESS;
 
 clean:
-	if (superBlock != NULL)
+	if (localSuperBlock != NULL)
 	{
-		kfree(superBlock);
-		superBlock = NULL;
+		kfree(localSuperBlock);
+        localSuperBlock = NULL;
 	}
 
-	return NULL;
+	return status;
 }
 
-static Ext2GroupDesc * ReadGroupDesc(Disk * disk)
+static KeStatus ReadGroupDesc(Ext2Disk * disk, Ext2GroupDesc ** groupDesc)
 {
-	Ext2GroupDesc * groupDesc = NULL;
+	Ext2GroupDesc * localGroupDesc = NULL;
 	int ret = 0;
 	int size = disk->groups * sizeof(Ext2GroupDesc);
 	unsigned long offset = (disk->blockSize == MBR_RESERVED_SIZE ? 2048 : disk->blockSize);
+    KeStatus status = STATUS_FAILURE;
 
-	groupDesc = (Ext2GroupDesc *)kmalloc(size);
-	if (groupDesc == NULL)
+    if (disk == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid disk parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    if (groupDesc == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid groupDesc parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    *groupDesc = NULL;
+
+    localGroupDesc = (Ext2GroupDesc *)kmalloc(size);
+	if (localGroupDesc == NULL)
 	{
-		kprint("ext2.c!ReadGroupDesc() : kmalloc() returned NULL\n");
-		return NULL;
+        KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(size));
+        status = STATUS_ALLOC_FAILED;
+        goto clean;
 	}
 
-	ret = AtaRead(disk->device, groupDesc, offset, (unsigned long)size);
+	ret = AtaRead(disk->device, localGroupDesc, offset, (unsigned long)size);
 
 	if (ret < 0)
 	{
-		kprint("ext2.c!ReadGroupDesc() : AtaRead() returned %d\n", ret);
-		goto clean;
+        KLOG(LOG_ERROR, "AtaRead() returned %d", ret);
+        status = STATUS_FAILURE;
+        goto clean;
 	}
 
-	return groupDesc;
+    *groupDesc = localGroupDesc;
+    localGroupDesc = NULL;
+
+    status = STATUS_SUCCESS;
 
 clean:
-	if (groupDesc != NULL)
+	if (localGroupDesc != NULL)
 	{
-		kfree(groupDesc);
-		groupDesc = NULL;
+		kfree(localGroupDesc);
+        localGroupDesc = NULL;
 	}
 
-	return NULL;
+	return status;
 }
 
-Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
+KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file)
 {
-	char * file = NULL;
-	Ext2File * res = NULL;
+	char * localFile = NULL;
 	char * block = NULL;
 	u32 * singlyBlock = NULL;
 	u32 * doublyBlock = NULL;
 	u32 fileSize = 0;
 	unsigned int fileOffset = 0, size = 0;
+    KeStatus status = STATUS_FAILURE;
+
+    if (disk == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid disk parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    if (inode == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid inode parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    if (file == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid file parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    *file = NULL;
 
 	fileSize = inode->size;
-	file = (char *)kmalloc(fileSize);
+    localFile = (char *)kmalloc(fileSize);
 
-	if (file == NULL)
+	if (localFile == NULL)
 	{
-		kprint("ext2.c!Ext2ReadFile() : can't allocate memory for file, kmalloc() returned NULL\n");
-		return NULL;
+        KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(size));
+        status = STATUS_ALLOC_FAILED;
+        goto clean;
 	}
 
 	block = (char *)kmalloc(disk->blockSize);
 	if (block == NULL)
 	{
-		kprint("ext2.c!Ext2ReadFile() : can't allocate memory for block buffer, kmalloc() returned NULL\n");
-		goto clean;
+        KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(size));
+        status = STATUS_ALLOC_FAILED;
+        goto clean;
 	}
 
 	// Direct blocks ptr
@@ -231,12 +322,13 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 
 		if (ret < 0)
 		{
-			kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for direct block ptr with code : %d\n", ret);
-			goto clean;
+            KLOG(LOG_ERROR, "AtaRead() failed for direct block ptr (returned %d)", ret);
+            status = STATUS_FAILURE;
+            goto clean;
 		}
 
 		size = fileSize > disk->blockSize ? disk->blockSize : fileSize;
-		MmCopy((u8 *)block, (u8 *)(file + fileOffset), size);
+		MmCopy((u8 *)block, (u8 *)(localFile + fileOffset), size);
 
 		fileOffset += size;
 		fileSize -= size;
@@ -248,8 +340,9 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 		singlyBlock = (u32 *)kmalloc(disk->blockSize);
 		if (singlyBlock == NULL)
 		{
-			kprint("ext2.c!Ext2ReadFile() : can't allocate memory for singly block buffer, kmalloc() returned NULL\n");
-			goto clean;
+            KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(size));
+            status = STATUS_ALLOC_FAILED;
+            goto clean;
 		}
 
 		unsigned long offset = inode->block[INODE_SINGLY_INDIRECT_PTR_INDEX] * disk->blockSize;
@@ -257,8 +350,9 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 
 		if (ret < 0)
 		{
-			kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for singly indirect block with code : %d\n", ret);
-			goto clean;
+            KLOG(LOG_ERROR, "AtaRead() failed for singly indirect block ptr (returned %d)", ret);
+            status = STATUS_FAILURE;
+            goto clean;
 		}
 
 		for (int i = 0; i < disk->blockSize / sizeof(u32) && singlyBlock[i]; i++)
@@ -268,12 +362,13 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 
 			if (ret < 0)
 			{
-				kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for data in sinply indirect block ptr with code : %d\n", ret);
-				goto clean;
+                KLOG(LOG_ERROR, "AtaRead() failed for singly indirect block ptr (returned %d)", ret);
+                status = STATUS_FAILURE;
+                goto clean;
 			}
 
 			size = fileSize > disk->blockSize ? disk->blockSize : fileSize;
-			MmCopy((u8 *)block, (u8 *)(file + fileOffset), size);
+			MmCopy((u8 *)block, (u8 *)(localFile + fileOffset), size);
 			fileOffset += size;
 			fileSize -= size;
 		}
@@ -287,16 +382,18 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 			singlyBlock = (u32 *)kmalloc(disk->blockSize);
 			if (singlyBlock == NULL)
 			{
-				kprint("ext2.c!Ext2ReadFile() : can't allocate memory for singly block buffer, kmalloc() returned NULL\n");
-				goto clean;
+                KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(size));
+                status = STATUS_ALLOC_FAILED;
+                goto clean;
 			}
 		}
 
 		doublyBlock = (u32 *)kmalloc(disk->blockSize);
 		if (doublyBlock == NULL)
 		{
-			kprint("ext2.c!Ext2ReadFile() : can't allocate memory for doubly block buffer, kmalloc() returned NULL\n");
-			goto clean;
+            KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(size));
+            status = STATUS_ALLOC_FAILED;
+            goto clean;
 		}
 
 		unsigned long offset = inode->block[INODE_DOUBLY_INDIRECT_PTR_INDEX] * disk->blockSize;
@@ -304,8 +401,9 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 
 		if (ret < 0)
 		{
-			kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for singly indirect block with code : %d\n", ret);
-			goto clean;
+            KLOG(LOG_ERROR, "AtaRead() failed for singly indirect block ptr (returned %d)", ret);
+            status = STATUS_FAILURE;
+            goto clean;
 		}
 
 		for (int i = 0; i < disk->blockSize / sizeof(u32) && singlyBlock[i]; i++)
@@ -315,8 +413,9 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 
 			if (ret < 0)
 			{
-				kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for doubly indirect block ptr with code : %d\n", ret);
-				goto clean;
+                KLOG(LOG_ERROR, "AtaRead() failed for doubly indirect block ptr (returned %d)", ret);
+                status = STATUS_FAILURE;
+                goto clean;
 			}
 
 			for (int j = 0; j < disk->blockSize / sizeof(u32) && doublyBlock[j]; j++)
@@ -326,12 +425,13 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 
 				if (ret < 0)
 				{
-					kprint("ext2.c!Ext2ReadFile() : AtaRead() failed for data in double direct block ptr with code : %d\n", ret);
-					goto clean;
+                    KLOG(LOG_ERROR, "AtaRead() failed for doubly indirect block ptr (returned %d)", ret);
+                    status = STATUS_FAILURE;
+                    goto clean;
 				}
 
 				size = fileSize > disk->blockSize ? disk->blockSize : fileSize;
-				MmCopy((u8 *)block, (u8 *)(file + fileOffset), size);
+				MmCopy((u8 *)block, (u8 *)(localFile + fileOffset), size);
 				fileOffset += size;
 				fileSize -= size;
 			}
@@ -341,17 +441,19 @@ Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode)
 	// TODO : triply indirect, mais faut faire du ménage, trop l'bordel
 	if (inode->block[INODE_TRIPLY_INDIRECT_PTR_INDEX])
 	{
-		kprint("[EXT2] : TRIPLY INDIRECT PTR NOT SUPPORTED !\n");
+		KLOG(LOG_WARNING, "TRIPLY INDIRECT PTR NOT SUPPORTED ");
 	}
 
-	res = (Ext2File *)file;
-	file = NULL;
+    *file = localFile;
+    localFile = NULL;
+
+    status = STATUS_SUCCESS;
 
 clean:
-	if (file != NULL)
+	if (localFile != NULL)
 	{
-		kfree(file);
-		file = NULL;
+		kfree(localFile);
+        localFile = NULL;
 	}
 
 	if (block != NULL)
@@ -372,13 +474,16 @@ clean:
 		doublyBlock = NULL;
 	}
 
-	return res;
+	return status;
 }
 
 void Ext2FreeDisk(Ext2Disk * disk)
 {
-	if (disk == NULL)
-		return;
+    if (disk == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid disk parameter");
+        return;
+    }
 
 	if (disk->groupDec != NULL)
 	{

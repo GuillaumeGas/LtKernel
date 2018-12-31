@@ -5,12 +5,20 @@
 
 #include <kernel/lib/stdio.h>
 
+#include <kernel/debug/debug.h>
+
+#include <kernel/logger.h>
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("LIB", LOG_LEVEL, format, ##__VA_ARGS__)
+
 List * ListCreate()
 {
 	ListElem * list = (ListElem *)kmalloc(sizeof (ListElem));
 	
 	if (list == NULL)
+	{
+		KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(ListElem));
 		return NULL;
+	}
 	
 	list->prev = NULL;
 	list->next = NULL;
@@ -27,7 +35,10 @@ void ListDestroy(List * list)
 void ListDestroyEx(List * list, CleanFunPtr cleaner)
 {
 	if (list == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid list parameter");
 		return;
+	}
 
 	ListElem * elem = list;
 	ListElem * next = list->next;
@@ -47,7 +58,10 @@ void ListDestroyEx(List * list, CleanFunPtr cleaner)
 void ListPush(List * list, void * data)
 {
 	if (list == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid list parameter");
 		return;
+	}
 
 	if (list->data == NULL)
 	{
@@ -64,20 +78,26 @@ void ListPush(List * list, void * data)
 
 		elem->next = (ListElem *)kmalloc(sizeof(ListElem));
 		
-		if (elem->next != NULL)
+		if (elem->next == NULL)
 		{
-			elem->next->prev = elem;
-			elem = elem->next;
-			elem->data = data;
-			elem->next = NULL;
+			KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(ListElem));
+			return;
 		}
+
+		elem->next->prev = elem;
+		elem = elem->next;
+		elem->data = data;
+		elem->next = NULL;
 	}
 }
 
 void * ListGet(List * list, unsigned int index)
 {
 	if (list == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid list parameter");
 		return NULL;
+	}
 
 	while (index > 0)
 	{
@@ -93,17 +113,27 @@ void * ListGet(List * list, unsigned int index)
 void * ListTop(List * list)
 {
 	if (list == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid list parameter");
 		return NULL;
+	}
 
 	return list->data;
 }
 
 void * ListPop(List ** list)
 {
-    if (list == NULL)
-        return NULL;
-    if ((*list) == NULL)
-        return NULL;
+	if (list == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid list parameter");
+		return NULL;
+	}
+
+	if ((*list) == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid list parameter");
+		return NULL;
+	}
 
     void * data = (*list)->data;
     ListElem * next = (*list)->next;
@@ -114,8 +144,16 @@ void * ListPop(List ** list)
 
 void ListEnumerate(List * list, EnumerateFunPtr callback, void * Context)
 {
-    if (list == NULL || callback == NULL)
-        return;
+	if (list == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid list parameter");
+		return;
+	}
+	if (callback == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid callback parameter");
+		return;
+	}
 
     ListElem * elem = list;
     ListElem * next = list->next;

@@ -3,6 +3,9 @@
 #include <kernel/lib/stdio.h>	
 #include <kernel/lib/kmalloc.h>
 
+#include <kernel/logger.h>
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("ATA", LOG_LEVEL, format, ##__VA_ARGS__)
+
 #include "ata.h"
 
 // Un exemple qui a l'air pas mal : https://github.com/CHOSTeam/CHicago/blob/master/kernel/arch/x86/io/ide.c
@@ -110,7 +113,7 @@ int AtaRead(AtaDevice * dev, void * buf, unsigned long offset, unsigned long siz
 	buffer = (char *)kmalloc(nbBlocks * ATA_BLOCK_SIZE);
 	if (buffer == NULL)
 	{
-		kprint("AtaRead() : Failed to allocate memory.\n");
+		KLOG(LOG_ERROR, "Failed to allocate memory.\n");
 		return NULL;
 	}
 	bufferPtr = buffer;
@@ -180,11 +183,11 @@ int AtaWrite(AtaDevice * device, void * buf, unsigned long offset, unsigned long
 
 	if (offset % ATA_BLOCK_SIZE != 0)
 	{
-		kprint("ata.c!AtaRead() : invalid offset parameter, should be a multiple of 512 !\n");
+        KLOG(LOG_ERROR, "ata.c!AtaRead() : invalid offset parameter, should be a multiple of 512 !\n");
 		return -1;
 	}
 
-	kprint("count : %d, block : %d, size : %d, offset : %d\n", count, block, size, offset);
+    KLOG(LOG_DEBUG, "count : %d, block : %d, size : %d, offset : %d\n", count, block, size, offset);
 
 	DISABLE_IRQ();
 	for (int i = 0; i < count && size > 0; i++)
@@ -227,7 +230,7 @@ static int AtaIdentify(AtaDevice * device)
 	}
 	else
 	{
-		kprint("ata: IDENTIFY error on b0d0 -> no status\n");
+        KLOG(LOG_ERROR, "IDENTIFY error on b0d0 -> no status\n");
 		return 0;
 	}
 }

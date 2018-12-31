@@ -1,6 +1,7 @@
 #pragma once
 
 #include <kernel/lib/types.h>
+#include <kernel/lib/status.h>
 #include <kernel/drivers/ata.h>
 
 /* super_block: errors */
@@ -142,7 +143,7 @@ typedef struct DirectoryEntry DirectoryEntry;
 
 typedef void Ext2File;
 
-Ext2Disk * Ext2ReadDiskOnDevice(AtaDevice * device);
-Ext2Inode * Ext2ReadInode(Ext2Disk * disk, int num);
-Ext2File * Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode);
+KeStatus Ext2ReadDiskOnDevice(AtaDevice * device, Ext2Disk ** disk);
+KeStatus Ext2ReadInode(Ext2Disk * disk, int num, Ext2Inode ** inode);
+KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file);
 void Ext2FreeDisk(Ext2Disk * disk);

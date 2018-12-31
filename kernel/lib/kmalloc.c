@@ -5,6 +5,9 @@
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 
+#include <kernel/logger.h>
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("LIB", LOG_LEVEL, format, ##__VA_ARGS__)
+
 /*
 	
 	TODO : gérer les cas d'erreur (tailles négatives, pointeurs null...)
@@ -25,9 +28,16 @@ static void _kdefrag();
 */
 MemBlock * ksbrk(int n)
 {
+	if (n <= 0)
+	{
+		KLOG(LOG_ERROR, "n <= 0");
+		return NULL;
+	}
+
 	// On ne doit pas dépasser la limite de l'espace réservé au tas
 	if ((u32)gHeap + (n * PAGE_SIZE) > gKernelInfo.vHeapLimit)
 	{
+		KLOG(LOG_ERROR, "Kernel heap limit reached");
 		panic(HEAP_LIMIT);
 		return NULL;
 	}
@@ -42,7 +52,10 @@ MemBlock * ksbrk(int n)
 			u8 * new_page = (u8*)GetFreePage();
 
 			if (new_page == NULL)
+			{
+				KLOG(LOG_ERROR, "Couldn't find a free page");
 				panic(MEMORY_FULL);
+			}
 
 			AddPageToKernelPageDirectory((u8 *)newBlock, new_page, PAGE_PRESENT | PAGE_WRITEABLE);
 
@@ -63,7 +76,10 @@ MemBlock * ksbrk(int n)
 void * kmalloc(int size)
 {
 	if (size <= 0)
+	{
+		KLOG(LOG_WARNING, "Kernel allocation with size <= 0");
 		return NULL;
+	}
 
 	void * res = NULL;
     res = _kmalloc((MemBlock*)gKernelInfo.vHeapBase, size + BLOCK_HEADER_SIZE);
@@ -73,6 +89,12 @@ void * kmalloc(int size)
 
 void kfree(void * ptr)
 {
+	if (ptr == NULL)
+	{
+		KLOG(LOG_ERROR, "Trying to free a NULL pointer");
+		return;
+	}
+
 	MemBlock * block = (MemBlock*)((u32)ptr - BLOCK_HEADER_SIZE);
 	block->state = BLOCK_FREE;
 	MmSet((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
@@ -168,7 +190,10 @@ Page PageAlloc()
 	newPage.pAddr = (u32 *)GetFreePage();
 
 	if (newPage.pAddr == NULL)
+	{
+		KLOG(LOG_ERROR, "Couldn't find a free page");
 		panic(MEMORY_FULL);
+	}
 
 	while (block != NULL)
 	{
@@ -183,7 +208,10 @@ Page PageAlloc()
 	}
 
 	if (newPage.vAddr == NULL)
+	{
+		KLOG(LOG_ERROR, "Couldn't find an available virtual address");
 		panic(VIRTUAL_MEMORY_FULL);
+	}
 
 	AddPageToKernelPageDirectory((u8 *)newPage.vAddr, (u8 *)newPage.pAddr, PAGE_PRESENT | PAGE_WRITEABLE);
 
@@ -194,6 +222,12 @@ Page PageAlloc()
 void PageFree(void * ptr)
 {
 	MemPageBlock * block = gPageHeap;
+
+	if (ptr == NULL)
+	{
+		KLOG(LOG_ERROR, "Trying to free a page will NULL address");
+		return;
+	}
 
 	while (block != NULL)
 	{

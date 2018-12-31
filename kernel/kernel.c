@@ -19,9 +19,11 @@
 #include <kernel/user/process_manager.h>
 #include <kernel/user/user_tests.h>
 
+#include <kernel/debug/debug.h>
 #include <kernel/debug/ltdbg.h>
 
 #include <kernel/logger.h>
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("KERNEL", LOG_LEVEL, format, ##__VA_ARGS__)
 
 #define __KERNEL__
 #include <kernel/kernel.h>
@@ -29,7 +31,7 @@
 #define __MULTIBOOT__
 #include <kernel/multiboot.h>
 
-#define KERNEL_DEBUG
+//#define KERNEL_DEBUG
 
 static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
@@ -58,52 +60,32 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	ScClear();
 
-	ScSetColor(WHITE);
+	ScSetColor(RED);
 	kprint("< ## LtKernel ## >\n\n");
+    ScSetColor(WHITE);
 
 	PicInit();
-	kprint("[Kernel] PIC loaded\n");
+	KLOG(LOG_INFO, "PIC loaded");
 
 	IdtInit();
-	kprint("[Kernel] IDT loaded\n");
+    KLOG(LOG_INFO, "IDT loaded");
 
 	SerialInit();
 	LoggerInit(LOG_SCREEN | LOG_SERIAL);
 
-	kprint("[Kernel] GDT loaded\n");
-	kprint("[Kernel] Serial port COM1 initialized\n");
+    KLOG(LOG_INFO, "GDT loaded");
+    KLOG(LOG_INFO, "Serial port COM1 initialized");
 
 	CheckMultibootPartialInfo(mbi, multibootMagicNumber);
 
 	InitKernelInfo();
-	kprint("[Kernel] Kernel info structure initialized\n");
+    KLOG(LOG_INFO, "Kernel info structure initialized");
 
 	InitVmm();
-	kprint("[Kernel] Paging enabled\n");
-
-	/* Pour commencer... */
-	// Pour le test, on fait simple : vu qu'on file à bochs une image de cd avec le noyau dessus sur le channel 0, on place le disque en channel 1 en master
-	// TODO : détecter les autres devices possible, permettre d'y accéder simplement, etc...
-	//AtaDevice device = AtaCreate(ATA_SECONDARY, ATA_MASTER);
-	//if (!AtaInit(&device))
-	//{
-	//	kprint("[Kernel] Ata driver initialization failed !\n");
-	//}
-	//else
-	//{
-	//	kprint("[Kernel] Ata %s %s using PIO mode initialized\n", device.dataPort == ATA_PRIMARY ? "Primary" : "Secondary", device.type == ATA_MASTER ? "Master" : "Slave");
-	//}
-
-	//FsInit(&device);
-	/* */
-
+    KLOG(LOG_INFO, "Paging enabled");
 
 	PmInit();
-	kprint("[Kernel] Process manager initialized\n\n");
-
-	InitCleanCallbacksList();
-
-	//PmCreateProcess(TestConsole, 500, NULL); 
+	KLOG(LOG_INFO, "Process manager initialized");
 
 	ENABLE_IRQ();
 
@@ -112,10 +94,44 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	{
 		LoggerInit(LOG_SCREEN); // on désactive la sortie de log du le port COM1 utilisé par le debugger
 		DbgInit();
-		asm("int $3");
+		__debugbreak();
 	}
-	asm("int $3");
-	kprint("here !\n");
+
+	/* Pour commencer... */
+	// Pour le test, on fait simple : vu qu'on file à bochs une image de cd avec le noyau dessus sur le channel 0, on place le disque en channel 1 en master
+	// TODO : détecter les autres devices possible, permettre d'y accéder simplement, etc...
+	AtaDevice device = AtaCreate(ATA_SECONDARY, ATA_MASTER);
+	if (!AtaInit(&device))
+	{
+        KLOG(LOG_ERROR, "Ata driver initialization failed !");
+	}
+	else
+	{
+        KLOG(LOG_INFO, "Ata %s %s using PIO mode initialized", device.dataPort == ATA_PRIMARY ? "Primary" : "Secondary", device.type == ATA_MASTER ? "Master" : "Slave");
+	}
+
+	KeStatus status = FsInit(&device);
+    if (FAILED(status))
+    {
+        KLOG(LOG_ERROR, "File system initialization failed !");
+    }
+    else
+    {
+        KLOG(LOG_INFO, "File system initialized");
+    }
+	/* */
+
+	InitCleanCallbacksList();
+
+	//{
+	//	int pid = -1;
+	//	KeStatus status = PmCreateProcess(TestConsole, 500, NULL, &pid);
+	//	if (FAILED(status))
+	//	{
+	//		KLOG(LOG_ERROR, "PmCreateProcess() failed with status : %d", status);
+	//	}
+	//}
+
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     CleanKernel();
     CheckHeap();
@@ -135,17 +151,17 @@ static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootM
 
 	if (multibootMagicNumber != MULTIBOOT_HEADER_MAGIC)
 	{ 
-		kprint("Invalid magic number : %x\n", multibootMagicNumber);
+		KLOG(LOG_ERROR, "Invalid magic number : %x", multibootMagicNumber);
 		asm("hlt");
 	}
 
 	if (FlagOn(mbi->flags, MEM_INFO))
 	{
-		kprint("[MULTIBOOT] RAM detected : %x (lower), %x (upper)\n\n", mbi->low_mem, mbi->high_mem);
+		KLOG(LOG_INFO, "[MULTIBOOT] RAM detected : %x (lower), %x (upper)", mbi->low_mem, mbi->high_mem);
 	}
 	else
 	{
-		kprint("Missing MEM_INFO flag !\n");
+		KLOG(LOG_WARNING, "Missing MEM_INFO flag !");
 		asm("hlt");
 	}
 }
@@ -179,8 +195,6 @@ static void InitCleanCallbacksList()
 
 static void CleanKernel()
 {
-	asm("int $3");
-
     while (CleanCallbacksList != NULL)
     {
         CleanCallbackFun callback = ListPop(&CleanCallbacksList);

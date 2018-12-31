@@ -3,7 +3,9 @@
 #include <kernel/lib/stdlib.h>
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
+
 #include <kernel/logger.h>
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("LIB", LOG_LEVEL, format, ##__VA_ARGS__)
 
 #include "stdio.h"
 
@@ -42,7 +44,7 @@ static void printInt(const int x, const unsigned short base)
 	/* vérification de la base. il faut que ça cadre avec "HEX" */
 	if ((base < 2) || (16 < base)) 
 	{
-		kprint("stdio!printInt () error : base non valide !\n");
+		KLOG(LOG_ERROR, "Base non valide ! (%d)", base);
 		return;
 	}
 

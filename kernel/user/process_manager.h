@@ -32,7 +32,7 @@ extern unsigned int gNbProcess;
 #endif
 
 void PmInit();
-int PmCreateProcess(void * task_addr, unsigned int size, Process * parent);
+KeStatus PmCreateProcess(void * task_addr, unsigned int size, Process * parent, int * pid);
 void PmStartProcess(int pid);
 void PmCleanCallback();
 void PmDumpProcess(Process * process);

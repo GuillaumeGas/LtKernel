@@ -13,3 +13,5 @@ enum KeStatus
 
 	STATUS_PROCESS_NOT_FOUND,
 } typedef KeStatus;
+
+#define FAILED(status) (status != STATUS_SUCCESS)
