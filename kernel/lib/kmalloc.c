@@ -8,6 +8,8 @@
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("LIB", LOG_LEVEL, format, ##__VA_ARGS__)
 
+#include <kernel/debug/debug.h>
+
 /*
 	
 	TODO : gérer les cas d'erreur (tailles négatives, pointeurs null...)
@@ -123,7 +125,11 @@ static void * _kmalloc(MemBlock * block, int size)
 	if (res_ptr == NULL)
 	{
 		if (size > DEFAULT_BLOCK_SIZE)
-			block = ksbrk(size / DEFAULT_BLOCK_SIZE);
+		{
+			unsigned int usize = (unsigned int)size;
+			const unsigned int ubsize = (unsigned int)DEFAULT_BLOCK_SIZE;
+			block = ksbrk(usize / ubsize);
+		}
         else
             block = ksbrk(1);
 

@@ -62,7 +62,7 @@ void TestConsole()
 	begin[1] = ' ';
 	begin[2] = '\0';
 
-	asm("int $0x3"::);
+	//asm("int $0x3"::);
 
 	while (1)
 	{
