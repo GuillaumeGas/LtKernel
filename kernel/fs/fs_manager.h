@@ -8,6 +8,9 @@
 KeStatus FsInit(AtaDevice * device);
 void FsCleanCallback();
 
+KeStatus ReadFileFromInode(int inodeNumber, Ext2File ** file);
+void FreeFile(Ext2File * file);
+
 #ifdef __FS__
 Ext2Disk * gExt2Disk = NULL;
 #else

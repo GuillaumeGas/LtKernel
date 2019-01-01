@@ -382,3 +382,8 @@ BOOL IsVirtualAddressAvailable(u32 vAddr)
 
 	return TRUE;
 }
+
+BOOL CheckUserVirtualAddressValidity(u32 vAddr)
+{
+	return (vAddr != 0 && vAddr >= V_USER_BASE_ADDR);
+}

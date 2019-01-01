@@ -150,6 +150,8 @@ void page_fault_isr(ExceptionContextWithCode * context)
 
 	PrintExceptionContextWithCode(context);
 
+	__debugbreak();
+
 	Halt();
 }
 

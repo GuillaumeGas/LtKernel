@@ -436,7 +436,12 @@ static BOOL StackTraceCommand(KeDebugRequest * request, KeDebugContext * context
 	response->data = (char *)addresses;
 
 clean:
-	ListDestroy(list);
+	if (list != NULL)
+	{
+		ListDestroy(list);
+		list = NULL;
+	}
+
 	return FALSE;
 }
 

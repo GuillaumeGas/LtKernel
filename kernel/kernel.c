@@ -15,6 +15,7 @@
 #include <kernel/drivers/ata.h>
 
 #include <kernel/fs/fs_manager.h>
+#include <kernel/fs/elf.h>
 
 #include <kernel/user/process_manager.h>
 #include <kernel/user/user_tests.h>
@@ -123,6 +124,33 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	InitCleanCallbacksList();
 
+	{
+		Ext2File * file = NULL;
+		KeStatus status = ReadFileFromInode(12, &file);
+		if (FAILED(status))
+		{
+			KLOG(LOG_ERROR, "ReadFileFromInode() failed with code %d", status);
+		}
+		else
+		{
+			KLOG(LOG_DEBUG, "File read successfully !");
+
+			ElfFile elf = { 0 };
+			status = LoadElf(file, &elf);
+			if (FAILED(status))
+			{
+				KLOG(LOG_ERROR, "LoadElf() failed with code %d", status);
+				FreeFile(file);
+			}
+			else
+			{
+				KLOG(LOG_DEBUG, "Elf loaded !");
+
+				ElfFree(&elf);
+			}
+		}
+	}
+
 	//{
 	//	int pid = -1;
 	//	KeStatus status = PmCreateProcess(TestConsole, 500, NULL, &pid);
@@ -130,11 +158,13 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	//	{
 	//		KLOG(LOG_ERROR, "PmCreateProcess() failed with status : %d", status);
 	//	}
+	//  // TODO : lancer un processus systeme qui va attendre un message indiquant de terminer (sinon on tombe dans les fonctions de "clean" avant d'avoir forcément lancé le processus...)
+	//  Pause(); 
 	//}
 
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
-    CleanKernel();
-    CheckHeap();
+    //CleanKernel();
+    //CheckHeap();
 
 	while (1);
 }

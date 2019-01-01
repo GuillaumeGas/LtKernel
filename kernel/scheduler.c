@@ -6,6 +6,9 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/init/gdt.h>
 
+#include <kernel/logger.h>
+#define KLOG(LOG_LEVEL, format, ...) KLOGGER("SCHEDULER", LOG_LEVEL, format, ##__VA_ARGS__)
+
 static int GetNextProcessPid()
 {
     int nextPid = (gCurrentProcess->pid + 1) % gNbProcess;
@@ -28,6 +31,7 @@ void Schedules()
 	if (gCurrentProcess == NULL && ListTop(gProcessList) != NULL)
 	{
 		gCurrentProcess = (Process *)ListTop(gProcessList);
+		//KLOG(LOG_DEBUG, "Switching to process %d", gCurrentProcess->pid);
 		PmStartProcess(gCurrentProcess->pid);
 	}
 	else if (gCurrentProcess != NULL && (gNbProcess > 1 || gCurrentProcess->state != PROCESS_STATE_ALIVE))

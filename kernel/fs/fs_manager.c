@@ -6,6 +6,7 @@
 
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("FS", LOG_LEVEL, format, ##__VA_ARGS__)
+#include <kernel/debug/debug.h>
 
 #include <kernel/fs/elf.h>
 
@@ -18,36 +19,56 @@ KeStatus FsInit(AtaDevice * device)
         return status;
 	}
 
-	//Ext2Inode * inode = Ext2ReadInode(gExt2Disk, 12);
-	//if (inode == NULL)
-	//{
-	//	kprint("  Failed to retrieve inode 1 !\n");
-	//}
-	//else
-	//{
-	//	ElfHeader * file = (ElfHeader *)Ext2ReadFile(gExt2Disk, inode);
-	//	if (file == NULL)
-	//	{
-	//		kprint("  Failed to read file !\n");
-	//	}
-	//	else
-	//	{
-	//		if (!ElfCheckIdent(file))
-	//		{
-	//			kprint("  Not a Elf file !\n");
-	//		}
-	//		else
-	//		{
-	//			kprint("  Bingo !\n");
-	//		}
-	//		kfree(file);
-	//	}
-	//	kfree(inode);
-	//}
     return STATUS_SUCCESS;
 }
 
 void FsCleanCallback()
 {
 	Ext2FreeDisk(gExt2Disk);
+}
+
+KeStatus ReadFileFromInode(int inodeNumber, Ext2File ** file)
+{
+    Ext2Inode * inode = NULL;
+    KeStatus status = STATUS_FAILURE;
+
+	if (file == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid file parameter");
+		return STATUS_INVALID_PARAMETER;
+	}
+
+    status = Ext2ReadInode(gExt2Disk, inodeNumber, &inode);
+    if (FAILED(status))
+    {
+        KLOG(LOG_ERROR, "Failed to retrieve inode %d !", inodeNumber);
+		goto clean;
+    }
+     
+	status = Ext2ReadFile(gExt2Disk, inode, file);
+    if (FAILED(status))
+    {
+        KLOG(LOG_ERROR, "Failed to read file !");
+		goto clean;
+    }
+
+	status = STATUS_SUCCESS;
+
+clean:
+	if (inode != NULL)
+	{
+		kfree(inode);
+	}
+
+	return status;
+}
+
+void FreeFile(Ext2File * file)
+{
+	if (file == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid file parameter");
+	}
+
+	kfree(file);
 }

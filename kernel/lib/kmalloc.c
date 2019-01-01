@@ -8,6 +8,8 @@
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("LIB", LOG_LEVEL, format, ##__VA_ARGS__)
 
+#include <kernel/debug/debug.h>
+
 /*
 	
 	TODO : gérer les cas d'erreur (tailles négatives, pointeurs null...)
@@ -57,7 +59,7 @@ MemBlock * ksbrk(int n)
 				panic(MEMORY_FULL);
 			}
 
-			AddPageToKernelPageDirectory((u8 *)newBlock, new_page, PAGE_PRESENT | PAGE_WRITEABLE);
+			AddPageToKernelPageDirectory((u8 *)heap, new_page, PAGE_PRESENT | PAGE_WRITEABLE);
 
 			heap += (u32)PAGE_SIZE;
 		}
@@ -96,10 +98,25 @@ void kfree(void * ptr)
 	}
 
 	MemBlock * block = (MemBlock*)((u32)ptr - BLOCK_HEADER_SIZE);
+
+	if (block->state == BLOCK_FREE)
+	{
+		KLOG(LOG_ERROR, "Double free on %x !", ptr);
+		//__debugbreak();
+		return;
+	}
+
 	block->state = BLOCK_FREE;
 	MmSet((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
 	gKFreeCount++;
     _kdefrag();
+}
+
+static unsigned int _mod(unsigned int a, unsigned int b)
+{
+	while (a > b)
+		a -= b;
+	return (a > 0) ? 1 : 0;
 }
 
 static void * _kmalloc(MemBlock * block, int size)
@@ -123,7 +140,16 @@ static void * _kmalloc(MemBlock * block, int size)
 	if (res_ptr == NULL)
 	{
 		if (size > DEFAULT_BLOCK_SIZE)
-			block = ksbrk(size / DEFAULT_BLOCK_SIZE);
+		{
+			unsigned int usize = (unsigned int)size;
+			const unsigned int ubsize = (unsigned int)DEFAULT_BLOCK_SIZE;
+			unsigned int n = usize / ubsize;
+			if (_mod(usize, ubsize) > 0)
+			{
+				n++;
+			}
+			block = ksbrk(n);
+		}
         else
             block = ksbrk(1);
 

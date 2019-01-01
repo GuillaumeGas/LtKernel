@@ -7,6 +7,8 @@
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("EXT2", LOG_LEVEL, format, ##__VA_ARGS__)
 
+#include <kernel/debug/debug.h>
+
 #define MBR_RESERVED_SIZE 1024
 #define INODE_NB_DIRECT_PTR 12
 #define INODE_SINGLY_INDIRECT_PTR_INDEX 12
@@ -48,6 +50,7 @@ KeStatus Ext2ReadDiskOnDevice(AtaDevice * device, Ext2Disk ** disk)
 	{
         KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(Disk));
         status = STATUS_ALLOC_FAILED;
+		goto clean;
 	}
 
 	status = ReadSuperBlock(device, &superBlock);
@@ -297,8 +300,8 @@ KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file)
     *file = NULL;
 
 	fileSize = inode->size;
-    localFile = (char *)kmalloc(fileSize);
 
+    localFile = (char *)kmalloc(fileSize);
 	if (localFile == NULL)
 	{
         KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(size));
