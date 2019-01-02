@@ -59,7 +59,7 @@ MemBlock * ksbrk(int n)
 				panic(MEMORY_FULL);
 			}
 
-			AddPageToKernelPageDirectory((u8 *)newBlock, new_page, PAGE_PRESENT | PAGE_WRITEABLE);
+			AddPageToKernelPageDirectory((u8 *)heap, new_page, PAGE_PRESENT | PAGE_WRITEABLE);
 
 			heap += (u32)PAGE_SIZE;
 		}
@@ -104,6 +104,13 @@ void kfree(void * ptr)
     _kdefrag();
 }
 
+static unsigned int _mod(unsigned int a, unsigned int b)
+{
+	while (a > b)
+		a -= b;
+	return (a > 0) ? 1 : 0;
+}
+
 static void * _kmalloc(MemBlock * block, int size)
 {
 	void * res_ptr = NULL;
@@ -128,7 +135,13 @@ static void * _kmalloc(MemBlock * block, int size)
 		{
 			unsigned int usize = (unsigned int)size;
 			const unsigned int ubsize = (unsigned int)DEFAULT_BLOCK_SIZE;
-			block = ksbrk(usize / ubsize);
+			unsigned int n = usize / ubsize;
+			if (_mod(usize, ubsize) > 0)
+			{
+				KLOG(LOG_DEBUG, "%d, %d : %d", usize, ubsize, _mod(usize, ubsize));
+				n++;
+			}
+			block = ksbrk(n);
 		}
         else
             block = ksbrk(1);

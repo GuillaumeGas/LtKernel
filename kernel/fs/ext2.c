@@ -299,24 +299,15 @@ KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file)
 
     *file = NULL;
 
-	__debugbreak();
-
 	fileSize = inode->size;
 
-	KLOG(LOG_DEBUG, "filesize : %d", fileSize);
-
     localFile = (char *)kmalloc(fileSize);
-
 	if (localFile == NULL)
 	{
         KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(size));
         status = STATUS_ALLOC_FAILED;
         goto clean;
 	}
-
-	__debugbreak();
-
-	KLOG(LOG_DEBUG, "blockSize : %d", disk->blockSize);
 
 	block = (char *)kmalloc(disk->blockSize);
 	if (block == NULL)
@@ -325,8 +316,6 @@ KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file)
         status = STATUS_ALLOC_FAILED;
         goto clean;
 	}
-
-	__debugbreak();
 
 	// Direct blocks ptr
 	for (int i = 0; i < INODE_NB_DIRECT_PTR && inode->block[i]; i++)

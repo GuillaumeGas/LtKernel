@@ -36,7 +36,6 @@ KeStatus FsInit(AtaDevice * device)
 		}
 		else
 		{
-			__debugbreak();
 			if (!ElfCheckIdent(file))
 			{
 				KLOG(LOG_ERROR, "Not a Elf file !");

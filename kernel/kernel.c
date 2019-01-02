@@ -31,7 +31,7 @@
 #define __MULTIBOOT__
 #include <kernel/multiboot.h>
 
-#define KERNEL_DEBUG
+//#define KERNEL_DEBUG
 
 static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
@@ -123,18 +123,20 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	InitCleanCallbacksList();
 
-	{
-		int pid = -1;
-		KeStatus status = PmCreateProcess(TestConsole, 500, NULL, &pid);
-		if (FAILED(status))
-		{
-			KLOG(LOG_ERROR, "PmCreateProcess() failed with status : %d", status);
-		}
-	}
+	//{
+	//	int pid = -1;
+	//	KeStatus status = PmCreateProcess(TestConsole, 500, NULL, &pid);
+	//	if (FAILED(status))
+	//	{
+	//		KLOG(LOG_ERROR, "PmCreateProcess() failed with status : %d", status);
+	//	}
+	//  // TODO : lancer un processus systeme qui va attendre un message indiquant de terminer (sinon on tombe dans les fonctions de "clean" avant d'avoir forcément lancé le processus...)
+	//  Pause(); 
+	//}
 
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
-    //CleanKernel();
-    //CheckHeap();
+    CleanKernel();
+    CheckHeap();
 
 	while (1);
 }
