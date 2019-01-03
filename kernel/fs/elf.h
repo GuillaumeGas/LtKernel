@@ -2,6 +2,9 @@
 
 #include <kernel/lib/types.h>
 
+// TODO : prévoir de pouvoir gérer d'autres fs
+#include <kernel/fs/ext2.h>
+
 struct ElfHeader
 {
 	unsigned char ident[16];      /* ELF identification */
@@ -23,4 +26,26 @@ struct ElfHeader
 	u16 shstrndx;         /* index of the section name string table */
 } typedef ElfHeader;
 
+struct ElfProgramHeaderTable
+{
+    u32 type;
+    u32 offset;
+    u32 vaddr;
+    u32 paddr;
+    u32 fileSize;
+    u32 memSize;
+    u32 flags;
+    u32 align;
+} typedef ElfProgramHeaderTable;
+
+struct ElfFile
+{
+    ElfHeader * header;
+    ElfProgramHeaderTable * prgHeaderTable;
+} typedef ElfFile;
+
 BOOL ElfCheckIdent(ElfHeader * header);
+// TODO : prévoir de pouvoir gérer d'autres fs
+KeStatus ElfInit(Ext2File * extFile, ElfFile * file);
+void ElfFree(const ElfFile * elf);
+void ElfHeaderDump(ElfFile * elf);

@@ -138,7 +138,6 @@ static void * _kmalloc(MemBlock * block, int size)
 			unsigned int n = usize / ubsize;
 			if (_mod(usize, ubsize) > 0)
 			{
-				KLOG(LOG_DEBUG, "%d, %d : %d", usize, ubsize, _mod(usize, ubsize));
 				n++;
 			}
 			block = ksbrk(n);
