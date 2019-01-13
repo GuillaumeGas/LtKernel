@@ -14,7 +14,7 @@
 #define __PROCESS_MANAGER__
 #include "process_manager.h"
 
-static void ProcessInit(Process * process, int pid, PageDirectory * pageDirectory, u32 esp0, Process * parent);
+static void ProcessInit(Process * process, int pid, PageDirectory * pageDirectory, u32 vEntryAddr, u32 esp0, Process * parent);
 
 void PmInit()
 {
@@ -75,7 +75,7 @@ KeStatus PmCreateProcess(void * taskAddr, unsigned int size, Process * parent, i
 		if (pNewCodePage == NULL)
 		{
 			KLOG(LOG_ERROR, "Couldn't find a free page");
-			status = STATUS_FAILURE;
+			status = STATUS_PHYSICAL_MEMORY_FULL;
 			goto clean;
 		}
 
@@ -119,7 +119,7 @@ KeStatus PmCreateProcess(void * taskAddr, unsigned int size, Process * parent, i
 		goto clean;
 	}
 
-	ProcessInit(newProcess, gNbProcess, &userPd, (u32)kernelStackPage.vAddr + PAGE_SIZE, parent);
+	ProcessInit(newProcess, gNbProcess, &userPd, (u32)USER_TASK_V_ADDR, (u32)kernelStackPage.vAddr + PAGE_SIZE, parent);
 	ListPush(gProcessList, (void*)newProcess);
 
     gNbProcess++;
@@ -149,7 +149,79 @@ clean:
 	return status;
 }
 
-static void ProcessInit(Process * process, int pid, PageDirectory * pageDirectory, u32 esp0, Process * parent)
+KeStatus PmCreateProcessFromElf(PageDirectory * pageDirectory, u32 entryAddr, int * pid, Process * parent)
+{
+	Process * newProcess = NULL;
+	Page kernelStackPage = { 0 };
+	u8 * pUserStack = NULL;
+	u8 * vUserStack = NULL;
+	KeStatus status = STATUS_FAILURE;
+
+	if (pageDirectory == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid pageDirectory parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	if (pid == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid pid parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	// On utilise maintenant le répertoire de pages de la tâche utilisateur pour le mettre correctement à jour
+	PageDirectoryEntry * currentKernelPd = _getCurrentPagesDirectory();
+	_setCurrentPagesDirectory(pageDirectory->pdEntry);
+
+	kernelStackPage = PageAlloc();
+
+	pUserStack = (u8 *)GetFreePage();
+	if (pUserStack == NULL)
+	{
+		KLOG(LOG_ERROR, "Couldn't find a free page");
+		goto clean;
+	}
+
+	vUserStack = (u8 *)(USER_STACK_V_ADDR - PAGE_SIZE);
+	AddPageToPageDirectory(vUserStack, pUserStack, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, *pageDirectory);
+
+	// Pour l'exemple : on réserve une page exprès pour les données de la tâche
+	u8 * pUserData = GetFreePage();
+	u8 * vUserData = (u8 *)0x50000000;
+	AddPageToPageDirectory(vUserData, pUserData, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, *pageDirectory);
+
+	newProcess = (Process *)kmalloc(sizeof(Process));
+	if (newProcess == NULL)
+	{
+		KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(Process));
+		status = STATUS_ALLOC_FAILED;
+		goto clean;
+	}
+
+	ProcessInit(newProcess, gNbProcess, pageDirectory, entryAddr, (u32)kernelStackPage.vAddr + PAGE_SIZE, parent);
+	ListPush(gProcessList, (void*)newProcess);
+
+	gNbProcess++;
+
+	*pid = newProcess->pid;
+	pUserStack = NULL;
+
+	status = STATUS_SUCCESS;
+
+clean:
+	// On revient sur le répertoire de pages initial du noyau
+	_setCurrentPagesDirectory(currentKernelPd);
+
+	if (pUserStack != NULL)
+	{
+		ReleasePage(pUserStack);
+		pUserStack = NULL;
+	}
+
+	return status;
+}
+
+static void ProcessInit(Process * process, int pid, PageDirectory * pageDirectory, u32 vEntryAddr, u32 esp0, Process * parent)
 {
 	if (process == NULL)
 	{
@@ -182,7 +254,7 @@ static void ProcessInit(Process * process, int pid, PageDirectory * pageDirector
 	process->regs.esi = 0;
 
 	process->regs.esp = USER_STACK_V_ADDR;
-	process->regs.eip = USER_TASK_V_ADDR;
+	process->regs.eip = vEntryAddr;
 
 	process->regs.eflags = 0x200 & 0xFFFFBFFF;
 	process->kstack.esp0 = esp0;

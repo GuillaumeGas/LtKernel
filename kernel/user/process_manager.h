@@ -33,6 +33,7 @@ extern unsigned int gNbProcess;
 
 void PmInit();
 KeStatus PmCreateProcess(void * task_addr, unsigned int size, Process * parent, int * pid);
+KeStatus PmCreateProcessFromElf(PageDirectory * pageDirectory, u32 entryAddr, int * pid, Process * parent);
 void PmStartProcess(int pid);
 void PmCleanCallback();
 void PmDumpProcess(Process * process);

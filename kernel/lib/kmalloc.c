@@ -98,6 +98,14 @@ void kfree(void * ptr)
 	}
 
 	MemBlock * block = (MemBlock*)((u32)ptr - BLOCK_HEADER_SIZE);
+
+	if (block->state == BLOCK_FREE)
+	{
+		KLOG(LOG_ERROR, "Double free on %x !", ptr);
+		//__debugbreak();
+		return;
+	}
+
 	block->state = BLOCK_FREE;
 	MmSet((u8 *)(&(block->data)), 0, block->size - BLOCK_HEADER_SIZE);
 	gKFreeCount++;

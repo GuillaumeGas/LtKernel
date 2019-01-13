@@ -48,4 +48,8 @@ BOOL ElfCheckIdent(ElfHeader * header);
 // TODO : prévoir de pouvoir gérer d'autres fs
 KeStatus ElfInit(Ext2File * extFile, ElfFile * file);
 void ElfFree(const ElfFile * elf);
+
+KeStatus LoadElf(Ext2File * file, ElfFile * elf);
+
 void ElfHeaderDump(ElfFile * elf);
+void ElfProgramHeaderEntryDump(ElfProgramHeaderTable * entry);

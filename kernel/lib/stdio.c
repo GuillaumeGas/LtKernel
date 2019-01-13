@@ -72,6 +72,7 @@ static void printInt(const int x, const unsigned short base)
 		printChar(chaine[i]);
 }
 
+
 static void printBin(const int value, int nbBits)
 {
 	int offset;

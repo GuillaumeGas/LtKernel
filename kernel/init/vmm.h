@@ -22,6 +22,8 @@
 #define PD_OFFSET(addr) ((addr) & 0xFFC00000) >> 20
 #define PT_OFFSET(addr) (addr & 0x003FF000) >> 12
 
+#define V_USER_BASE_ADDR 0x40000000
+
 enum PAGE_FLAG
 {
 	PAGE_EMPTY = 0,
@@ -95,6 +97,7 @@ void * GetFreePage();
 void ReleasePage(void * pAddr);
 void * GetPhysicalAddress(void * vAddr);
 BOOL IsVirtualAddressAvailable(u32 vAddr);
+BOOL CheckUserVirtualAddressValidity(u32 vAddr);
 
 void AddPageToKernelPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags);
 void AddPageToPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags, PageDirectory pd);
