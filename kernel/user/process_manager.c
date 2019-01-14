@@ -253,7 +253,7 @@ static void ProcessInit(Process * process, int pid, PageDirectory * pageDirector
 	process->regs.edi = 0;
 	process->regs.esi = 0;
 
-	process->regs.esp = USER_STACK_V_ADDR;
+	process->regs.esp = USER_STACK_V_ADDR - 4;
 	process->regs.eip = vEntryAddr;
 
 	process->regs.eflags = 0x200 & 0xFFFFBFFF;
