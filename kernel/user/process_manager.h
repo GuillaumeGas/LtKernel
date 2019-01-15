@@ -3,6 +3,7 @@
 #include <kernel/init/vmm.h>
 
 #include <kernel/user/process.h>
+#include <kernel/user/thread.h>
 
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/types.h>
@@ -25,10 +26,18 @@ typedef enum ExecMode ExecMode;
 Process * gCurrentProcess = NULL;
 List * gProcessList = NULL;
 unsigned int gNbProcess = 0;
+
+Thread * gCurrentThread = NULL;
+List * gThreadsList = NULL;
+unsigned int gNbThreads = 0;
 #else
 extern Process * gCurrentProcess;
 extern List * gProcessList;
 extern unsigned int gNbProcess;
+
+extern Thread * gCurrentThread;
+extern List * gThreadsList;
+extern unsigned int gNbThreads;
 #endif
 
 void PmInit();

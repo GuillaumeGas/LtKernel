@@ -1,8 +1,17 @@
 == TODO ==
 
-- Ajouter exit() syscall
-  -> Ajouter un processus system qui attend qu'il ne reste que lui d'actif pour terminer.
-- Vérifier que tout est bien nettoyé, pages, etc...
+ - Implémenter le tas user :
+    - Déterminer comment réserver la place nécessaire pour le tas
+	- Implémenter l'appel system sbrk
+	- Implémenter malloc & free
+ - Implémentation des threads
+    - Deux solutions :
+	    - Les threads ne peuvent pas accéder à la pile des autres, la pile d'un thread est toujours à la même adresse (chaque thread a sa propre table de pages, dont une bonne partie est commune avec les autres threads)
+	      Mais : ça oblige à copier la table de table à chaque création de thread
+	    - On se base sur le tas utilisateur, mais comment intialiser la pile ?
+ - Amélioration lecture ELF (sections...)
+ - Implémenter fonctions de parcours du système de fichiers
+	   
 
 == NOTES ==
 
