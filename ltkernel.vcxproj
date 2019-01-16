@@ -134,6 +134,7 @@
     <ClCompile Include="kernel\user\process.c" />
     <ClCompile Include="kernel\user\process_manager.c" />
     <ClCompile Include="kernel\user\syscalls.c" />
+    <ClCompile Include="kernel\user\thread.c" />
     <ClCompile Include="kernel\user\user_tests.c" />
     <ClCompile Include="user\console\main.c" />
     <ClCompile Include="user\lib\stdio.c" />
@@ -174,6 +175,7 @@
     <ClInclude Include="kernel\user\process.h" />
     <ClInclude Include="kernel\user\process_manager.h" />
     <ClInclude Include="kernel\user\syscalls.h" />
+    <ClInclude Include="kernel\user\thread.h" />
     <ClInclude Include="kernel\user\user_tests.h" />
     <ClInclude Include="user\lib\stdio.h" />
     <ClInclude Include="user\lib\stdlib.h" />
