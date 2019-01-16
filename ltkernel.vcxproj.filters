@@ -37,6 +37,15 @@
     <Filter Include="Fichiers sources\kernel\fs">
       <UniqueIdentifier>{a0c3dc7c-88e6-4f90-b1fb-694e97d0b5ad}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers sources\user">
+      <UniqueIdentifier>{5f82c222-740e-4a79-8c1d-ed94d6c87f75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers sources\user\lib">
+      <UniqueIdentifier>{8dcfffd2-f448-406e-91cd-7cb408860a3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers sources\user\console">
+      <UniqueIdentifier>{5d05b09b-d5c2-4562-8a63-1c4d4f5af921}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
@@ -72,6 +81,12 @@
     </None>
     <None Include="kernel\debug\ltdbg_isr.asm">
       <Filter>Fichiers sources\kernel\debug</Filter>
+    </None>
+    <None Include="user\lib\syscalls.asm">
+      <Filter>Fichiers sources\user\lib</Filter>
+    </None>
+    <None Include="user\console\Makefile">
+      <Filter>Fichiers sources\user\console</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -158,9 +173,18 @@
     </ClCompile>
     <ClCompile Include="kernel\debug\ltdbgcom.c">
       <Filter>Fichiers sources\kernel\debug</Filter>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="kernel\fs\elf.c">
       <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="user\lib\stdio.c">
+      <Filter>Fichiers sources\user\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="user\console\main.c">
+      <Filter>Fichiers sources\user\console</Filter>
+    </ClCompile>
+    <ClCompile Include="user\lib\stdlib.c">
+      <Filter>Fichiers sources\user\lib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -265,9 +289,18 @@
     </ClInclude>
     <ClInclude Include="kernel\debug\ltdbgcom.h">
       <Filter>Fichiers sources\kernel\debug</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="kernel\fs\elf.h">
       <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="user\lib\stdio.h">
+      <Filter>Fichiers sources\user\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="user\lib\syscalls.h">
+      <Filter>Fichiers sources\user\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="user\lib\stdlib.h">
+      <Filter>Fichiers sources\user\lib</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

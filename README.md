@@ -51,7 +51,14 @@ Le noyau décrit les **segments** suivant :
  - sinon on ne fait rien
 
 **Les appels système** :
- - [0] : printf
- - [1] : scanf
-
+ - [0] : print
+ - [1] : scan
+ - [2] : exec (utilisé pour tester le noyau..., exécute une tâche utilisateur)
+ - [3] : wait (pid)
+ - [4] : exit
+ - [10] : listProcess
+ 
+ **Système de fichier et exécutable ELF** :
+ Support de l'ext2, chargement de fichier exécutable au format ELF + exécution.
+ 
 Un **logger** permet de rediriger l'affichage de texte soit vers **l'écran** soit vers le **port série** (**COM 1**)
