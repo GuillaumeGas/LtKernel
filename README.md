@@ -1,6 +1,8 @@
 # LtKernel
 Petit noyau à but éducatif
 
+![](https://github.com/GuillaumeGas/LtKernel/blob/work_thread/screenshot.png)
+
 # Organisation de la mémoire
 
 **Le bootloader** charge le noyau en **0x100000**.
