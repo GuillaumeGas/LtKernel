@@ -7,6 +7,7 @@
 #include <kernel/multiboot.h>
 #include <kernel/init/heap.h>
 #include <kernel/user/process_manager.h>
+#include <kernel/debug/debug.h>
 
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("VMM", LOG_LEVEL, format, ##__VA_ARGS__)
@@ -19,6 +20,8 @@ static void SetIdentityMapping();
 
 // Représente l'ensemble des pages disponibles ou non
 static u8 memBitmap[MEM_BITMAP_SIZE];
+
+static PageDirectoryEntry * s_SavedPageDirectoryEntry = NULL;
 
 #define set_page_used(page) memBitmap[((u32)page) / 8] |= (1 << (((u32)page) % 8))
 #define set_page_unused(addr) memBitmap[((u32)addr / PAGE_SIZE) / 8] &= ~(1 << (((u32)addr / PAGE_SIZE) % 8))
@@ -386,4 +389,28 @@ BOOL IsVirtualAddressAvailable(u32 vAddr)
 BOOL CheckUserVirtualAddressValidity(u32 vAddr)
 {
 	return (vAddr != 0 && vAddr >= V_USER_BASE_ADDR);
+}
+
+void SaveCurrentMemoryMapping()
+{
+	__debugbreak();
+
+	s_SavedPageDirectoryEntry = _getCurrentPagesDirectory();
+
+	KLOG(LOG_DEBUG, "Save page dir %x", s_SavedPageDirectoryEntry);
+
+	if (s_SavedPageDirectoryEntry != NULL)
+	{
+		KLOG(LOG_WARNING, "The s_SavedPageDirectoryEntry is already used");
+		//__debugbreak();
+	}
+}
+
+void RestoreMemoryMapping()
+{
+	if (s_SavedPageDirectoryEntry != NULL)
+	{
+		_setCurrentPagesDirectory(s_SavedPageDirectoryEntry);
+		s_SavedPageDirectoryEntry = NULL;
+	}
 }

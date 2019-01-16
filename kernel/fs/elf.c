@@ -110,6 +110,9 @@ void ElfProgramHeaderEntryDump(ElfProgramHeaderTable * entry)
 	kprint("\n");
 }
 
+/*
+	TODO : vérifier si tous les cas d'erreurs sont gérés (et surtout si la mémoire est bien libérée...)
+*/
 KeStatus LoadElf(Ext2File * file, ElfFile * elf)
 {
 	KeStatus status = STATUS_FAILURE;
@@ -142,13 +145,16 @@ KeStatus LoadElf(Ext2File * file, ElfFile * elf)
 		}
 		else
 		{
-			PageDirectory userPd = { 0 };
+			Process * process = NULL;
+			
+			status = PmCreateProcess(elf->header->entry, &process, NULL);
+			if (FAILED(status))
+			{
+				KLOG(LOG_ERROR, "PmCreateProcess() failed with code %d", status);
+				goto clean;
+			}
 
-			userPd = CreateProcessPageDirectory();
-
-			// On utilise maintenant le répertoire de pages de la tâche utilisateur pour le mettre correctement à jour
-			PageDirectoryEntry * currentKernelPd = _getCurrentPagesDirectory();
-			_setCurrentPagesDirectory(userPd.pdEntry);
+			SwitchToMemoryMappingOfProcess(process);
 
 			int i = 0;
 			for (; i < elf->header->phnum; i++)
@@ -187,7 +193,7 @@ KeStatus LoadElf(Ext2File * file, ElfFile * elf)
 					}
 
 					// On ajoute la page physique dans l'espace d'adressage de la tâche utilisateur
-					AddPageToPageDirectory(vUserCodePtr, pNewCodePage, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, userPd);
+					AddPageToPageDirectory(vUserCodePtr, pNewCodePage, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, process->pageDirectory);
 
 					KLOG(LOG_DEBUG, "Mapped %x on %x", pNewCodePage, vUserCodePtr);
 
@@ -206,20 +212,7 @@ KeStatus LoadElf(Ext2File * file, ElfFile * elf)
 
 		onError:
 			// On revient sur le répertoire de pages initial du noyau
-			_setCurrentPagesDirectory(currentKernelPd);
-
-			int pid = 0;
-			status = PmCreateProcessFromElf(&userPd, elf->header->entry, &pid, NULL);
-			if (FAILED(status))
-			{
-				KLOG(LOG_ERROR, "PmCreateProcessFromElf() failed with code %d", status);
-				// TODO : mieux gérer erreur de création de process (libération mémoire...)
-				goto clean;
-			}
-			else
-			{
-				KLOG(LOG_DEBUG, "Created process %d", pid);
-			}
+			RestoreMemoryMapping();
 		}
 	}
 

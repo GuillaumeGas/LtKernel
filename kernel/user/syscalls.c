@@ -4,6 +4,7 @@
 #include <kernel/drivers/screen.h>
 
 #include <kernel/user/process.h>
+#include <kernel/user/thread.h>
 #include <kernel/user/console.h>
 #include <kernel/user/process_manager.h>
 
@@ -104,10 +105,10 @@ static KeStatus SysScanf(char * buffer, int * ret)
 		return STATUS_NULL_PARAMETER;
 	}
 
-    Process * currentProcess = GetCurrentProcess();
-	if (currentProcess == NULL)
+    Thread * currentThread = GetCurrentThread();
+	if (currentThread == NULL)
 	{
-		KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL");
+		KLOG(LOG_ERROR, "GetCurrentThread() returned NULL");
 		*ret = -1; // TODO : definir quelques codes d'erreur de retour, types qui seront utilisés dans les libs userland
 		return STATUS_PROCESS_NOT_FOUND;
 	}
@@ -116,32 +117,32 @@ static KeStatus SysScanf(char * buffer, int * ret)
 
     if (CnslIsAvailable())
     {
-        CnslSetOwnerProcess(currentProcess);
+        CnslSetOwnerThread(currentThread);
     }
 	else
 	{
-		Process * currentCnslOwner = CnslGetOwnerProcess();
+		Thread * currentCnslOwner = CnslGetOwnerThread();
 
-		if (currentCnslOwner != currentProcess)
+		if (currentCnslOwner != currentThread)
 		{
 			while (!CnslIsAvailable());
 
 			// TODO : Add lock/mutex whatever ?
-			CnslSetOwnerProcess(currentProcess);
+			CnslSetOwnerThread(currentThread);
 		}
 	}
 
-	while (!currentProcess->console.readyToBeFlushed);
+	while (!currentThread->console.readyToBeFlushed);
 
 	ScDisableCursor();
 
-	MmCopy((u8 *)currentProcess->console.consoleBuffer, (u8 *)buffer, currentProcess->console.bufferIndex + 1);
-	buffer[currentProcess->console.bufferIndex] = '\0';
+	MmCopy((u8 *)currentThread->console.consoleBuffer, (u8 *)buffer, currentThread->console.bufferIndex + 1);
+	buffer[currentThread->console.bufferIndex] = '\0';
 
-	CnslFreeOwnerProcess();
+	CnslFreeOwnerThread();
 
-	currentProcess->console.bufferIndex = 0;
-	currentProcess->console.readyToBeFlushed = FALSE;
+	currentThread->console.bufferIndex = 0;
+	currentThread->console.readyToBeFlushed = FALSE;
 
 	*ret = 0;
 
@@ -164,29 +165,29 @@ static KeStatus SysExec(void * funAddr, int * ret)
 		return STATUS_NULL_PARAMETER;
 	}
 
-    Process * currentProcess = GetCurrentProcess();
-    if (currentProcess == NULL)
-    {
-		KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL");
-		status = STATUS_PROCESS_NOT_FOUND;
-		*ret = -1;
-		goto clean;
-    }
+ //   Process * currentProcess = GetCurrentProcess();
+ //   if (currentProcess == NULL)
+ //   {
+	//	KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL");
+	//	status = STATUS_PROCESS_NOT_FOUND;
+	//	*ret = -1;
+	//	goto clean;
+ //   }
 
-	int newProcPid = -1;
-	status = PmCreateProcess(funAddr, 500 /*tmp !*/, currentProcess, &newProcPid);
-	if (FAILED(status) || newProcPid == -1)
-	{
-		KLOG(LOG_ERROR, "PmCreateProcess() failed with status : %d", status);
-		*ret = -1;
-		goto clean;
-	}
+	//int newProcPid = -1;
+	//status = PmCreateProcess(funAddr, 500 /*tmp !*/, currentProcess, &newProcPid);
+	//if (FAILED(status) || newProcPid == -1)
+	//{
+	//	KLOG(LOG_ERROR, "PmCreateProcess() failed with status : %d", status);
+	//	*ret = -1;
+	//	goto clean;
+	//}
 	/*Process * newProcess = GetProcessFromPid(newProcPid);*/
 	
 	// TODO, implémenter syscall_wait !
 	//while (newProcess->state != PROCESS_STATE_DEAD);
 
-	*ret = newProcPid;
+	//*ret = newProcPid;
 
 clean:
 	return status;

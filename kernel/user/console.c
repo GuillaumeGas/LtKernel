@@ -3,37 +3,37 @@
 
 #include <kernel/lib/stdio.h>
 
-void CnslSetOwnerProcess(Process * process)
+void CnslSetOwnerThread(Thread * thread)
 {
-    gConsole.ownerProcess = process;
+    gConsole.ownerThread = thread;
 }
 
-Process * CnslGetOwnerProcess()
+Thread * CnslGetOwnerThread()
 {
-    return gConsole.ownerProcess;
+    return gConsole.ownerThread;
 }
 
-void CnslFreeOwnerProcess()
+void CnslFreeOwnerThread()
 {
-    gConsole.ownerProcess = NULL;
+    gConsole.ownerThread = NULL;
 }
 
 void CnslHandleKey(const char key)
 {
-    if (gConsole.ownerProcess != NULL)
+    if (gConsole.ownerThread != NULL)
     {
-		Process * p = gConsole.ownerProcess;
-		p->console.consoleBuffer[p->console.bufferIndex++] = key;
+		Thread * t = gConsole.ownerThread;
+		t->console.consoleBuffer[t->console.bufferIndex++] = key;
         kprint("%c", key);
 
 		if (key == '\n')
 		{
-			p->console.readyToBeFlushed = TRUE;
+			t->console.readyToBeFlushed = TRUE;
 		}
     }
 }
 
 int CnslIsAvailable()
 {
-    return gConsole.ownerProcess == NULL;
+    return gConsole.ownerThread == NULL;
 }

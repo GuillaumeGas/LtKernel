@@ -1,17 +1,21 @@
 #pragma once
 
 #include <kernel/lib/status.h>
-
-#include "process.h"
+#include <kernel/lib/types.h>
+#include <kernel/init/vmm.h>
 
 #define THREAD_CONSOLE_BUFFER_SIZE 512
 
 enum ThreadState
 {
+	THREAD_STATE_INIT,
     THREAD_STATE_ALIVE,
     THREAD_STATE_PAUSE,
     THREAD_STATE_DEAD
 } typedef ThreadState;
+
+struct Process;
+typedef struct Process Process;
 
 struct Thread
 {
@@ -19,6 +23,7 @@ struct Thread
     unsigned int startExecutionTime;
     ThreadState state;
     Process * process;
+	Page stackPage;
 
     struct
     {
@@ -45,5 +50,8 @@ struct Thread
 } typedef Thread;
 
 Thread * GetCurrentThread();
-Thread * GetCurrentThreadFromTid(int tid);
-KeStatus CreateThread(PageDirectory * pageDirectory, u32 entryAddr, Process * process);
+Thread * GetThreadFromTid(int tid);
+KeStatus CreateMainThread(Process * process, u32 entryAddr, Thread ** mainThread);
+void ThreadPrepare(Thread * thread);
+
+void SwitchToMemoryMappingOfThread(Thread * thread);

@@ -5,72 +5,75 @@
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 #include <kernel/init/gdt.h>
+#include <kernel/debug/debug.h>
 
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("SCHEDULER", LOG_LEVEL, format, ##__VA_ARGS__)
 
-static int GetNextProcessPid()
+static int GetNextThreadTid()
 {
-    int nextPid = (gCurrentProcess->pid + 1) % gNbProcess;
+    int nextTid = (gCurrentThread->tid + 1) % gNbThreads;
 
     do
     {
-        Process * p = ListGet(gProcessList, nextPid);
-        if (p->state == PROCESS_STATE_ALIVE)
-            return nextPid;
-        nextPid = (nextPid + 1) % gNbProcess;
-		if (gCurrentProcess->pid == nextPid)
+        Thread * t = ListGet(gThreadsList, nextTid);
+        if (t->state == THREAD_STATE_ALIVE)
+            return nextTid;
+        nextTid = (nextTid + 1) % gNbThreads;
+		if (gCurrentThread->tid == nextTid)
 		{
-			return nextPid;
+			return nextTid;
 		}
     } while (1);
 }
 
 void Schedules()
 {
-	if (gCurrentProcess == NULL && ListTop(gProcessList) != NULL)
+	if (gCurrentThread == NULL && ListTop(gThreadsList) != NULL)
 	{
-		gCurrentProcess = (Process *)ListTop(gProcessList);
-		//KLOG(LOG_DEBUG, "Switching to process %d", gCurrentProcess->pid);
-		PmStartProcess(gCurrentProcess->pid);
-	}
-	else if (gCurrentProcess != NULL && (gNbProcess > 1 || gCurrentProcess->state != PROCESS_STATE_ALIVE))
-	{
-		u32 * stack_ptr = NULL;
-
-		// Tous les registres ont été push sur la pile, par le proc via l'interruption et par les push et le pushad dans int.asm
-		// On récupère le pointeur de pile stocké dans ebp afin de récupérer les registres qui nous intéressent.
-		asm("mov (%%ebp), %%eax; mov %%eax, %0" : "=m" (stack_ptr) : );
+		gCurrentThread = (Thread *)ListTop(gThreadsList);
 		
-		gCurrentProcess->regs.eflags = stack_ptr[16];
-		gCurrentProcess->regs.cs = stack_ptr[15];
-		gCurrentProcess->regs.eip = stack_ptr[14];
-		gCurrentProcess->regs.eax = stack_ptr[13];
-		gCurrentProcess->regs.ecx = stack_ptr[12];
-		gCurrentProcess->regs.edx = stack_ptr[11];
-		gCurrentProcess->regs.ebx = stack_ptr[10];
-		gCurrentProcess->regs.ebp = stack_ptr[8];
-		gCurrentProcess->regs.esi = stack_ptr[7];
-		gCurrentProcess->regs.edi = stack_ptr[6];
-		gCurrentProcess->regs.ds = stack_ptr[5];
-		gCurrentProcess->regs.es = stack_ptr[4];
-		gCurrentProcess->regs.fs = stack_ptr[3];
-		gCurrentProcess->regs.gs = stack_ptr[2];
+		//__debugbreak();
 
-		if (gCurrentProcess->regs.cs != K_CODE_SEG_SELECTOR)
-		{
-			gCurrentProcess->regs.ss = stack_ptr[18];
-			gCurrentProcess->regs.esp = stack_ptr[17];
-		}
-		else
-		{
-			gCurrentProcess->regs.ss = gTss.ss0;
-			gCurrentProcess->regs.esp = (u32)(&stack_ptr[17]);
-		}
-
-		gCurrentProcess->kstack.esp0 = gTss.esp0;
-		gCurrentProcess->kstack.ss0 = gTss.ss0;
-
-		PmStartProcess(GetNextProcessPid());
+		PmStartThread(gCurrentThread->tid);
 	}
+	//else if (gCurrentThread != NULL && (gNbThreads > 1 || gCurrentThread->state != THREAD_STATE_ALIVE))
+	//{
+	//	u32 * stack_ptr = NULL;
+
+	//	// Tous les registres ont été push sur la pile, par le proc via l'interruption et par les push et le pushad dans int.asm
+	//	// On récupère le pointeur de pile stocké dans ebp afin de récupérer les registres qui nous intéressent.
+	//	asm("mov (%%ebp), %%eax; mov %%eax, %0" : "=m" (stack_ptr) : );
+	//	
+	//	gCurrentThread->regs.eflags = stack_ptr[16];
+	//	gCurrentThread->regs.cs = stack_ptr[15];
+	//	gCurrentThread->regs.eip = stack_ptr[14];
+	//	gCurrentThread->regs.eax = stack_ptr[13];
+	//	gCurrentThread->regs.ecx = stack_ptr[12];
+	//	gCurrentThread->regs.edx = stack_ptr[11];
+	//	gCurrentThread->regs.ebx = stack_ptr[10];
+	//	gCurrentThread->regs.ebp = stack_ptr[8];
+	//	gCurrentThread->regs.esi = stack_ptr[7];
+	//	gCurrentThread->regs.edi = stack_ptr[6];
+	//	gCurrentThread->regs.ds = stack_ptr[5];
+	//	gCurrentThread->regs.es = stack_ptr[4];
+	//	gCurrentThread->regs.fs = stack_ptr[3];
+	//	gCurrentThread->regs.gs = stack_ptr[2];
+
+	//	if (gCurrentThread->regs.cs != K_CODE_SEG_SELECTOR)
+	//	{
+	//		gCurrentThread->regs.ss = stack_ptr[18];
+	//		gCurrentThread->regs.esp = stack_ptr[17];
+	//	}
+	//	else
+	//	{
+	//		gCurrentThread->regs.ss = gTss.ss0;
+	//		gCurrentThread->regs.esp = (u32)(&stack_ptr[17]);
+	//	}
+
+	//	gCurrentThread->kstack.esp0 = gTss.esp0;
+	//	gCurrentThread->kstack.ss0 = gTss.ss0;
+
+	//	PmStartThread(GetNextThreadTid());
+	//}
 }

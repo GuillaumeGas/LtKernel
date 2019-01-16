@@ -1,15 +1,15 @@
 #pragma once
 
-#include <kernel/user/process.h>
+#include <kernel/user/thread.h>
 
 struct Console
 {
-    Process * ownerProcess;
+    Thread * ownerThread;
 } typedef Console;
 
-void CnslSetOwnerProcess(Process * process);
-Process * CnslGetOwnerProcess();
-void CnslFreeOwnerProcess();
+void CnslSetOwnerThread(Thread * thread);
+Thread * CnslGetOwnerThread();
+void CnslFreeOwnerThread();
 void CnslHandleKey(const char key);
 int CnslIsAvailable();
 

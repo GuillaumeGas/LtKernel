@@ -108,3 +108,6 @@ void VmmCleanCallback();
 
 void _setCurrentPagesDirectory(PageDirectoryEntry * pd);
 PageDirectoryEntry * _getCurrentPagesDirectory();
+
+void SaveCurrentMemoryMapping();
+void RestoreMemoryMapping();
