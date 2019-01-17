@@ -20,9 +20,17 @@
 
 void PmInit()
 {
-	// TODO : check list creation
 	gProcessList = ListCreate();
+	if (gProcessList == NULL)
+	{
+		KLOG(LOG_ERROR, "ListCreate() failed");
+	}
+
 	gThreadsList = ListCreate();
+	if (gThreadsList == NULL)
+	{
+		KLOG(LOG_ERROR, "ListCreate() failed");
+	}
 }
 
 KeStatus PmCreateProcess(u32 entryAddr, Process ** newProcess, Process * parent)
@@ -131,37 +139,6 @@ void PmCleanCallback()
 	ListDestroyEx(gProcessList, CleanProcessCallback);
 }
 
-void PmDumpProcess(Process * process)
-{
-	if (process == NULL)
-	{
-		KLOG(LOG_ERROR, "Invalid process parameter");
-		return;
-	}
-
-    //kprint("== Process %d ==\n", process->pid);
-    //kprint(" - kstack_esp0 : %x\n", process->kstack.esp0);
-    //kprint(" - page_directory : %x\n", process->pageDirectory.pdEntry);
-    //kprint(" - start_execution_time : %x\n", process->startExcecutionTime);
-    //kprint(" - ss : %x\n", process->regs.ss);
-    //kprint(" - esp : %x\n", process->regs.esp);
-    //kprint(" - eflags : %x\n", process->regs.eflags);
-    //kprint(" - cs : %x\n", process->regs.cs);
-    //kprint(" - eip : %x\n", process->regs.eip);
-    //kprint(" - eax : %x\n", process->regs.eax);
-    //kprint(" - ecx : %x\n", process->regs.ecx);
-    //kprint(" - edx : %x\n", process->regs.edx);
-    //kprint(" - ebx : %x\n", process->regs.ebx);
-    //kprint(" - ebp : %x\n", process->regs.ebp);
-    //kprint(" - esi : %x\n", process->regs.esi);
-    //kprint(" - edi : %x\n", process->regs.edi);
-    //kprint(" - ds : %x\n", process->regs.ds);
-    //kprint(" - es : %x\n", process->regs.es);
-    //kprint(" - fs : %x\n", process->regs.fs);
-    //kprint(" - gs : %x\n", process->regs.gs);
-    //kprint(" - cs : %x\n", process->regs.cs);
-}
-
 static void PrintThreadCallback(void * _thread, void * _context)
 {
 	UNREFERENCED_PARAMETER(_context);
@@ -174,7 +151,7 @@ static void PrintThreadCallback(void * _thread, void * _context)
 
 	Thread * thread = (Thread *)_thread;
 
-	kprint(" > Thread %d, state : %s, start exec time : %d\n",
+	kprint(" - Thread %d, state : %s, start exec time : %d\n",
 		thread->tid,
 		thread->state == THREAD_STATE_RUNNING ? "ALIVE" : (thread->state == THREAD_STATE_PAUSE ? "PAUSE" : (thread->state == THREAD_STATE_INIT ? "INIT" : "DEAD")),
 		thread->startExecutionTime
@@ -212,7 +189,7 @@ static void PrintProcessCallback(void * _process, void * _context)
 
     Process * process = (Process *)_process;
 
-    kprint("Process %d, state : %s, start exec time : %d\n",
+    kprint("\nProcess %d, state : %s, start exec time : %d\n",
         process->pid,
         process->state == PROCESS_STATE_RUNNING ? "ALIVE" : (process->state == PROCESS_STATE_PAUSE ? "PAUSE" : (process->state == PROCESS_STATE_INIT ? "INIT" : "DEAD")),
         process->startExcecutionTime
