@@ -145,13 +145,13 @@ static KeStatus InitThread(Thread * thread, u32 entryAddr)
 	thread->regs.gs = USER_DATA_SEG_SELECTOR;
 
 	thread->regs.eax = 0;
-	thread->regs.ebp = 0;
 	thread->regs.ecx = 0;
 	thread->regs.edx = 0;
 	thread->regs.edi = 0;
 	thread->regs.esi = 0;
 
-	thread->regs.esp = (u32)vUserStack - (u32)(sizeof(void*));
+	thread->regs.esp = (((u32)vUserStack + (u32)PAGE_SIZE) - (u32)(sizeof(void*)));
+    thread->regs.ebp = thread->regs.esp;
 	thread->regs.eip = entryAddr;
 
 	thread->regs.eflags = 0x200 & 0xFFFFBFFF;

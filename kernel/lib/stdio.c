@@ -3,6 +3,7 @@
 #include <kernel/lib/stdlib.h>
 #include <kernel/drivers/screen.h>
 #include <kernel/drivers/serial.h>
+#include <kernel/debug/debug.h>
 
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("LIB", LOG_LEVEL, format, ##__VA_ARGS__)

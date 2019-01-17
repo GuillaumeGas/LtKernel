@@ -32,7 +32,7 @@
 #define __MULTIBOOT__
 #include <kernel/multiboot.h>
 
-#define KERNEL_DEBUG
+//#define KERNEL_DEBUG
 
 static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
@@ -124,8 +124,6 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	InitCleanCallbacksList();
 
-	DISABLE_IRQ();
-
 	{
 		Ext2File * file = NULL;
 		KeStatus status = ReadFileFromInode(12, &file);
@@ -136,6 +134,10 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 		else
 		{
 			KLOG(LOG_DEBUG, "File read successfully !");
+
+            DISABLE_IRQ();
+
+            KLOG(LOG_DEBUG, "Before");
 
 			ElfFile elf = { 0 };
 			status = LoadElf(file, &elf);
@@ -150,10 +152,12 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 				ElfFree(&elf);
 			}
+
+            KLOG(LOG_DEBUG, "After");
+
+            ENABLE_IRQ();
 		}
 	}
-
-	ENABLE_IRQ();
 
 	//{
 	//	int pid = -1;

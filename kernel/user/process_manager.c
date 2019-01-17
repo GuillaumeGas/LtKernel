@@ -339,8 +339,6 @@ void PmStartThread(int tid)
 		gTss.esp0 = gCurrentThread->kstack.esp0;
         gTss.ss0 = gCurrentThread->kstack.ss0;
 
-		__debugbreak();
-
 		_start_process(
 			gCurrentThread->process->pageDirectory.pdEntry,
 			gCurrentThread->regs.ss,

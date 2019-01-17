@@ -170,18 +170,18 @@ KeStatus LoadElf(Ext2File * file, ElfFile * elf)
 				//KLOG(LOG_DEBUG, "header addr : %x, offset code : %x", elf->header, elf->prgHeaderTable[i].offset);
 				//KLOG(LOG_DEBUG, "code addr : %x", codeAddr);
 
-				// pas top, il faudrait prendre en compte la taille du code, et la pile utilisateur
-				if (!CheckUserVirtualAddressValidity((u32)vUserCodePtr))
-				{
-					KLOG(LOG_ERROR, "Invalid user virtual address (%x), can't map code in memory", vUserCodePtr);
-					status = STATUS_INVALID_VIRTUAL_USER_ADDRESS;
-					goto onError;
-				}
-
 				//KLOG(LOG_DEBUG, "[%d] Mapping code at 0x%x...", i, elf->prgHeaderTable[i].vaddr);
 
 				while (count < size)
 				{
+                    // pas top, il faudrait prendre en compte la taille du code, et la pile utilisateur
+                    if (!CheckUserVirtualAddressValidity((u32)vUserCodePtr))
+                    {
+                        KLOG(LOG_ERROR, "Invalid user virtual address (%x), can't map code in memory", vUserCodePtr);
+                        status = STATUS_INVALID_VIRTUAL_USER_ADDRESS;
+                        goto onError;
+                    }
+
 					// On récupère une page physique libre dans laquelle on va y copier le code
 					u8 * pNewCodePage = (u8 *)GetFreePage();
 
@@ -205,8 +205,8 @@ KeStatus LoadElf(Ext2File * file, ElfFile * elf)
 					else
 						MmCopy(codeAddr + count, vUserCodePtr, PAGE_SIZE);
 
-					vUserCodePtr = (u8 *)((unsigned int)vUserCodePtr + PAGE_SIZE);
-					count += PAGE_SIZE;
+					vUserCodePtr = (u8 *)((unsigned int)vUserCodePtr + (unsigned int)PAGE_SIZE);
+					count += (u32)PAGE_SIZE;
 				}
 			}
 

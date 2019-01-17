@@ -86,7 +86,7 @@ static KeStatus SysPrint(const char * str, int * ret)
 	}
 
     kprint(str);
-	*ret = 0;
+    *ret = 0;
 
 	return STATUS_SUCCESS;
 }

@@ -1,6 +1,8 @@
 #define __CLOCK__
 #include "clock.h"
 
+#include <kernel/lib/stdio.h>
+
 void DrvClock()
 {
     gClockTic++;
