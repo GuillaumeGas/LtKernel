@@ -104,7 +104,7 @@ void ThreadPrepare(Thread * thread)
 {
 	SwitchToMemoryMappingOfThread(thread);
 
-	AddPageToPageDirectory((u8 *)thread->stackPage.vAddr, (u8 *)thread->stackPage.vAddr, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, thread->process->pageDirectory);
+	AddPageToPageDirectory((u8 *)thread->stackPage.vAddr, (u8 *)thread->stackPage.pAddr, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, thread->process->pageDirectory);
 
 	RestoreMemoryMapping();
 }

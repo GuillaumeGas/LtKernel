@@ -393,25 +393,19 @@ BOOL CheckUserVirtualAddressValidity(u32 vAddr)
 
 void SaveCurrentMemoryMapping()
 {
-	//__debugbreak();
-
     if (s_SavedPageDirectoryEntry != NULL)
     {
         KLOG(LOG_WARNING, "The s_SavedPageDirectoryEntry is already used");
-        __debugbreak();
+		// __debugbreak();
     }
 
 	s_SavedPageDirectoryEntry = _getCurrentPagesDirectory();
-
-	KLOG(LOG_DEBUG, "Save page dir %x", s_SavedPageDirectoryEntry);
 }
 
 void RestoreMemoryMapping()
 {
 	if (s_SavedPageDirectoryEntry != NULL)
 	{
-        KLOG(LOG_DEBUG, "Restoring %x", s_SavedPageDirectoryEntry);
-
 		_setCurrentPagesDirectory(s_SavedPageDirectoryEntry);
 		s_SavedPageDirectoryEntry = NULL;
 	}

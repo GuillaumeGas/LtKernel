@@ -195,8 +195,6 @@ KeStatus LoadElf(Ext2File * file, ElfFile * elf)
 					// On ajoute la page physique dans l'espace d'adressage de la tâche utilisateur
 					AddPageToPageDirectory(vUserCodePtr, pNewCodePage, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, process->pageDirectory);
 
-					KLOG(LOG_DEBUG, "Mapped %x on %x", pNewCodePage, vUserCodePtr);
-
 					MmSet((u8*)vUserCodePtr, 0, PAGE_SIZE);
 
 					// Si on a de quoi copier sur une page entière, on fait ça sinon on copie seulement le reste de code à copier

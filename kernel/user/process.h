@@ -9,7 +9,7 @@
 enum ProcessState
 {
 	PROCESS_STATE_INIT,
-    PROCESS_STATE_ALIVE,
+    PROCESS_STATE_RUNNING,
     PROCESS_STATE_PAUSE,
     PROCESS_STATE_DEAD
 } typedef ProcessState;

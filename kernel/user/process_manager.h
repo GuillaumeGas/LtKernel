@@ -44,7 +44,7 @@ void PmInit();
 //KeStatus PmCreateProcess(void * task_addr, unsigned int size, Process * parent, int * pid);
 //KeStatus PmCreateProcessFromElf(PageDirectory * pageDirectory, u32 entryAddr, int * pid, Process * parent);
 
-KeStatus PmCreateProcess(u32 entryPoint, Process ** pid, Process * parent);
+KeStatus PmCreateProcess(u32 entryPoint, Process ** newProcess, Process * parent);
 
 void PmStartThread(int tid);
 void PmCleanCallback();

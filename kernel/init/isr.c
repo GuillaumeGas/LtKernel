@@ -118,9 +118,17 @@ void general_protection_fault_isr(ExceptionContextWithCode * context)
 
 	kprint("Selector index : %x\n\n", Index);
 
-	PrintExceptionContextWithCode(context);
+	// coming from kernel
+	if (context->cr3 == 0x1000)
+	{
+		PrintExceptionContextWithCode(context);
+	}
+	else
+	{
+		PrintExceptionUserContextWithCode((ExceptionContextUserWithCode *)context);
+	}
 
-	Halt();
+	Pause();
 }
 
 void page_fault_isr(ExceptionContextWithCode * context)
@@ -129,7 +137,7 @@ void page_fault_isr(ExceptionContextWithCode * context)
 
 	EXCEPTION_SCREEN
 
-	ScSetColorEx(BLUE, RED, 0, 1);
+		ScSetColorEx(BLUE, RED, 0, 1);
 	kprint(">> [Fault] Page fault ! \n\n");
 
 	ScSetColorEx(BLUE, WHITE, 0, 1);
@@ -140,19 +148,24 @@ void page_fault_isr(ExceptionContextWithCode * context)
 	u8 rsvd = (code & 8);
 	u8 id = (code & 16);
 
-	kprint ("Error code : %x (%b)\n", code, code);
-	kprint (" - P : %d (%s)\n", p ? 1 : 0, p ? "protection violation" : "non-present page");
-	kprint (" - W/R : %d (%s)\n", wr ? 1 : 0, wr ? "write access" : "read access");
-	kprint (" - U/S : %d (%s)\n", us ? 1 : 0, us ? "user mode" : "supervisor mode");
-	kprint (" - RSVD : %d (%s)\n", rsvd ? 1 : 0, rsvd ? "one or more page directory entries contain reserved bits which are set to 1" : "PSE or PAE flags in CR4 are set to 1");
-	kprint (" - I/D : %d (%s)\n\n", id ? 1 : 0, id ? "instruction fetch (applies when the No-Execute bit is supported and enabled" : "-");
+	kprint("Error code : %x (%b)\n", code, code);
+	kprint(" - P : %d (%s)\n", p ? 1 : 0, p ? "protection violation" : "non-present page");
+	kprint(" - W/R : %d (%s)\n", wr ? 1 : 0, wr ? "write access" : "read access");
+	kprint(" - U/S : %d (%s)\n", us ? 1 : 0, us ? "user mode" : "supervisor mode");
+	kprint(" - RSVD : %d (%s)\n", rsvd ? 1 : 0, rsvd ? "one or more page directory entries contain reserved bits which are set to 1" : "PSE or PAE flags in CR4 are set to 1");
+	kprint(" - I/D : %d (%s)\n\n", id ? 1 : 0, id ? "instruction fetch (applies when the No-Execute bit is supported and enabled" : "-");
 	kprint("Linear address : %x, %b*\n\n", context->cr2, context->cr2, 32);
 
-	PrintExceptionContextWithCode(context);
+	if (us == 1)
+	{
+		PrintExceptionContextWithCode(context);
+	}
+	else
+	{
+		PrintExceptionUserContextWithCode((ExceptionContextUserWithCode *)context);
+	}
 
-	__debugbreak();
-
-	Halt();
+	Pause();
 }
 
 void x87_floating_point_isr(ExceptionContext * context)

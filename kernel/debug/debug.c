@@ -79,3 +79,11 @@ void PrintExceptionContextWithCode(ExceptionContextWithCode * context)
 	kprint("cr3 = %x (%b)\n", context->cr3, context->cr3);
 	kprint("Error code : %x (%b)\n", context->code, context->code);
 }
+
+void PrintExceptionUserContextWithCode(ExceptionContextUserWithCode * context)
+{
+	ExceptionContextWithCode * baseContext = (ExceptionContextWithCode *)context;
+	PrintExceptionContextWithCode(baseContext);
+
+	kprint("espU : %x (%b*)\n", context->espU, context->espU, 32);
+}

@@ -9,7 +9,7 @@
 enum ThreadState
 {
 	THREAD_STATE_INIT,
-    THREAD_STATE_ALIVE,
+    THREAD_STATE_RUNNING,
     THREAD_STATE_PAUSE,
     THREAD_STATE_DEAD
 } typedef ThreadState;
