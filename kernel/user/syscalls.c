@@ -235,7 +235,7 @@ static KeStatus SysWait(int pid, int * ret)
 		goto clean;
 	}
 
-	while (process->state == PROCESS_STATE_ALIVE);
+	while (process->state == PROCESS_STATE_RUNNING);
 
 	status = STATUS_SUCCESS;
 	*ret = 0;
