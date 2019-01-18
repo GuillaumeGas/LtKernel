@@ -25,6 +25,9 @@ enum KeStatus
 
 	/* Physical memory */
 	STATUS_PHYSICAL_MEMORY_FULL,
+
+	/* FS */
+	STATUS_NOT_A_DIRECTORY,
 } typedef KeStatus;
 
 #define FAILED(status) (status != STATUS_SUCCESS)

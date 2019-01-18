@@ -8,7 +8,10 @@
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("FS", LOG_LEVEL, format, ##__VA_ARGS__)
 #include <kernel/debug/debug.h>
 
-#include <kernel/fs/elf.h>
+#include "elf.h"
+#include "file.h"
+
+static KeStatus InitRoot();
 
 KeStatus FsInit(AtaDevice * device)
 {
@@ -17,6 +20,13 @@ KeStatus FsInit(AtaDevice * device)
 	{
 		KLOG(LOG_ERROR, "File system intialization failed with status %d", status);
         return status;
+	}
+
+	status = InitRoot();
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "InitRootFile() failed with status %d", status);
+		return status;
 	}
 
     return STATUS_SUCCESS;
@@ -31,7 +41,6 @@ KeStatus ReadFileFromInode(int inodeNumber, File ** file)
 {
     Ext2Inode * inode = NULL;
     KeStatus status = STATUS_FAILURE;
-
 
 	if (file == NULL)
 	{
@@ -75,4 +84,43 @@ void FreeFile(File * file)
     // TODO : compléter nettoyage...
 
 	kfree(file);
+}
+
+static KeStatus InitRoot()
+{
+	KeStatus status = STATUS_FAILURE;
+
+	if (gExt2Disk == NULL)
+	{
+		KLOG(LOG_ERROR, "Ext2 file system is not initialized !");
+		return STATUS_UNEXPECTED;
+	}
+
+	status = ReadFileFromInode(EXT2_ROOT_INODE_NUMBER, &gRootFile);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "ReadFileFromInode() failed with code %d", status);
+		goto clean;
+	}
+
+	status = InitRootFile(gRootFile);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "InitRootFile() failed with code %d", status);
+		goto clean;
+	}
+
+	status = BrowseAndCacheDirectory(gRootFile);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "BrowseAndCacheDirectory() failed with code %d", status);
+		goto clean;
+	}
+
+	PrintDirectory(gRootFile);
+
+	status = STATUS_SUCCESS;
+
+clean:
+	return status;
 }

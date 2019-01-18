@@ -4,6 +4,8 @@
 #include <kernel/lib/status.h>
 #include <kernel/drivers/ata.h>
 
+#define EXT2_ROOT_INODE_NUMBER 2
+
 /* super_block: errors */
 #define EXT2_ERRORS_CONTINUE    1
 #define EXT2_ERRORS_RO          2
@@ -131,28 +133,21 @@ struct Ext2Inode
 } __attribute__((packed));
 typedef struct Ext2Inode Ext2Inode;
 
-struct DirectoryEntry 
+struct Ext2DirectoryEntry
 {
 	u32 inode;              /* inode number or 0 (unused) */
 	u16 recLen;            /* offset to the next dir. entry */
 	u8 nameLen;            /* name length */
 	u8 fileType;
-	char * name;
+	char name;
 } __attribute__((packed));
-typedef struct DirectoryEntry DirectoryEntry;
+typedef struct Ext2DirectoryEntry Ext2DirectoryEntry;
 
+/*
+	TMP : Ext2ReadFile devra récupérer un fichier au format brut (char* quoi..)
+	C'est file.c qui va permettre la création d'un fichier en utilisant Ext2ReadFile
+*/
 typedef struct File File;
-struct File
-{
-    Ext2Disk * disk;
-    int inum;
-    Ext2Inode * inode;
-    char * name;
-    void * content;
-    File * parent;
-    File * prev;
-    File * next;
-};
 
 KeStatus Ext2ReadDiskOnDevice(AtaDevice * device, Ext2Disk ** disk);
 KeStatus Ext2ReadInode(Ext2Disk * disk, int num, Ext2Inode ** inode);

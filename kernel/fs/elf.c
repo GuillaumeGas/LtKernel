@@ -1,4 +1,5 @@
 #include "elf.h"
+#include "file.h"
 
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/kmalloc.h>

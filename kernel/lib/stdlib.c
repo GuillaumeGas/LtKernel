@@ -75,6 +75,8 @@ int StrCmp(const char * str1, const char * str2)
 
 		if (str2[index + 1] == '\0' && str1[index + 1] != '\0')
 			return 1;
+
+		index++;
 	}
 
 	return 0;

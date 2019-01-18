@@ -13,6 +13,8 @@ void FreeFile(File * file);
 
 #ifdef __FS__
 Ext2Disk * gExt2Disk = NULL;
+File * gRootFile = NULL;
 #else
 extern Ext2Disk * gExt2Disk;
+extern File * gRootFile;
 #endif

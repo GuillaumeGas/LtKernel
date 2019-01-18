@@ -4,6 +4,9 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/kmalloc.h>
 
+// TMP
+#include "file.h"
+
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("EXT2", LOG_LEVEL, format, ##__VA_ARGS__)
 
@@ -267,67 +270,6 @@ clean:
 	}
 
 	return status;
-}
-
-static KeStatus CreateFile(Ext2Disk * disk, Ext2Inode * inode, int inum, void * fileContent, File ** file)
-{
-    KeStatus status = STATUS_FAILURE;
-    File * localFile = NULL;
-
-    if (disk == NULL)
-    {
-        KLOG(LOG_ERROR, "Invalid disk parameter");
-        return STATUS_NULL_PARAMETER;
-    }
-
-    if (inode == NULL)
-    {
-        KLOG(LOG_ERROR, "Invalid inode parameter");
-        return STATUS_NULL_PARAMETER;
-    }
-
-    if (fileContent == NULL)
-    {
-        KLOG(LOG_ERROR, "Invalid fileContent parameter");
-        return STATUS_NULL_PARAMETER;
-    }
-
-    if (file == NULL)
-    {
-        KLOG(LOG_ERROR, "Invalid file parameter");
-        return STATUS_NULL_PARAMETER;
-    }
-
-    localFile = (File *)kmalloc(sizeof(File));
-    if (localFile == NULL)
-    {
-        KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(File));
-        status = STATUS_ALLOC_FAILED;
-        goto clean;
-    }
-
-    localFile->content = fileContent;
-    localFile->disk = disk;
-    localFile->inode = inode;
-    localFile->inum = inum;
-    localFile->name = NULL;
-    localFile->next = NULL;
-    localFile->parent = NULL;
-    localFile->prev = NULL;
-
-    *file = localFile;
-    localFile = NULL;
-
-    status = STATUS_SUCCESS;
-
-clean:
-    if (localFile != NULL)
-    {
-        kfree(localFile);
-        localFile = NULL;
-    }
-
-    return status;
 }
 
 KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, int inum, File ** file)
