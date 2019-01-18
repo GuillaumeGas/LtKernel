@@ -125,7 +125,7 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 	InitCleanCallbacksList();
 
 	{
-		Ext2File * file = NULL;
+		File * file = NULL;
 		KeStatus status = ReadFileFromInode(12, &file);
 		if (FAILED(status))
 		{

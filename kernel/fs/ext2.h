@@ -137,13 +137,24 @@ struct DirectoryEntry
 	u16 recLen;            /* offset to the next dir. entry */
 	u8 nameLen;            /* name length */
 	u8 fileType;
-	char name;
+	char * name;
 } __attribute__((packed));
 typedef struct DirectoryEntry DirectoryEntry;
 
-typedef void Ext2File;
+typedef struct File File;
+struct File
+{
+    Ext2Disk * disk;
+    int inum;
+    Ext2Inode * inode;
+    char * name;
+    void * content;
+    File * parent;
+    File * prev;
+    File * next;
+};
 
 KeStatus Ext2ReadDiskOnDevice(AtaDevice * device, Ext2Disk ** disk);
 KeStatus Ext2ReadInode(Ext2Disk * disk, int num, Ext2Inode ** inode);
-KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file);
+KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, int inum, File ** file);
 void Ext2FreeDisk(Ext2Disk * disk);

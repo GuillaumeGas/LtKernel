@@ -17,3 +17,5 @@ kernel_bin
 /iso/boot/ltkernel.img
 /ltkernel.iso
 *.bxrc
+*.out
+*.bxrc

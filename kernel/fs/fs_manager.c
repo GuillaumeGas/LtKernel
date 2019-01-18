@@ -27,10 +27,11 @@ void FsCleanCallback()
 	Ext2FreeDisk(gExt2Disk);
 }
 
-KeStatus ReadFileFromInode(int inodeNumber, Ext2File ** file)
+KeStatus ReadFileFromInode(int inodeNumber, File ** file)
 {
     Ext2Inode * inode = NULL;
     KeStatus status = STATUS_FAILURE;
+
 
 	if (file == NULL)
 	{
@@ -45,7 +46,7 @@ KeStatus ReadFileFromInode(int inodeNumber, Ext2File ** file)
 		goto clean;
     }
      
-	status = Ext2ReadFile(gExt2Disk, inode, file);
+	status = Ext2ReadFile(gExt2Disk, inode, inodeNumber, file);
     if (FAILED(status))
     {
         KLOG(LOG_ERROR, "Failed to read file !");
@@ -63,12 +64,15 @@ clean:
 	return status;
 }
 
-void FreeFile(Ext2File * file)
+void FreeFile(File * file)
 {
 	if (file == NULL)
 	{
 		KLOG(LOG_ERROR, "Invalid file parameter");
+        return;
 	}
+
+    // TODO : compléter nettoyage...
 
 	kfree(file);
 }

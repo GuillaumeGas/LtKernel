@@ -269,9 +269,70 @@ clean:
 	return status;
 }
 
-KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file)
+static KeStatus CreateFile(Ext2Disk * disk, Ext2Inode * inode, int inum, void * fileContent, File ** file)
 {
-	char * localFile = NULL;
+    KeStatus status = STATUS_FAILURE;
+    File * localFile = NULL;
+
+    if (disk == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid disk parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    if (inode == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid inode parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    if (fileContent == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid fileContent parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    if (file == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid file parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    localFile = (File *)kmalloc(sizeof(File));
+    if (localFile == NULL)
+    {
+        KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(File));
+        status = STATUS_ALLOC_FAILED;
+        goto clean;
+    }
+
+    localFile->content = fileContent;
+    localFile->disk = disk;
+    localFile->inode = inode;
+    localFile->inum = inum;
+    localFile->name = NULL;
+    localFile->next = NULL;
+    localFile->parent = NULL;
+    localFile->prev = NULL;
+
+    *file = localFile;
+    localFile = NULL;
+
+    status = STATUS_SUCCESS;
+
+clean:
+    if (localFile != NULL)
+    {
+        kfree(localFile);
+        localFile = NULL;
+    }
+
+    return status;
+}
+
+KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, int inum, File ** file)
+{
+	char * fileContent = NULL;
 	char * block = NULL;
 	u32 * singlyBlock = NULL;
 	u32 * doublyBlock = NULL;
@@ -297,12 +358,10 @@ KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file)
         return STATUS_NULL_PARAMETER;
     }
 
-    *file = NULL;
-
 	fileSize = inode->size;
 
-    localFile = (char *)kmalloc(fileSize);
-	if (localFile == NULL)
+    fileContent = (char *)kmalloc(fileSize);
+	if (fileContent == NULL)
 	{
         KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(size));
         status = STATUS_ALLOC_FAILED;
@@ -331,7 +390,7 @@ KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file)
 		}
 
 		size = fileSize > disk->blockSize ? disk->blockSize : fileSize;
-		MmCopy((u8 *)block, (u8 *)(localFile + fileOffset), size);
+		MmCopy((u8 *)block, (u8 *)(fileContent + fileOffset), size);
 
 		fileOffset += size;
 		fileSize -= size;
@@ -371,7 +430,7 @@ KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file)
 			}
 
 			size = fileSize > disk->blockSize ? disk->blockSize : fileSize;
-			MmCopy((u8 *)block, (u8 *)(localFile + fileOffset), size);
+			MmCopy((u8 *)block, (u8 *)(fileContent + fileOffset), size);
 			fileOffset += size;
 			fileSize -= size;
 		}
@@ -434,7 +493,7 @@ KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file)
 				}
 
 				size = fileSize > disk->blockSize ? disk->blockSize : fileSize;
-				MmCopy((u8 *)block, (u8 *)(localFile + fileOffset), size);
+				MmCopy((u8 *)block, (u8 *)(fileContent + fileOffset), size);
 				fileOffset += size;
 				fileSize -= size;
 			}
@@ -447,16 +506,23 @@ KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, Ext2File ** file)
 		KLOG(LOG_WARNING, "TRIPLY INDIRECT PTR NOT SUPPORTED ");
 	}
 
-    *file = localFile;
-    localFile = NULL;
+    status = CreateFile(disk, inode, inum, fileContent, file);
+    if (FAILED(status))
+    {
+        KLOG(LOG_ERROR, "CreateFile() failed with status %d", status);
+        goto clean;
+    }
+
+    // file content ptr has been saved in file structure
+    fileContent = NULL;
 
     status = STATUS_SUCCESS;
 
 clean:
-	if (localFile != NULL)
+	if (fileContent != NULL)
 	{
-		kfree(localFile);
-        localFile = NULL;
+		kfree(fileContent);
+        fileContent = NULL;
 	}
 
 	if (block != NULL)

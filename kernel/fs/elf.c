@@ -22,31 +22,31 @@ BOOL ElfCheckIdent(ElfHeader * header)
 	return TRUE;
 }
 
-KeStatus ElfInit(Ext2File * extFile, ElfFile * file)
+KeStatus ElfInit(File * file, ElfFile * elf)
 {
     KeStatus status = STATUS_FAILURE;
 
-    if (extFile == NULL)
+    if (file == NULL)
     {
         KLOG(LOG_ERROR, "Invalid extFile parameter");
         return STATUS_NULL_PARAMETER;
     }
 
-    if (file == NULL)
+    if (elf == NULL)
     {
         KLOG(LOG_ERROR, "Invalid file parameter");
         return STATUS_NULL_PARAMETER;
     }
 
-    file->header = (ElfHeader *)extFile;
+    elf->header = (ElfHeader *)file->content;
 
-    if (file->header->phoff == 0)
+    if (elf->header->phoff == 0)
     {
         KLOG(LOG_ERROR, "Elf program header table pointer is NULL");
         status = STATUS_UNEXPECTED;
     }
 
-    file->prgHeaderTable = (ElfProgramHeaderTable *)((u8 *)file->header + file->header->phoff);
+    elf->prgHeaderTable = (ElfProgramHeaderTable *)((u8 *)elf->header + elf->header->phoff);
 
     status = STATUS_SUCCESS;
 
@@ -113,7 +113,7 @@ void ElfProgramHeaderEntryDump(ElfProgramHeaderTable * entry)
 /*
 	TODO : vérifier si tous les cas d'erreurs sont gérés (et surtout si la mémoire est bien libérée...)
 */
-KeStatus LoadElf(Ext2File * file, ElfFile * elf)
+KeStatus LoadElf(File * file, ElfFile * elf)
 {
 	KeStatus status = STATUS_FAILURE;
 
@@ -129,7 +129,7 @@ KeStatus LoadElf(Ext2File * file, ElfFile * elf)
 		return STATUS_INVALID_PARAMETER;
 	}
 
-	if (!ElfCheckIdent(file))
+	if (!ElfCheckIdent(file->content))
 	{
 	    KLOG(LOG_ERROR, "Not a Elf file !");
 		status = STATUS_NOT_ELF_FILE;

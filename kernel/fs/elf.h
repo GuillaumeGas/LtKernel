@@ -46,10 +46,10 @@ struct ElfFile
 
 BOOL ElfCheckIdent(ElfHeader * header);
 // TODO : prévoir de pouvoir gérer d'autres fs
-KeStatus ElfInit(Ext2File * extFile, ElfFile * file);
+KeStatus ElfInit(File * file, ElfFile * elf);
 void ElfFree(const ElfFile * elf);
 
-KeStatus LoadElf(Ext2File * file, ElfFile * elf);
+KeStatus LoadElf(File * file, ElfFile * elf);
 
 void ElfHeaderDump(ElfFile * elf);
 void ElfProgramHeaderEntryDump(ElfProgramHeaderTable * entry);
