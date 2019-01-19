@@ -28,6 +28,7 @@ enum KeStatus
 
 	/* FS */
 	STATUS_NOT_A_DIRECTORY,
+	STATUS_FILE_NOT_FOUND,
 } typedef KeStatus;
 
 #define FAILED(status) (status != STATUS_SUCCESS)

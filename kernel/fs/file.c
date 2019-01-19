@@ -101,14 +101,16 @@ clean:
 	return status;
 }
 
-KeStatus OpenFileFromName(const char * fileName, File ** file)
+KeStatus OpenFileFromName(const char * filePath, File ** file)
 {
 	KeStatus status = STATUS_FAILURE;
 	File * localFile = NULL;
+	File * directory = NULL;
+	char * path = (char *)filePath;
 
-	if (fileName == NULL)
+	if (filePath == NULL)
 	{
-		KLOG(LOG_ERROR, "Invalid fileName parameter");
+		KLOG(LOG_ERROR, "Invalid filePath parameter");
 		return STATUS_NULL_PARAMETER;
 	}
 
@@ -118,23 +120,90 @@ KeStatus OpenFileFromName(const char * fileName, File ** file)
 		return STATUS_NULL_PARAMETER;
 	}
 
-	// TODO : prendre le rootFile du thread courant, truc dans l'genre
-	if (IsCached(gRootFile, fileName, &localFile) == TRUE)
+	// TODO : ajouter un pointeur sur le répertoire courant du thread
+	// Dans le cas d'un chemin relatif, on va utiliser celui du thread et non le root
+	if (path[0] == '/')
 	{
-		if (localFile->opened == FALSE)
+		directory = gRootFile;
+		path++; // on passe le '/'
+	}
+	else
+	{
+		// TMP
+		directory = gRootFile;
+		//directory = gCurrentThread->currentDirectory;
+	}
+
+	while (*path != '\0')
+	{
+		// Si on se trouve à la fin du chemin, ce soit être le nom du fichier
+		int indexSlash = 0;
+		if ((indexSlash = FirstIndexOf(path, '/')) < 0)
 		{
-			status = OpenFile(localFile);
-			if (FAILED(status))
+			if (IsCached(directory, path, &localFile) == TRUE)
 			{
-				KLOG(LOG_ERROR, "OpenFile() failed with code %d", status);
+				if (localFile->opened == FALSE)
+				{
+					status = OpenFile(localFile);
+					if (FAILED(status))
+					{
+						KLOG(LOG_ERROR, "OpenFile() failed with code %d", status);
+						goto clean;
+					}
+				}
+
+				*file = localFile;
+				localFile = NULL;
+
+				status = STATUS_SUCCESS;
+				break;
+			}
+			else
+			{
+				status = STATUS_FILE_NOT_FOUND;
 				goto clean;
 			}
 		}
+		else
+		{
+			// Sinon, on remplace la prochaine occurence de '/' par '\0' pour déterminer quoi faire
+			// et on oublie pas de rétablir le '/' ensuite
+			path[indexSlash] = '\0';
 
-		*file = localFile;
-		localFile = NULL;
+			KLOG(LOG_DEBUG, "dir : %s", path);
 
-		status = STATUS_SUCCESS;
+			if (StrCmp(path, "..") == 0)
+			{
+				directory = directory->parent;
+			}
+			else if (StrCmp(path, ".") == 0)
+			{
+				// on ne fait rien
+			}
+			else
+			{
+				if (IsCached(directory, path, &directory) == FALSE)
+				{
+					status = STATUS_FILE_NOT_FOUND;
+					goto clean;
+				}
+
+				if (directory->opened == FALSE)
+				{
+					status = OpenFile(directory);
+					if (FAILED(status))
+					{
+						// TODO : il faudra sans doute mieux gérer cette erreur... (accès interdit par exemple ?)
+						KLOG(LOG_ERROR, "OpenFile() failed with code %d", status);
+						goto clean;
+					}
+				}
+				BrowseAndCacheDirectory(directory);
+			}
+
+			path[indexSlash] = '/';
+			path = &path[indexSlash + 1];
+		}
 	}
 
 clean:
@@ -325,6 +394,8 @@ KeStatus InitRootFile(File * file)
 
 	StrCpy(name, file->name);
 
+	file->parent = file;
+
 	status = STATUS_SUCCESS;
 
 clean:
@@ -390,31 +461,35 @@ void PrintDirectory(File * dir)
 	}
 
 	File * f = dir;
-	BOOL canEnter = TRUE;
+	int nb = 0;
 
 	while (f != NULL)
 	{
 		if (f->name != NULL)
 		{
+			int i = 0;
+			for (; i < nb; i++)
+				kprint(" ");
+
 			if (f->leaf != NULL)
-				kprint(" %s >\n", f->name);
+				kprint("[%s]\n", f->name);
 			else
-				kprint("- %s\n", f->name);
+				kprint("%s\n", f->name);
 		}
 
-		if (f->leaf != NULL && canEnter == TRUE)
+		if (f->leaf != NULL)
 		{
 			f = f->leaf;
+			nb += 4;
 		}
 		else if (f->next != NULL)
 		{
 			f = f->next;
-			canEnter = TRUE;
 		}
 		else
 		{
-			f = f->parent;
-			canEnter = FALSE;
+			f = f->parent->next;
+			nb -= 4;
 
 			if (f == dir)
 				f = NULL;
