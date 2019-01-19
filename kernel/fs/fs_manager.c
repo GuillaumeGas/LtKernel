@@ -37,42 +37,6 @@ void FsCleanCallback()
 	Ext2FreeDisk(gExt2Disk);
 }
 
-KeStatus ReadFileFromInode(int inodeNumber, File ** file)
-{
-    Ext2Inode * inode = NULL;
-    KeStatus status = STATUS_FAILURE;
-
-	if (file == NULL)
-	{
-		KLOG(LOG_ERROR, "Invalid file parameter");
-		return STATUS_INVALID_PARAMETER;
-	}
-
-    status = Ext2ReadInode(gExt2Disk, inodeNumber, &inode);
-    if (FAILED(status))
-    {
-        KLOG(LOG_ERROR, "Failed to retrieve inode %d !", inodeNumber);
-		goto clean;
-    }
-     
-	status = Ext2ReadFile(gExt2Disk, inode, inodeNumber, file);
-    if (FAILED(status))
-    {
-        KLOG(LOG_ERROR, "Failed to read file !");
-		goto clean;
-    }
-
-	status = STATUS_SUCCESS;
-
-clean:
-	if (inode != NULL)
-	{
-		kfree(inode);
-	}
-
-	return status;
-}
-
 void FreeFile(File * file)
 {
 	if (file == NULL)
@@ -89,6 +53,7 @@ void FreeFile(File * file)
 static KeStatus InitRoot()
 {
 	KeStatus status = STATUS_FAILURE;
+	Ext2Inode * inode = NULL;
 
 	if (gExt2Disk == NULL)
 	{
@@ -96,10 +61,17 @@ static KeStatus InitRoot()
 		return STATUS_UNEXPECTED;
 	}
 
-	status = ReadFileFromInode(EXT2_ROOT_INODE_NUMBER, &gRootFile);
+	status = Ext2ReadInode(gExt2Disk, EXT2_ROOT_INODE_NUMBER, &inode);
 	if (FAILED(status))
 	{
-		KLOG(LOG_ERROR, "ReadFileFromInode() failed with code %d", status);
+		KLOG(LOG_ERROR, "Ext2ReadInode() failed with code %d", status);
+		goto clean;
+	}
+
+	status = CreateFile(gExt2Disk, inode, EXT2_ROOT_INODE_NUMBER, &gRootFile);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "CreateFile() failed with code %d", status);
 		goto clean;
 	}
 

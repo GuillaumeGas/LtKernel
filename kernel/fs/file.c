@@ -10,7 +10,7 @@
 
 #include <kernel/debug/debug.h>
 
-KeStatus CreateFile(Ext2Disk * disk, Ext2Inode * inode, int inum, void * fileContent, File ** file)
+KeStatus CreateFile(Ext2Disk * disk, Ext2Inode * inode, int inum, File ** file)
 {
 	KeStatus status = STATUS_FAILURE;
 	File * localFile = NULL;
@@ -24,12 +24,6 @@ KeStatus CreateFile(Ext2Disk * disk, Ext2Inode * inode, int inum, void * fileCon
 	if (inode == NULL)
 	{
 		KLOG(LOG_ERROR, "Invalid inode parameter");
-		return STATUS_NULL_PARAMETER;
-	}
-
-	if (fileContent == NULL)
-	{
-		KLOG(LOG_ERROR, "Invalid fileContent parameter");
 		return STATUS_NULL_PARAMETER;
 	}
 
@@ -47,11 +41,12 @@ KeStatus CreateFile(Ext2Disk * disk, Ext2Inode * inode, int inum, void * fileCon
 		goto clean;
 	}
 
-	localFile->content = fileContent;
+	localFile->content = NULL;
 	localFile->disk = disk;
 	localFile->inode = inode;
 	localFile->inum = inum;
 	localFile->name = NULL;
+	localFile->opened = FALSE;
 	localFile->next = NULL;
 	localFile->parent = NULL;
 	localFile->prev = NULL;
@@ -71,6 +66,77 @@ clean:
 	return status;
 }
 
+KeStatus OpenFile(File * file)
+{
+	KeStatus status = STATUS_FAILURE;
+
+	if (file == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid file parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	if (file->inode == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid file->inode parameter");
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	status = Ext2ReadFile(file->disk, file->inode, file->inum, (char **)&file->content);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "Ext2ReadFile() failed with code %d", status);
+		return status;
+	}
+
+	file->opened = TRUE;
+
+	return STATUS_SUCCESS;
+}
+
+KeStatus ReadFileFromInode(int inodeNumber, File ** file)
+{
+	Ext2Inode * inode = NULL;
+	KeStatus status = STATUS_FAILURE;
+
+	if (file == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid file parameter");
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	status = Ext2ReadInode(gExt2Disk, inodeNumber, &inode);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "Failed to retrieve inode %d !", inodeNumber);
+		goto clean;
+	}
+
+	status = CreateFile(gExt2Disk, inode, inodeNumber, file);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "CreateFile() failed with code %d", status);
+		goto clean;
+	}
+
+	status = OpenFile(*file);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "OpenFile() failed with code %d", status);
+		goto clean;
+	}
+
+	status = STATUS_SUCCESS;
+
+clean:
+	if (inode != NULL)
+	{
+		kfree(inode);
+	}
+
+	return status;
+}
+
 /*
 	
 */
@@ -84,9 +150,11 @@ KeStatus BrowseAndCacheDirectory(File * directory)
 		return STATUS_NULL_PARAMETER;
 	}
 
+	// Shouldn't happen
 	if (directory->inode == NULL)
 	{
-		// Pour le moment, forcément le cas car quand on créé un fichier, inode et content sont renseignés
+		KLOG(LOG_WARNING, "directory->inode == NULL");
+
 		status = Ext2ReadInode(gExt2Disk, directory->inum, &directory->inode);
 		if (FAILED(status))
 		{
@@ -95,43 +163,32 @@ KeStatus BrowseAndCacheDirectory(File * directory)
 		}
 	}
 
-	// TODO : quand Ext2ReadFile aura été mis à jour, décommenter...
-	if (directory->content == NULL)
+	if (directory->opened == FALSE)
 	{
-		KLOG(LOG_WARNING, "content is null !");
-		status = STATUS_UNEXPECTED;
-		goto clean;
-
-		//status = Ext2ReadFile(gExt2Disk, directory->inode, directory->inode, &directory->content);
-		//if (FAILED(status))
-		//{
-		//	KLOG(LOG_ERROR, "Ext2ReadFile() failed with code %d", result);
-		//	goto clean;
-		//}
+		status = OpenFile(directory);
+		if (FAILED(status))
+		{
+			KLOG(LOG_ERROR, "OpenFile() failed with code %d", status);
+			goto clean;
+		}
 	}
 
 	if (IsDirectory(directory) == FALSE)
 	{
-		KLOG(LOG_WARNING, "Not a directory");
-
-		//KLOG(LOG_ERROR, "Not a directory !");
-		//status = STATUS_NOT_A_DIRECTORY;
-		//goto clean;
+		KLOG(LOG_ERROR, "Not a directory !");
+		status = STATUS_NOT_A_DIRECTORY;
+		goto clean;
 	}
 
 	Ext2DirectoryEntry * currentEntry = (Ext2DirectoryEntry *)directory->content;
-	Ext2DirectoryEntry * previousEntry = NULL;
 	u32 dirContentSize = directory->inode->size;
 
-	KLOG(LOG_DEBUG, "dirContentSize : %d", dirContentSize);
-	KLOG(LOG_DEBUG, "currentEntry->recLen : %d", currentEntry->recLen);
-
-	while (/*dirContentSize > 0 && */currentEntry->recLen > 0)
+	while (dirContentSize > 0 && currentEntry->recLen > 0)
 	{
 		char * fileName = (char *)kmalloc(currentEntry->nameLen + 1);
 		if (fileName == NULL)
 		{
-			KLOG(LOG_ERROR, "Couldn't alloocate %d bytes", currentEntry->nameLen + 1);
+			KLOG(LOG_ERROR, "Couldn't allocate %d bytes", currentEntry->nameLen + 1);
 			goto clean;
 		}
 		MmCopy(&currentEntry->name, fileName, currentEntry->nameLen + 1);
@@ -183,7 +240,7 @@ KeStatus BrowseAndCacheDirectory(File * directory)
 		}
 
 
-		previousEntry = currentEntry;
+		dirContentSize -= currentEntry->recLen;
 		currentEntry = (Ext2DirectoryEntry *)((char *)currentEntry + (currentEntry->recLen));
 
 		if (currentEntry == NULL)

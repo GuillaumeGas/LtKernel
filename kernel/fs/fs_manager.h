@@ -4,11 +4,11 @@
 #include <kernel/drivers/ata.h>
 
 #include "ext2.h"
+#include "file.h"
 
 KeStatus FsInit(AtaDevice * device);
 void FsCleanCallback();
 
-KeStatus ReadFileFromInode(int inodeNumber, File ** file);
 void FreeFile(File * file);
 
 #ifdef __FS__

@@ -102,8 +102,6 @@
     <None Include="kernel\Makefile" />
     <None Include="kernel\user\process_starter.asm" />
     <None Include="Makefile" />
-    <None Include="user\console\Makefile" />
-    <None Include="user\lib\syscalls.asm" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="kernel\debug\debug.c" />
@@ -116,6 +114,7 @@
     <ClCompile Include="kernel\drivers\serial.c" />
     <ClCompile Include="kernel\fs\elf.c" />
     <ClCompile Include="kernel\fs\ext2.c" />
+    <ClCompile Include="kernel\fs\file.c" />
     <ClCompile Include="kernel\fs\fs_manager.c" />
     <ClCompile Include="kernel\init\gdt.c" />
     <ClCompile Include="kernel\init\heap.c" />
@@ -134,11 +133,7 @@
     <ClCompile Include="kernel\user\process.c" />
     <ClCompile Include="kernel\user\process_manager.c" />
     <ClCompile Include="kernel\user\syscalls.c" />
-    <ClCompile Include="kernel\user\thread.c" />
     <ClCompile Include="kernel\user\user_tests.c" />
-    <ClCompile Include="user\console\main.c" />
-    <ClCompile Include="user\lib\stdio.c" />
-    <ClCompile Include="user\lib\stdlib.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\debug\debug.h" />
@@ -154,6 +149,7 @@
     <ClInclude Include="kernel\drivers\serial.h" />
     <ClInclude Include="kernel\fs\elf.h" />
     <ClInclude Include="kernel\fs\ext2.h" />
+    <ClInclude Include="kernel\fs\file.h" />
     <ClInclude Include="kernel\fs\fs_manager.h" />
     <ClInclude Include="kernel\init\gdt.h" />
     <ClInclude Include="kernel\init\heap.h" />
@@ -175,11 +171,7 @@
     <ClInclude Include="kernel\user\process.h" />
     <ClInclude Include="kernel\user\process_manager.h" />
     <ClInclude Include="kernel\user\syscalls.h" />
-    <ClInclude Include="kernel\user\thread.h" />
     <ClInclude Include="kernel\user\user_tests.h" />
-    <ClInclude Include="user\lib\stdio.h" />
-    <ClInclude Include="user\lib\stdlib.h" />
-    <ClInclude Include="user\lib\syscalls.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

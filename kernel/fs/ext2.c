@@ -272,7 +272,7 @@ clean:
 	return status;
 }
 
-KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, int inum, File ** file)
+KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, int inum, char ** content)
 {
 	char * fileContent = NULL;
 	char * block = NULL;
@@ -294,7 +294,7 @@ KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, int inum, File ** file
         return STATUS_NULL_PARAMETER;
     }
 
-    if (file == NULL)
+    if (content == NULL)
     {
         KLOG(LOG_ERROR, "Invalid file parameter");
         return STATUS_NULL_PARAMETER;
@@ -448,14 +448,7 @@ KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, int inum, File ** file
 		KLOG(LOG_WARNING, "TRIPLY INDIRECT PTR NOT SUPPORTED ");
 	}
 
-    status = CreateFile(disk, inode, inum, fileContent, file);
-    if (FAILED(status))
-    {
-        KLOG(LOG_ERROR, "CreateFile() failed with status %d", status);
-        goto clean;
-    }
-
-    // file content ptr has been saved in file structure
+	*content = fileContent;
     fileContent = NULL;
 
     status = STATUS_SUCCESS;

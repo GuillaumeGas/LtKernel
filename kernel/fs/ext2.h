@@ -143,13 +143,7 @@ struct Ext2DirectoryEntry
 } __attribute__((packed));
 typedef struct Ext2DirectoryEntry Ext2DirectoryEntry;
 
-/*
-	TMP : Ext2ReadFile devra récupérer un fichier au format brut (char* quoi..)
-	C'est file.c qui va permettre la création d'un fichier en utilisant Ext2ReadFile
-*/
-typedef struct File File;
-
 KeStatus Ext2ReadDiskOnDevice(AtaDevice * device, Ext2Disk ** disk);
 KeStatus Ext2ReadInode(Ext2Disk * disk, int num, Ext2Inode ** inode);
-KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, int inum, File ** file);
+KeStatus Ext2ReadFile(Ext2Disk * disk, Ext2Inode * inode, int inum, char ** content);
 void Ext2FreeDisk(Ext2Disk * disk);

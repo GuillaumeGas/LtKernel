@@ -3,7 +3,9 @@
 #include <kernel/lib/types.h>
 
 // TODO : prévoir de pouvoir gérer d'autres fs
-#include <kernel/fs/ext2.h>
+#include "ext2.h"
+#include "file.h"
+
 
 struct ElfHeader
 {

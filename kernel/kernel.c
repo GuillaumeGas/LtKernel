@@ -16,6 +16,7 @@
 
 #include <kernel/fs/fs_manager.h>
 #include <kernel/fs/elf.h>
+#include <kernel/fs/file.h>
 
 #include <kernel/user/process_manager.h>
 #include <kernel/user/user_tests.h>
