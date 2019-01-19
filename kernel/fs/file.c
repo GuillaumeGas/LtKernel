@@ -78,20 +78,67 @@ KeStatus OpenFile(File * file)
 
 	if (file->inode == NULL)
 	{
-		KLOG(LOG_ERROR, "Invalid file->inode parameter");
-		return STATUS_INVALID_PARAMETER;
+		status = Ext2ReadInode(gExt2Disk, file->inum, &file->inode);
+		if (FAILED(status))
+		{
+			KLOG(LOG_ERROR, "Ext2ReadInode() failed with code %d", status);
+			goto clean;
+		}
 	}
 
 	status = Ext2ReadFile(file->disk, file->inode, file->inum, (char **)&file->content);
 	if (FAILED(status))
 	{
 		KLOG(LOG_ERROR, "Ext2ReadFile() failed with code %d", status);
-		return status;
+		goto clean;
 	}
 
 	file->opened = TRUE;
 
-	return STATUS_SUCCESS;
+	status = STATUS_SUCCESS;
+
+clean:
+	return status;
+}
+
+KeStatus OpenFileFromName(const char * fileName, File ** file)
+{
+	KeStatus status = STATUS_FAILURE;
+	File * localFile = NULL;
+
+	if (fileName == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid fileName parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	if (file == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid file parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	// TODO : prendre le rootFile du thread courant, truc dans l'genre
+	if (IsCached(gRootFile, fileName, &localFile) == TRUE)
+	{
+		if (localFile->opened == FALSE)
+		{
+			status = OpenFile(localFile);
+			if (FAILED(status))
+			{
+				KLOG(LOG_ERROR, "OpenFile() failed with code %d", status);
+				goto clean;
+			}
+		}
+
+		*file = localFile;
+		localFile = NULL;
+
+		status = STATUS_SUCCESS;
+	}
+
+clean:
+	return status;
 }
 
 KeStatus ReadFileFromInode(int inodeNumber, File ** file)
@@ -196,7 +243,7 @@ KeStatus BrowseAndCacheDirectory(File * directory)
 
 		if (StrCmp(fileName, ".") != 0 && StrCmp(fileName, "..") != 0)
 		{
-			if (IsCached(directory, fileName) == FALSE)
+			if (IsCached(directory, fileName, NULL) == FALSE)
 			{
 				File * newCachedFile = (File *)kmalloc(sizeof(File));
 				if (newCachedFile == NULL)
@@ -299,9 +346,8 @@ BOOL IsDirectory(File * file)
 	return (file->inode->mode & EXT2_S_IFDIR) ? TRUE : FALSE;
 }
 
-BOOL IsCached(File * dir, const char * fileName)
+BOOL IsCached(File * dir, const char * fileName, File ** file)
 {
-	return FALSE;
 	if (dir == NULL)
 	{
 		KLOG(LOG_ERROR, "Invalid dir parameter");
@@ -315,12 +361,18 @@ BOOL IsCached(File * dir, const char * fileName)
 	}
 
 	File * leaf = dir->leaf;
+
 	while (leaf != NULL)
 	{
 		if (leaf->name != NULL)
 		{
 			if (StrCmp(leaf->name, fileName) == 0)
 			{
+				if (file != NULL)
+				{
+					*file = leaf;
+				}
+
 				return TRUE;
 			}
 		}

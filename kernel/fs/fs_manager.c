@@ -89,8 +89,6 @@ static KeStatus InitRoot()
 		goto clean;
 	}
 
-	PrintDirectory(gRootFile);
-
 	status = STATUS_SUCCESS;
 
 clean:

@@ -19,10 +19,11 @@ struct File
 
 KeStatus CreateFile(Ext2Disk * disk, Ext2Inode * inode, int inum, File ** file);
 KeStatus OpenFile(File * file);
+KeStatus OpenFileFromName(const char * fileName, File ** file);
 KeStatus ReadFileFromInode(int inodeNumber, File ** file);
 KeStatus BrowseAndCacheDirectory(File * directory);
 KeStatus InitRootFile(File * file);
 BOOL IsDirectory(File * file);
-BOOL IsCached(File * dir, const char * fileName);
+BOOL IsCached(File * dir, const char * fileName, File ** file);
 
 void PrintDirectory(File * dir);

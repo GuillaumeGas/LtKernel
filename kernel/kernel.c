@@ -127,10 +127,10 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	{
 		File * file = NULL;
-		KeStatus status = ReadFileFromInode(12, &file);
+		KeStatus status = OpenFileFromName("main.out", &file);
 		if (FAILED(status))
 		{
-			KLOG(LOG_ERROR, "ReadFileFromInode() failed with code %d", status);
+			KLOG(LOG_ERROR, "OpenFileFromName() failed with code %d", status);
 		}
 		else
 		{
