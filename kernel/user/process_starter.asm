@@ -84,6 +84,4 @@ next:
 	mov al, 0x20
 	out 0x20, al
 
-	int 3
-
 	iret

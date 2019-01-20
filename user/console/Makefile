@@ -9,7 +9,7 @@ all: $(OBJ)
 clean:
 	rm -f $(OBJ) *.o
 
-main.out: main.o stdio.o stdlib.o syscalls.o
+main.out: main.o stdio.o stdlib.o syscalls.o file.o
 	$(LD) $^ -o $@
 	e2cp $@ ../disk.img:/
 
@@ -24,3 +24,6 @@ stdlib.o: ../lib/stdlib.c
 
 syscalls.o: ../lib/syscalls.asm
 	$(ASM) -o $@ $^
+
+file.o: ../lib/file.c 
+	$(CC) -c $^

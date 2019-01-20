@@ -2,6 +2,8 @@
 #include "scheduler.h"
 
 #include <kernel/user/process_manager.h>
+#include <kernel/user/process.h>
+#include <kernel/user/thread.h>
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 #include <kernel/init/gdt.h>
@@ -13,8 +15,8 @@
 static int GetNextThreadTid()
 {
     int nextTid = (gCurrentThread->tid + 1) % gNbThreads;
-
-    do
+	return nextTid;
+    /*do
     {
         Thread * t = ListGet(gThreadsList, nextTid);
         if (t->state == THREAD_STATE_RUNNING)
@@ -24,7 +26,7 @@ static int GetNextThreadTid()
 		{
 			return nextTid;
 		}
-    } while (1);
+    } while (1);*/
 }
 
 void Schedules()

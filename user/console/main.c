@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <syscalls.h>
+#include <file.h>
 
 #define MAX_BUFFER_SIZE 255
 
@@ -14,14 +15,26 @@ void main()
 
     MmSet(buffer,'\0', MAX_BUFFER_SIZE);
 
-	while (1)
-	{
-		Print(begin);
-		Scan(buffer);
+	Handle fileHandle = NULL;
+	int ret = OpenDir("/", &fileHandle);
 
-		if (StrCmp(buffer, CMD_PROCESS_LIST) == 0)
-			ListProcess();
+	if (ret == 0)
+	{
+		Print("Success !");
 	}
+	else
+	{
+		Print("Echec !");
+	}
+
+	//while (1)
+	//{
+	//	Print(begin);
+	//	Scan(buffer);
+
+	//	if (StrCmp(buffer, CMD_PROCESS_LIST) == 0)
+	//		ListProcess();
+	//}
 
         while (1);
 

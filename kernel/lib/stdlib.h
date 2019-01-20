@@ -2,6 +2,7 @@
 
 #include <kernel/lib/types.h>
 #include <kernel/lib/status.h>
+#include <kernel/lib/handle.h>
 
 #define FlagOn(a, b) ((a & b) != 0)
 #define NULL 0

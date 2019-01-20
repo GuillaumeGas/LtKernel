@@ -148,7 +148,7 @@ KeStatus LoadElf(File * file, ElfFile * elf)
 		{
 			Process * process = NULL;
 			
-			status = PmCreateProcess(elf->header->entry, &process, NULL);
+			status = PmCreateProcess(elf->header->entry, &process, NULL, file->parent);
 			if (FAILED(status))
 			{
 				KLOG(LOG_ERROR, "PmCreateProcess() failed with code %d", status);

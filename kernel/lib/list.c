@@ -101,13 +101,16 @@ void * ListGet(List * list, unsigned int index)
 
 	while (index > 0)
 	{
-		if (list->next == NULL)
-			return NULL;
 		list = list->next;
 		index--;
+
+		if (list->next == NULL)
+			break;
 	}
 
-	return list->data;
+	if (index == 0)
+		return list->data;
+	return NULL;
 }
 
 void * ListTop(List * list)

@@ -4,6 +4,8 @@
 #include <kernel/lib/types.h>
 #include <kernel/init/vmm.h>
 
+#include "common.h"
+
 #define THREAD_CONSOLE_BUFFER_SIZE 512
 
 enum ThreadState
@@ -24,6 +26,7 @@ struct Thread
     ThreadState state;
     Process * process;
 	Page stackPage;
+	ExecMode privilegeLevel;
 
     struct
     {

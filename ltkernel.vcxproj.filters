@@ -37,6 +37,15 @@
     <Filter Include="Fichiers sources\kernel\fs">
       <UniqueIdentifier>{a0c3dc7c-88e6-4f90-b1fb-694e97d0b5ad}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers sources\user">
+      <UniqueIdentifier>{cb17d3b4-c9a5-4c44-b595-cfe8644fcb3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers sources\user\console">
+      <UniqueIdentifier>{71a9d33f-097b-4d4d-9c50-183f6ca97f03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers sources\user\lib">
+      <UniqueIdentifier>{d8f08be7-136c-4195-90e7-4df58d3bb1ef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
@@ -72,6 +81,12 @@
     </None>
     <None Include="kernel\debug\ltdbg_isr.asm">
       <Filter>Fichiers sources\kernel\debug</Filter>
+    </None>
+    <None Include="user\lib\syscalls.asm">
+      <Filter>Fichiers sources\user\lib</Filter>
+    </None>
+    <None Include="user\console\Makefile">
+      <Filter>Fichiers sources\user\console</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -164,6 +179,24 @@
     </ClCompile>
     <ClCompile Include="kernel\fs\file.c">
       <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\user\thread.c">
+      <Filter>Fichiers sources\kernel\user</Filter>
+    </ClCompile>
+    <ClCompile Include="kernel\lib\handle.c">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="user\lib\stdio.c">
+      <Filter>Fichiers sources\user\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="user\lib\stdlib.c">
+      <Filter>Fichiers sources\user\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="user\console\main.c">
+      <Filter>Fichiers sources\user\console</Filter>
+    </ClCompile>
+    <ClCompile Include="user\lib\file.c">
+      <Filter>Fichiers sources\user\lib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -274,6 +307,27 @@
     </ClInclude>
     <ClInclude Include="kernel\fs\file.h">
       <Filter>Fichiers sources\kernel\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\user\thread.h">
+      <Filter>Fichiers sources\kernel\user</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\user\common.h">
+      <Filter>Fichiers sources\kernel\user</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel\lib\handle.h">
+      <Filter>Fichiers sources\kernel\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="user\lib\stdio.h">
+      <Filter>Fichiers sources\user\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="user\lib\stdlib.h">
+      <Filter>Fichiers sources\user\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="user\lib\syscalls.h">
+      <Filter>Fichiers sources\user\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="user\lib\file.h">
+      <Filter>Fichiers sources\user\lib</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

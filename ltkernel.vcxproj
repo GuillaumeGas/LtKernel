@@ -102,6 +102,8 @@
     <None Include="kernel\Makefile" />
     <None Include="kernel\user\process_starter.asm" />
     <None Include="Makefile" />
+    <None Include="user\console\Makefile" />
+    <None Include="user\lib\syscalls.asm" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="kernel\debug\debug.c" />
@@ -122,6 +124,7 @@
     <ClCompile Include="kernel\init\isr.c" />
     <ClCompile Include="kernel\init\vmm.c" />
     <ClCompile Include="kernel\kernel.c" />
+    <ClCompile Include="kernel\lib\handle.c" />
     <ClCompile Include="kernel\lib\kmalloc.c" />
     <ClCompile Include="kernel\lib\list.c" />
     <ClCompile Include="kernel\lib\panic.c" />
@@ -133,7 +136,12 @@
     <ClCompile Include="kernel\user\process.c" />
     <ClCompile Include="kernel\user\process_manager.c" />
     <ClCompile Include="kernel\user\syscalls.c" />
+    <ClCompile Include="kernel\user\thread.c" />
     <ClCompile Include="kernel\user\user_tests.c" />
+    <ClCompile Include="user\console\main.c" />
+    <ClCompile Include="user\lib\file.c" />
+    <ClCompile Include="user\lib\stdio.c" />
+    <ClCompile Include="user\lib\stdlib.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kernel\debug\debug.h" />
@@ -157,6 +165,7 @@
     <ClInclude Include="kernel\init\isr.h" />
     <ClInclude Include="kernel\init\vmm.h" />
     <ClInclude Include="kernel\kernel.h" />
+    <ClInclude Include="kernel\lib\handle.h" />
     <ClInclude Include="kernel\lib\kmalloc.h" />
     <ClInclude Include="kernel\lib\list.h" />
     <ClInclude Include="kernel\lib\panic.h" />
@@ -167,11 +176,17 @@
     <ClInclude Include="kernel\logger.h" />
     <ClInclude Include="kernel\multiboot.h" />
     <ClInclude Include="kernel\scheduler.h" />
+    <ClInclude Include="kernel\user\common.h" />
     <ClInclude Include="kernel\user\console.h" />
     <ClInclude Include="kernel\user\process.h" />
     <ClInclude Include="kernel\user\process_manager.h" />
     <ClInclude Include="kernel\user\syscalls.h" />
+    <ClInclude Include="kernel\user\thread.h" />
     <ClInclude Include="kernel\user\user_tests.h" />
+    <ClInclude Include="user\lib\file.h" />
+    <ClInclude Include="user\lib\stdio.h" />
+    <ClInclude Include="user\lib\stdlib.h" />
+    <ClInclude Include="user\lib\syscalls.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -33,7 +33,7 @@ void PmInit()
 	}
 }
 
-KeStatus PmCreateProcess(u32 entryAddr, Process ** newProcess, Process * parent)
+KeStatus PmCreateProcess(u32 entryAddr, Process ** newProcess, Process * parent, File * location)
 {
 	PageDirectory processPd = { 0 };
 	Process * process = NULL;
@@ -53,9 +53,7 @@ KeStatus PmCreateProcess(u32 entryAddr, Process ** newProcess, Process * parent)
 
 	processPd = CreateProcessPageDirectory();
 
-	KLOG(LOG_DEBUG, "pd : %x", processPd.pdEntry);
-
-	status = CreateProcess(processPd, entryAddr, parent, &process);
+	status = CreateProcess(processPd, entryAddr, parent, location, &process);
 	if (FAILED(status))
 	{
 		KLOG(LOG_ERROR, "CreateProcess() failed with code %d", status);
@@ -68,6 +66,28 @@ KeStatus PmCreateProcess(u32 entryAddr, Process ** newProcess, Process * parent)
 
 clean:
 	return status;
+}
+
+// TODO : revoir la création de threads noyau
+void PmCreateKernelThread()
+{
+	Thread * thread = (Thread *)kmalloc(sizeof(Thread));
+	if (thread == NULL)
+	{
+		// TODO : va aussi falloir crash le systeme ici
+		KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(Thread));
+		return;
+	}
+
+	thread->tid = gThreadId++;
+	thread->startExecutionTime = 0;
+	thread->state = THREAD_STATE_RUNNING;
+	thread->process = NULL;
+	thread->privilegeLevel = KERNEL;
+
+	gNbThreads++;
+
+	gCurrentThread = thread;
 }
 
 void PmStartThread(int tid)
@@ -88,17 +108,30 @@ void PmStartThread(int tid)
 
 		gCurrentThread->startExecutionTime = g_clock;
 		gCurrentThread->state = THREAD_STATE_RUNNING;
-		
-		gCurrentProcess = gCurrentThread->process;
-		gCurrentProcess->state = PROCESS_STATE_RUNNING;
 
-		ThreadPrepare(gCurrentThread);
+		PageDirectoryEntry * pd = NULL;
+
+		if (gCurrentThread->privilegeLevel == USER)
+		{
+			gCurrentProcess = gCurrentThread->process;
+			gCurrentProcess->state = PROCESS_STATE_RUNNING;
+			pd = gCurrentProcess->pageDirectory.pdEntry;
+
+			ThreadPrepare(gCurrentThread);
+		}
+		else
+		{
+			pd = gKernelInfo.pPageDirectory.pdEntry;
+		}
 
 		gTss.esp0 = gCurrentThread->kstack.esp0;
         gTss.ss0 = gCurrentThread->kstack.ss0;
 
+
+		// Si on passe sur un thread noyau, on utilise le pd du process qui s'exécutait,
+		// au pire ce sera le process system quand il sera créé
 		_start_process(
-			gCurrentThread->process->pageDirectory.pdEntry,
+			pd,
 			gCurrentThread->regs.ss,
 			gCurrentThread->regs.esp,
 			gCurrentThread->regs.eflags,

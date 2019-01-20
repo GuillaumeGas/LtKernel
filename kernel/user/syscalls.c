@@ -13,6 +13,8 @@
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/stdlib.h>
 
+#include <kernel/fs/fs_manager.h>
+
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("USER", LOG_LEVEL, format, ##__VA_ARGS__)
 
@@ -21,6 +23,19 @@ static KeStatus SysScanf(char * buffer, int * ret);
 static KeStatus SysExec(void * funAddr, int * ret);
 static KeStatus SysWait(int pid, int * ret);
 static KeStatus SysExit(int * ret);
+
+/* FS syscalls */
+static KeStatus SysOpenDir(const char * dirPath, Handle * dirHandle, int * ret);
+static KeStatus SysOpenDirHandle(const Handle dirHandle, int * ret);
+static KeStatus SysReadDir(const Handle dirHandle, const Handle * fileHandle, int * ret);
+static KeStatus SysCloseDir(const Handle dirHandle, int * ret);
+static KeStatus SysRewindDir(const Handle dirHandle, int * ret);
+
+//static KeStatus SysOpenFile(const char * filePath, Handle * dirHandle, int * ret);
+//static KeStatus SysReadFile(const Handle dirHandle, FileCursorType beginType, uint bytes, char * buffer, int * ret);
+//static KeStatus SysCloseFile(const Handle dirHandle, int * ret);
+//static KeStatus SysRewindFile(const Handle dirHandle, int * ret);
+
 static KeStatus SysDebugListProcess(int * ret);
 
 enum SyscallId
@@ -31,8 +46,14 @@ enum SyscallId
 	SYSCALL_WAIT  = 4,
     SYSCALL_EXIT  = 5,
 
-    SYSCALL_DEBUG_LIST_PROCESS   = 10,
-    SYSCALL_DEBUG_DUMP_REGISTERS = 11
+	SYSCALL_OPEN_DIR = 6,
+	SYSCALL_OPEN_DIR_HANDLE = 7,
+	SYSCALL_READ_DIR = 8,
+	SYSCALL_CLOSE_DIR = 9,
+	SYSCALL_REWIND_DIR = 10,
+
+    SYSCALL_DEBUG_LIST_PROCESS   = 255,
+    SYSCALL_DEBUG_DUMP_REGISTERS = 256,
 };
 
 void SyscallHandler(int syscallNumber, InterruptContext * context)
@@ -57,6 +78,23 @@ void SyscallHandler(int syscallNumber, InterruptContext * context)
         case SYSCALL_EXIT:
 			status = SysExit(&ret);
             break;
+
+		case SYSCALL_OPEN_DIR:
+			status = SysOpenDir((const char *)context->ebx, (Handle *)context->ecx, &ret);
+			break;
+		case SYSCALL_OPEN_DIR_HANDLE:
+			status = SysOpenDirHandle((const Handle)context->ebx, &ret);
+			break;
+		case SYSCALL_READ_DIR:
+			status = SysReadDir((const Handle)context->ebx, (Handle *)context->ecx, &ret);
+			break;
+		case SYSCALL_CLOSE_DIR:
+			status = SysCloseDir((const Handle)context->ebx, &ret);
+			break;
+		case SYSCALL_REWIND_DIR:
+			status = SysRewindDir((const Handle)context->ebx, &ret);
+			break;
+
         case SYSCALL_DEBUG_LIST_PROCESS:
 			status = SysDebugListProcess(&ret);
             break;
@@ -263,6 +301,95 @@ static KeStatus SysExit(int * ret)
 	gNbProcess--;
 
 	*ret = 0;
+	return STATUS_SUCCESS;
+}
+
+static KeStatus SysOpenDir(const char * dirPath, Handle * dirHandle, int * ret)
+{
+	KeStatus status = STATUS_FAILURE;
+
+	if (dirPath == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid dirPath parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	if (dirHandle == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid dirHandle parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	if (ret == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid ret parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	File * file = NULL;
+	status = OpenFileFromName(dirPath, &file);
+	if (FAILED(status))
+	{
+		// TODO : les erreurs syscall sont pas forcément des erreurs du noyau,
+		// on devrait les logger autrement
+		KLOG(LOG_WARNING, "OpenFileFromName() failed with code %d", status);
+		status = STATUS_SUCCESS; // le syscall n'a pas vraiment échoué, le user est juste mauvais
+		*ret = -1; // FILE_NOT_FOUND
+		goto clean;
+	}
+
+	if (IsDirectory(file) == FALSE)
+	{
+		KLOG(LOG_WARNING, "%s is not a directory", dirPath);
+		*ret = -2; // NOT_A_DIRECTORY
+		goto clean;
+	}
+
+	DirHandle * localHandle = NULL;
+	status = CreateDirHandle(file, &localHandle);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "CreateFileHandle() failed with code %d", status);
+		*ret = -3; // INTERNAL_ERROR
+		goto clean;
+	}
+
+	Process * currentProcess = GetCurrentProcess();
+	if (currentProcess == NULL)
+	{
+		KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL");
+		*ret = -3; // INTERNAL_ERROR
+		return STATUS_PROCESS_NOT_FOUND;
+	}
+
+	ListPush(currentProcess->dirHandleList, localHandle);
+
+	*dirHandle = localHandle->handle;
+	dirHandle = NULL;
+
+	status = STATUS_SUCCESS;
+
+clean:
+	return status;
+}
+
+static KeStatus SysOpenDirHandle(const Handle dirHandle, int * ret) 
+{
+	return STATUS_SUCCESS;
+}
+
+static KeStatus SysReadDir(const Handle dirHandle, const Handle * fileHandle, int * ret)
+{
+	return STATUS_SUCCESS;
+}
+
+static KeStatus SysCloseDir(const Handle dirHandle, int * ret)
+{
+	return STATUS_SUCCESS;
+}
+
+static KeStatus SysRewindDir(const Handle dirHandle, int * ret)
+{
 	return STATUS_SUCCESS;
 }
 

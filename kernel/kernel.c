@@ -125,9 +125,12 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	InitCleanCallbacksList();
 
+	// TODO : créer un ThreadsManager ?
+	//PmCreateKernelThread();
+
 	{
 		File * file = NULL;
-		KeStatus status = OpenFileFromName("/subdir/main.out", &file);
+		KeStatus status = OpenFileFromName("/main.out", &file);
 		if (FAILED(status))
 		{
 			KLOG(LOG_ERROR, "OpenFileFromName() failed with code %d", status);
@@ -137,7 +140,7 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 			KLOG(LOG_DEBUG, "File read successfully !");
 
             DISABLE_IRQ();
-
+			
 			ElfFile elf = { 0 };
 			status = LoadElf(file, &elf);
 			if (FAILED(status))
@@ -151,8 +154,8 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 				ElfFree(&elf);
 			}
-
-            ENABLE_IRQ();
+            
+			ENABLE_IRQ();
 		}
 	}
 

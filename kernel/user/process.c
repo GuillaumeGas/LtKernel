@@ -39,12 +39,14 @@ en lui filant un thread, un processus ou juste un pageDir, et de restaurer le co
 - Créer le processus
 - Switcher de contexte grâce à la fonction précédente pour mapper le binaire
 */
-KeStatus CreateProcess(PageDirectory pageDirectory, u32 entryAddr, Process * parent, Process ** newProcess)
+KeStatus CreateProcess(PageDirectory pageDirectory, u32 entryAddr, Process * parent, File * location, Process ** newProcess)
 {
 	KeStatus status = STATUS_FAILURE;
 	Process * process = NULL;
 	List * childrenList = NULL;
 	List * threadsList = NULL;
+	List * fileHandleList = NULL;
+	List * dirHandleList = NULL;
 	Thread * mainThread = NULL;
 
 	if (entryAddr == 0)
@@ -83,6 +85,22 @@ KeStatus CreateProcess(PageDirectory pageDirectory, u32 entryAddr, Process * par
 		goto clean;
 	}
 
+	fileHandleList = ListCreate();
+	if (fileHandleList == NULL)
+	{
+		KLOG(LOG_ERROR, "ListCreate() returned NULL");
+		status = STATUS_FAILURE;
+		goto clean;
+	}
+
+	dirHandleList = ListCreate();
+	if (dirHandleList == NULL)
+	{
+		KLOG(LOG_ERROR, "ListCreate() returned NULL");
+		status = STATUS_FAILURE;
+		goto clean;
+	}
+
 	process->pageDirectory = pageDirectory;
 
 	status = CreateMainThread(process, entryAddr, &mainThread);
@@ -102,6 +120,9 @@ KeStatus CreateProcess(PageDirectory pageDirectory, u32 entryAddr, Process * par
 	process->pid = s_CurrentProcessId++;
 	process->startExcecutionTime = 0;
 	process->state = PROCESS_STATE_INIT;
+	process->currentDirectory = location;
+	process->fileHandleList = fileHandleList;
+	process->dirHandleList = dirHandleList;
 
 	childrenList = NULL;
 	threadsList = NULL;

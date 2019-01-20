@@ -8,7 +8,7 @@ ROOT=kernel.o logger.o scheduler.o
 DEBUG=debug.o ltdbg.o ltdbg_isr.o ltdbgcom.o
 DRIVERS=screen.o serial.o clock.o keyboard.o ata.o
 INIT=gdt.o gdt_loader.o idt.o idt_loader.o int.o isr.o vmm.o pic.o vmm_utils.o heap.o
-LIB=kmalloc.o list.o stdio.o stdlib.o panic.o
+LIB=kmalloc.o list.o stdio.o stdlib.o panic.o handle.o
 FS=ext2.o fs_manager.o elf.o file.o
 USER=process.o thread.o process_manager.o process_starter.o syscalls.o console.o user_tests.o
 
@@ -105,6 +105,9 @@ stdlib.o: lib/stdlib.c
 	$(CC) -c $^
 
 panic.o: lib/panic.c
+	$(CC) -c $^
+
+handle.o: lib/handle.c
 	$(CC) -c $^
 
 # FS DIRECTORY

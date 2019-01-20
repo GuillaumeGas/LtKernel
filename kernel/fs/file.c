@@ -4,6 +4,7 @@
 #include <kernel/lib/stdlib.h>
 #include <kernel/lib/stdio.h>
 #include <kernel/lib/kmalloc.h>
+#include <kernel/user/process_manager.h>
 
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("FS", LOG_LEVEL, format, ##__VA_ARGS__)
@@ -120,18 +121,22 @@ KeStatus OpenFileFromName(const char * filePath, File ** file)
 		return STATUS_NULL_PARAMETER;
 	}
 
-	// TODO : ajouter un pointeur sur le répertoire courant du thread
-	// Dans le cas d'un chemin relatif, on va utiliser celui du thread et non le root
 	if (path[0] == '/')
 	{
 		directory = gRootFile;
 		path++; // on passe le '/'
+
+		if (path[0] == '\0')
+		{
+			// On veut ouvrir le rep racine
+			*file = gRootFile;
+		}
 	}
 	else
 	{
-		// TMP
+		// TODO : on a pas de process kernel, donc faut mettre l'info dans le thread
+		//directory = gCurrentProcess->currentDirectory;
 		directory = gRootFile;
-		//directory = gCurrentThread->currentDirectory;
 	}
 
 	while (*path != '\0')
@@ -170,8 +175,6 @@ KeStatus OpenFileFromName(const char * filePath, File ** file)
 			// et on oublie pas de rétablir le '/' ensuite
 			path[indexSlash] = '\0';
 
-			KLOG(LOG_DEBUG, "dir : %s", path);
-
 			if (StrCmp(path, "..") == 0)
 			{
 				directory = directory->parent;
@@ -205,6 +208,8 @@ KeStatus OpenFileFromName(const char * filePath, File ** file)
 			path = &path[indexSlash + 1];
 		}
 	}
+
+	status = STATUS_SUCCESS;
 
 clean:
 	return status;

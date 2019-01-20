@@ -1,12 +1,11 @@
 #include "thread.h"
+#include "process.h"
 
 #include <kernel/user/process_manager.h>
 #include <kernel/lib/kmalloc.h>
 
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("USER", LOG_LEVEL, format, ##__VA_ARGS__)
-
-static int s_ThreadId = 0;
 
 Thread * GetCurrentThread()
 {
@@ -57,10 +56,11 @@ KeStatus CreateMainThread(Process * process, u32 entryAddr, Thread ** mainThread
         goto clean;
     }
 
-    thread->tid = s_ThreadId++;
+    thread->tid = gThreadId++;
     thread->startExecutionTime = 0;
     thread->state = THREAD_STATE_INIT;
     thread->process = process;
+	thread->privilegeLevel = USER;
 
     status = InitThread(thread, entryAddr);
 	if (FAILED(status))
