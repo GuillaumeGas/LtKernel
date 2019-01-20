@@ -2,6 +2,8 @@
 
 #include <kernel/fs/file.h>
 
+typedef struct Process Process;
+
 typedef void* Handle;
 
 struct FileHandle
@@ -32,3 +34,5 @@ KeStatus CreateDirHandle(File * dir, DirHandle ** DirHandle);
 void FreeFileHandle(FileHandle * fileHandle);
 // TODO : attention à ne pas free le gRootFile...
 void FreeDirHandle(DirHandle * dirHandle);
+
+KeStatus GetDirFromHandle(Handle handle, Process * process, DirHandle ** dirHandle);

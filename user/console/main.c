@@ -6,7 +6,27 @@
 #define MAX_BUFFER_SIZE 255
 
 #define CMD_PROCESS_LIST "plist"
+#define CMD_LS "ls"
 
+void Ls()
+{
+	Handle fileHandle = NULL;
+	int ret = OpenDir("/", &fileHandle);
+
+	if (ret == 0)
+	{
+		DirEntry dirEntry;
+		while ((ret = ReadDir(fileHandle, &dirEntry)) != 0)
+		{
+			Print(dirEntry.name);
+			Print("\n");
+		}
+	}
+	else
+	{
+		Print("Echec !");
+	}
+}
 
 void main()
 {
@@ -15,28 +35,18 @@ void main()
 
     MmSet(buffer,'\0', MAX_BUFFER_SIZE);
 
-	Handle fileHandle = NULL;
-	int ret = OpenDir("/", &fileHandle);
-
-	if (ret == 0)
+	while (1)
 	{
-		Print("Success !");
+		Print(begin);
+		Scan(buffer);
+
+		if (StrCmp(buffer, CMD_PROCESS_LIST) == 0)
+			ListProcess();
+		else if (StrCmp(buffer, CMD_LS) == 0)
+			Ls();
 	}
-	else
-	{
-		Print("Echec !");
-	}
 
-	//while (1)
-	//{
-	//	Print(begin);
-	//	Scan(buffer);
-
-	//	if (StrCmp(buffer, CMD_PROCESS_LIST) == 0)
-	//		ListProcess();
-	//}
-
-        while (1);
+    while (1);
 
 	// TODO : exit();
 }

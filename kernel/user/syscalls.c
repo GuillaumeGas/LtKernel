@@ -27,7 +27,7 @@ static KeStatus SysExit(int * ret);
 /* FS syscalls */
 static KeStatus SysOpenDir(const char * dirPath, Handle * dirHandle, int * ret);
 static KeStatus SysOpenDirHandle(const Handle dirHandle, int * ret);
-static KeStatus SysReadDir(const Handle dirHandle, const Handle * fileHandle, int * ret);
+static KeStatus SysReadDir(const Handle dirHandle, DirEntry * dirEntry, int * ret);
 static KeStatus SysCloseDir(const Handle dirHandle, int * ret);
 static KeStatus SysRewindDir(const Handle dirHandle, int * ret);
 
@@ -86,7 +86,7 @@ void SyscallHandler(int syscallNumber, InterruptContext * context)
 			status = SysOpenDirHandle((const Handle)context->ebx, &ret);
 			break;
 		case SYSCALL_READ_DIR:
-			status = SysReadDir((const Handle)context->ebx, (Handle *)context->ecx, &ret);
+			status = SysReadDir((const Handle)context->ebx, (DirEntry *)context->ecx, &ret);
 			break;
 		case SYSCALL_CLOSE_DIR:
 			status = SysCloseDir((const Handle)context->ebx, &ret);
@@ -378,9 +378,120 @@ static KeStatus SysOpenDirHandle(const Handle dirHandle, int * ret)
 	return STATUS_SUCCESS;
 }
 
-static KeStatus SysReadDir(const Handle dirHandle, const Handle * fileHandle, int * ret)
+static KeStatus SysReadDir(const Handle handle, DirEntry * dirEntry, int * ret)
 {
-	return STATUS_SUCCESS;
+	KeStatus status = STATUS_FAILURE;
+	DirHandle * dirHandle = NULL;
+	Process * process = NULL;
+
+	if (handle == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid handle parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	if (dirEntry == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid dirEntry parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	if (ret == NULL)
+	{
+		KLOG(LOG_ERROR, "Invalid ret parameter");
+		return STATUS_NULL_PARAMETER;
+	}
+
+	process = GetCurrentProcess();
+	if (process == NULL)
+	{
+		KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL");
+		*ret = -3; // INTERNAL_ERROR
+		status = STATUS_PROCESS_NOT_FOUND;
+		goto clean;
+	}
+
+	status = GetDirFromHandle(handle, process, &dirHandle);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "GetDirFromHandle() failed with code %d", status);
+		*ret = -4; // UNKNOWN HANDLE
+		goto clean;
+	}
+
+	if (dirHandle->dir == NULL)
+	{
+		KLOG(LOG_ERROR, "dirHandle->dir is NULL !");
+		status = STATUS_UNEXPECTED;
+		goto clean;
+	}
+
+	if (dirHandle->cursor == NULL)
+	{
+		if (dirHandle->dir->leaf == NULL)
+		{
+			*ret = 0; // EMPTY DIRECTORY
+			status = STATUS_SUCCESS;
+			goto clean;
+		}
+		else
+		{
+			dirHandle->cursor = dirHandle->dir->leaf;
+		}
+	}
+	else
+	{
+		dirHandle->cursor = dirHandle->cursor->next;
+	}
+
+	if (dirHandle->cursor == NULL)
+	{
+		*ret = 0; // EMPTY DIRECTORY
+		status = STATUS_SUCCESS;
+		goto clean;
+	}
+
+	if (IsDirectory(dirHandle->cursor))
+	{
+		DirHandle * subDirHandle = NULL;
+		status = CreateDirHandle(dirHandle->cursor, &subDirHandle);
+		if (FAILED(status))
+		{
+			KLOG(LOG_ERROR, "CreateDirHandle() failed with code %d", status);
+			*ret = -3; // INTERNAL ERROR
+			goto clean;
+		}
+
+		ListPush(process->dirHandleList, subDirHandle);
+
+		dirEntry->handle = subDirHandle->handle;
+		dirEntry->isDirectory = TRUE;
+	}
+	else
+	{
+		FileHandle * fileHandle = NULL;
+		status = CreateFileHandle(dirHandle->cursor, &fileHandle);
+		if (FAILED(status))
+		{
+			KLOG(LOG_ERROR, "CreateFileHandle() failed with code %d", status);
+			*ret = -3; // INTERNAL ERROR
+			goto clean;
+		}
+
+		ListPush(process->fileHandleList, fileHandle->handle);
+
+		dirEntry->handle = fileHandle->handle;
+		dirEntry->isDirectory = FALSE;
+	}
+
+	// TODO : StrCpySafe, copie de mem kernel vers mem user...
+	StrCpy(dirHandle->cursor->name, dirEntry->name);
+
+	status = STATUS_SUCCESS;
+	*ret = 1;
+
+clean:
+	return status;
 }
 
 static KeStatus SysCloseDir(const Handle dirHandle, int * ret)

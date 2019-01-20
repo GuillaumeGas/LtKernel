@@ -7,12 +7,14 @@
 %define SYSCALL_SCAN          0x2
 %define SYSCALL_EXIT          0x5
 %define SYSCALL_OPEN_DIR      0x6
+%define SYSCALL_READ_DIR      0x8
 %define SYSCALL_LIST_PROCESS  0xA
 
 global _print
 global _scan
 global _exit
 global _openDir
+global _readDir
 global _listProcess
 
 _print:
@@ -57,6 +59,19 @@ _openDir:
 	mov ebx, [ebp+8]  ; on récupère le paramètre : pointeur sur la chaîne
 	mov ecx, [ebp+12] ; on récupère le second param : pointeur sur le handle
     mov eax, SYSCALL_OPEN_DIR
+
+    int SYSCALL_INTERRUPT
+
+    leave
+    ret
+
+_readDir:
+	push ebp
+    mov ebp, esp
+
+	mov ebx, [ebp+8]  ; on récupère le paramètre : handle sur rep
+	mov ecx, [ebp+12] ; on récupère le second param : pointeur sur un DirEntry
+    mov eax, SYSCALL_READ_DIR
 
     int SYSCALL_INTERRUPT
 

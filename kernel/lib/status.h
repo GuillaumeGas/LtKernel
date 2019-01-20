@@ -3,8 +3,8 @@
 enum KeStatus
 {
 	/* General */
-	STATUS_FAILURE,
 	STATUS_SUCCESS,
+	STATUS_FAILURE,
 	STATUS_UNEXPECTED,
 
 	/* Parameters */
@@ -30,6 +30,9 @@ enum KeStatus
 	STATUS_NOT_A_DIRECTORY,
 	STATUS_NOT_A_FILE,
 	STATUS_FILE_NOT_FOUND,
+
+	/* HANDLE */
+	STATUS_HANDLE_NOT_FOUND,
 } typedef KeStatus;
 
 #define FAILED(status) (status != STATUS_SUCCESS)
