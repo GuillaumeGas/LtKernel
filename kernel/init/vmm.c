@@ -298,7 +298,8 @@ void AddPageToKernelPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags)
 
 	if (!FlagOn(*pde, PAGE_PRESENT))
 	{
-		KLOG(LOG_ERROR, "Page not found (0x%x)", pde);
+		//__debugbreak();
+		//KLOG(LOG_ERROR, "Page not found (0x%x)", pde);
 		panic(PAGE_TABLE_NOTE_FOUND);
 	}
 
@@ -322,6 +323,7 @@ void AddPageToPageDirectory(u8 * vAddr, u8 * pAddr, PAGE_FLAG flags, PageDirecto
 	// On vérifie que la page est bien présente (voir get_p_addr pour mieux comprendre l'algo)
 	pde = (u32 *)(0xFFFFF000 | PD_OFFSET((u32)vAddr));
 
+	//KLOG(LOG_DEBUG, "pde : %b*", pde, 32);
 	if (!FlagOn(*pde, PAGE_PRESENT))
 	{
 		Page new_page = PageAlloc();

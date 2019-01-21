@@ -39,7 +39,9 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 static void CheckMultibootPartialInfo(MultibootPartialInfo * mbi, u32 multibootMagicNumber);
 static void InitKernelInfo();
 static void InitCleanCallbacksList();
-static void CleanKernel();
+//static void CleanKernel();
+
+static void MainRoutine();
 
 static List * CleanCallbacksList = NULL;
 
@@ -125,50 +127,56 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	InitCleanCallbacksList();
 
+	KLOG(LOG_DEBUG, "Starting system process...");
     DISABLE_IRQ();
-    if (FAILED(PmCreateSystemProcess()))
+    if (FAILED(PmCreateSystemProcess(MainRoutine)))
     {
         KLOG(LOG_ERROR, "PmCreateSystemProcess() failed");
-        Pause();
+        //Pause();
     }
     ENABLE_IRQ();
-
-	{
-		File * file = NULL;
-		KeStatus status = OpenFileFromName("/main.out", &file);
-		if (FAILED(status))
-		{
-			KLOG(LOG_ERROR, "OpenFileFromName() failed with code %d", status);
-		}
-		else
-		{
-			KLOG(LOG_DEBUG, "File read successfully !");
-
-            DISABLE_IRQ();
-			
-			ElfFile elf = { 0 };
-			status = LoadElf(file, &elf);
-			if (FAILED(status))
-			{
-				KLOG(LOG_ERROR, "LoadElf() failed with code %d", status);
-				FreeFile(file);
-			}
-			else
-			{
-				KLOG(LOG_DEBUG, "Elf loaded !");
-
-				ElfFree(&elf);
-			}
-            
-			ENABLE_IRQ();
-		}
-	}
+	KLOG(LOG_DEBUG, "System process started !");
 
     // Fonction de nettoyage pour vérifier qu'on garde bien une trace de tout ce qu'on alloue, et qu'on est capable de tout libérer
     //CleanKernel();
     //CheckHeap();
 
 	while (1);
+}
+
+static void MainRoutine()
+{
+	KLOG(LOG_DEBUG, "MainRoutine() !");
+	File * file = NULL;
+	KeStatus status = OpenFileFromName("/main.out", &file);
+	if (FAILED(status))
+	{
+		KLOG(LOG_ERROR, "OpenFileFromName() failed with code %d", status);
+	}
+	else
+	{
+		KLOG(LOG_DEBUG, "File read successfully !");
+
+		DISABLE_IRQ();
+
+		ElfFile elf = { 0 };
+		status = LoadElf(file, &elf);
+		if (FAILED(status))
+		{
+			KLOG(LOG_ERROR, "LoadElf() failed with code %d", status);
+			FreeFile(file);
+		}
+		else
+		{
+			KLOG(LOG_DEBUG, "Elf loaded !");
+
+			ElfFree(&elf);
+		}
+
+		ENABLE_IRQ();
+	}
+
+	Pause();
 }
 
 /*
@@ -225,13 +233,13 @@ static void InitCleanCallbacksList()
 	ListPush(CleanCallbacksList, (CleanCallbackFun)FsCleanCallback);
 }
 
-static void CleanKernel()
-{
-    while (CleanCallbacksList != NULL)
-    {
-        CleanCallbackFun callback = ListPop(&CleanCallbacksList);
-
-        if (callback != NULL)
-            callback();
-    }
-}
+//static void CleanKernel()
+//{
+//    while (CleanCallbacksList != NULL)
+//    {
+//        CleanCallbackFun callback = ListPop(&CleanCallbacksList);
+//
+//        if (callback != NULL)
+//            callback();
+//    }
+//}

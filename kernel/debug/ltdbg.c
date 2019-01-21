@@ -408,6 +408,7 @@ static BOOL StackTraceCommand(KeDebugRequest * request, KeDebugContext * context
 	
 	while (ebp != NULL)
 	{
+		kprint("ptr : %x\n", (void*)ebp[1]);
 		ListPush(list, (void *)ebp[1]);
 		ebp = (u32 *)ebp[0];
 		nbPtr++;

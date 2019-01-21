@@ -41,6 +41,8 @@ void Schedules()
 	{
 		u32 * stack_ptr = NULL;
 
+		//KLOG(LOG_DEBUG, "Coming from process %d (%d)", gCurrentProcess->pid, gCurrentThread->tid);
+
 		// Tous les registres ont été push sur la pile, par le proc via l'interruption et par les push et le pushad dans int.asm
 		// On récupère le pointeur de pile stocké dans ebp afin de récupérer les registres qui nous intéressent.
 		asm("mov (%%ebp), %%eax; mov %%eax, %0" : "=m" (stack_ptr) : );
@@ -64,18 +66,18 @@ void Schedules()
 		{
 			gCurrentThread->regs.ss = stack_ptr[18];
 			gCurrentThread->regs.esp = stack_ptr[17];
-
-            gCurrentThread->kstack.esp0 = gTss.esp0;
 		}
 		else
 		{
 			gCurrentThread->regs.ss = gTss.ss0;
 			gCurrentThread->regs.esp = (u32)(&stack_ptr[17]);
-
-            gCurrentThread->kstack.esp0 = gCurrentThread->regs.esp;
 		}
 		
 		gCurrentThread->kstack.ss0 = gTss.ss0;
+		gCurrentThread->kstack.esp0 = gTss.esp0;
+
+		gCurrentThread->state = THREAD_STATE_PAUSE;
+		gCurrentThread->process->state = PROCESS_STATE_PAUSE;
 
 		PmStartThread(GetNextThreadTid());
 	}

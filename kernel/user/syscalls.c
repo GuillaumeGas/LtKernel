@@ -227,7 +227,7 @@ static KeStatus SysExec(void * funAddr, int * ret)
 
 	//*ret = newProcPid;
 
-clean:
+//clean:
 	return status;
 }
 

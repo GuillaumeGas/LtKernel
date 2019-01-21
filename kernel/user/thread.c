@@ -119,6 +119,7 @@ void ThreadPrepare(Thread * thread)
 {
 	SwitchToMemoryMappingOfThread(thread);
 
+	KLOG(LOG_DEBUG, "ThreadPrepare() v : %x, p : %x", thread->stackPage.vAddr, thread->stackPage.pAddr);
 	AddPageToPageDirectory((u8 *)thread->stackPage.vAddr, (u8 *)thread->stackPage.pAddr, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, thread->process->pageDirectory);
 
 	RestoreMemoryMapping();
@@ -152,7 +153,7 @@ static KeStatus InitThread(Thread * thread, u32 entryAddr)
 	thread->stackPage.vAddr = vUserStack;
 	thread->stackPage.pAddr = pUserStack;
 
-	thread->regs.ss = USER_STACK_SEG_SELECTOR;
+	thread->regs.ss = USER_DATA_SEG_SELECTOR;
 	thread->regs.cs = USER_CODE_SEG_SELECTOR;
 	thread->regs.ds = USER_DATA_SEG_SELECTOR;
 	thread->regs.es = USER_DATA_SEG_SELECTOR;
@@ -186,6 +187,11 @@ clean:
 static KeStatus InitKernelThread(Thread * thread, u32 entryAddr)
 {
     KeStatus status = STATUS_FAILURE;
+	Page kernelStackPage = { 0 };
+
+	// On créé une pile séparée pour le cas d'un appel système
+	// afin de ne pas péter la stack du thread noyau
+	Page kernelIntStackPage = { 0 };
 
     if (thread == NULL)
     {
@@ -193,30 +199,29 @@ static KeStatus InitKernelThread(Thread * thread, u32 entryAddr)
         return STATUS_NULL_PARAMETER;
     }
 
-    // TODO
+	kernelStackPage = PageAlloc();
+	kernelIntStackPage = PageAlloc();
 
-    //thread->regs.ss = USER_STACK_SEG_SELECTOR;
-    //thread->regs.cs = USER_CODE_SEG_SELECTOR;
-    //thread->regs.ds = USER_DATA_SEG_SELECTOR;
-    //thread->regs.es = USER_DATA_SEG_SELECTOR;
-    //thread->regs.fs = USER_DATA_SEG_SELECTOR;
-    //thread->regs.gs = USER_DATA_SEG_SELECTOR;
+    thread->regs.ss = KERNEL_DATA_SEG_SELECTOR;
+    thread->regs.cs = KERNEL_CODE_SEG_SELECTOR;
+    thread->regs.ds = KERNEL_DATA_SEG_SELECTOR;
+    thread->regs.es = KERNEL_DATA_SEG_SELECTOR;
+    thread->regs.fs = KERNEL_DATA_SEG_SELECTOR;
+    thread->regs.gs = KERNEL_DATA_SEG_SELECTOR;
 
-    //thread->regs.eax = 0;
-    //thread->regs.ecx = 0;
-    //thread->regs.edx = 0;
-    //thread->regs.edi = 0;
-    //thread->regs.esi = 0;
+    thread->regs.eax = 0;
+    thread->regs.ecx = 0;
+    thread->regs.edx = 0;
+    thread->regs.edi = 0;
+    thread->regs.esi = 0;
 
-    //thread->regs.esp = (((u32)vUserStack + (u32)PAGE_SIZE) - (u32)(sizeof(void*)));
-    //thread->regs.ebp = thread->regs.esp;
-    //thread->regs.eip = entryAddr;
+    thread->regs.esp = (((u32)kernelStackPage.vAddr + (u32)PAGE_SIZE) - (u32)(sizeof(void*)));
+    thread->regs.ebp = thread->regs.esp;
+    thread->regs.eip = entryAddr;
 
-    //thread->regs.eflags = 0x200 & 0xFFFFBFFF;
-    //thread->kstack.esp0 = (u32)kernelStackPage.vAddr + PAGE_SIZE;
-    //thread->kstack.ss0 = 0x10;
-
-    thread->kstack.ss0 = 0x10;
+    thread->regs.eflags = 0x200 & 0xFFFFBFFF;
+	thread->kstack.esp0 = (u32)kernelIntStackPage.vAddr + (u32)PAGE_SIZE;
+    thread->kstack.ss0 = KERNEL_DATA_SEG_SELECTOR;
 
     MmSet((u8 *)thread->console.consoleBuffer, 0, THREAD_CONSOLE_BUFFER_SIZE);
     thread->console.bufferIndex = 0;
@@ -224,6 +229,5 @@ static KeStatus InitKernelThread(Thread * thread, u32 entryAddr)
 
     status = STATUS_SUCCESS;
 
-clean:
     return status;
 }

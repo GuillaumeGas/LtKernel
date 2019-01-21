@@ -19,8 +19,10 @@
 // Les bits RPL (niveau de privilège) sont à '11' afin de permettre le passage en niveau de privilèges utilisateur
 // lors de l'exécution de l'instruction iret (voir process_starter.asm et le fonctionnement de iret)
 #define USER_CODE_SEG_SELECTOR 0x1B
-#define USER_STACK_SEG_SELECTOR 0x23
 #define USER_DATA_SEG_SELECTOR 0x23
+
+#define KERNEL_CODE_SEG_SELECTOR 0x08
+#define KERNEL_DATA_SEG_SELECTOR 0x10
 
 #ifdef __PROCESS_MANAGER__
 Process * gCurrentProcess = NULL;
@@ -47,7 +49,7 @@ extern int gThreadId;
 void PmInit();
 
 KeStatus PmCreateProcess(u32 entryPoint, Process ** newProcess, Process * parent, File * location);
-KeStatus PmCreateSystemProcess();
+KeStatus PmCreateSystemProcess(void * kernelMainRoutine);
 
 void PmStartThread(int tid);
 void PmCleanCallback();

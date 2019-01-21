@@ -70,29 +70,17 @@ clean:
 	return status;
 }
 
-KeStatus PmCreateSystemProcess()
+KeStatus PmCreateSystemProcess(void * kernelMainRoutine)
 {
     Process * process = NULL;
-    Thread * thread = NULL;
     KeStatus status = STATUS_FAILURE;
 
-    status = CreateProcess(gKernelInfo.pPageDirectory, 0, NULL, gRootFile, KERNEL, &process);
+    status = CreateProcess(gKernelInfo.pPageDirectory, (u32)kernelMainRoutine, NULL, gRootFile, KERNEL, &process);
     if (FAILED(status))
     {
         KLOG(LOG_ERROR, "CreateProcess() failed with code %d", status);
         return status;
     }
-
-    ListPush(gProcessList, process);
-    gNbProcess++;
-
-    thread = process->mainThread;
-	thread->privilegeLevel = KERNEL;
-    thread->state = THREAD_STATE_RUNNING;
-
-	gCurrentThread = thread;
-    gCurrentProcess = process;
-    gCurrentProcess->state = PROCESS_STATE_RUNNING;
 
     return STATUS_SUCCESS;
 }
@@ -116,24 +104,20 @@ void PmStartThread(int tid)
 		gCurrentThread->startExecutionTime = g_clock;
 		gCurrentThread->state = THREAD_STATE_RUNNING;
 
+		gCurrentProcess = gCurrentThread->process;
+		gCurrentProcess->state = PROCESS_STATE_RUNNING;
+
 		PageDirectoryEntry * pd = NULL;
+
+		pd = gCurrentProcess->pageDirectory.pdEntry;
 
 		if (gCurrentThread->privilegeLevel == USER)
 		{
-			gCurrentProcess = gCurrentThread->process;
-			gCurrentProcess->state = PROCESS_STATE_RUNNING;
-			pd = gCurrentProcess->pageDirectory.pdEntry;
-
 			ThreadPrepare(gCurrentThread);
-		}
-		else
-		{
-			pd = gKernelInfo.pPageDirectory.pdEntry;
 		}
 
 		gTss.esp0 = gCurrentThread->kstack.esp0;
         gTss.ss0 = gCurrentThread->kstack.ss0;
-
 
 		// Si on passe sur un thread noyau, on utilise le pd du process qui s'exécutait,
 		// au pire ce sera le process system quand il sera créé

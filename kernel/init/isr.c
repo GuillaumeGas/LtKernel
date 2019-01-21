@@ -135,6 +135,7 @@ void page_fault_isr(ExceptionContextWithCode * context)
 {
 	u32 code = context->code;
 
+	Pause();
 	EXCEPTION_SCREEN
 
 	ScSetColorEx(BLUE, RED, 0, 1);
@@ -156,7 +157,7 @@ void page_fault_isr(ExceptionContextWithCode * context)
 	kprint(" - I/D : %d (%s)\n\n", id ? 1 : 0, id ? "instruction fetch (applies when the No-Execute bit is supported and enabled" : "-");
 	kprint("Linear address : %x, %b*\n\n", context->cr2, context->cr2, 32);
 
-	if (us == 1)
+	if (us == 0)
 	{
 		PrintExceptionContextWithCode(context);
 	}
