@@ -54,7 +54,7 @@ struct Thread
 
 Thread * GetCurrentThread();
 Thread * GetThreadFromTid(int tid);
-KeStatus CreateMainThread(Process * process, u32 entryAddr, Thread ** mainThread);
+KeStatus CreateMainThread(Process * process, u32 entryAddr, ExecMode mode, Thread ** mainThread);
 void ThreadPrepare(Thread * thread);
 
 void SwitchToMemoryMappingOfThread(Thread * thread);

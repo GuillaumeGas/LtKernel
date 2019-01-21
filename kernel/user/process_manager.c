@@ -9,6 +9,8 @@
 #include <kernel/lib/kmalloc.h>
 #include <kernel/debug/debug.h>
 
+#include <kernel/fs/fs_manager.h>
+
 #include "process.h"
 #include "thread.h"
 
@@ -53,7 +55,7 @@ KeStatus PmCreateProcess(u32 entryAddr, Process ** newProcess, Process * parent,
 
 	processPd = CreateProcessPageDirectory();
 
-	status = CreateProcess(processPd, entryAddr, parent, location, &process);
+	status = CreateProcess(processPd, entryAddr, parent, location, USER, &process);
 	if (FAILED(status))
 	{
 		KLOG(LOG_ERROR, "CreateProcess() failed with code %d", status);
@@ -68,26 +70,31 @@ clean:
 	return status;
 }
 
-// TODO : revoir la création de threads noyau
-void PmCreateKernelThread()
+KeStatus PmCreateSystemProcess()
 {
-	Thread * thread = (Thread *)kmalloc(sizeof(Thread));
-	if (thread == NULL)
-	{
-		// TODO : va aussi falloir crash le systeme ici
-		KLOG(LOG_ERROR, "Couldn't allocate %d bytes", sizeof(Thread));
-		return;
-	}
+    Process * process = NULL;
+    Thread * thread = NULL;
+    KeStatus status = STATUS_FAILURE;
 
-	thread->tid = gThreadId++;
-	thread->startExecutionTime = 0;
-	thread->state = THREAD_STATE_RUNNING;
-	thread->process = NULL;
+    status = CreateProcess(gKernelInfo.pPageDirectory, 0, NULL, gRootFile, KERNEL, &process);
+    if (FAILED(status))
+    {
+        KLOG(LOG_ERROR, "CreateProcess() failed with code %d", status);
+        return status;
+    }
+
+    ListPush(gProcessList, process);
+    gNbProcess++;
+
+    thread = process->mainThread;
 	thread->privilegeLevel = KERNEL;
-
-	gNbThreads++;
+    thread->state = THREAD_STATE_RUNNING;
 
 	gCurrentThread = thread;
+    gCurrentProcess = process;
+    gCurrentProcess->state = PROCESS_STATE_RUNNING;
+
+    return STATUS_SUCCESS;
 }
 
 void PmStartThread(int tid)

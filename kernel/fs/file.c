@@ -135,8 +135,8 @@ KeStatus OpenFileFromName(const char * filePath, File ** file)
 	else
 	{
 		// TODO : on a pas de process kernel, donc faut mettre l'info dans le thread
-		//directory = gCurrentProcess->currentDirectory;
-		directory = gRootFile;
+		directory = gCurrentProcess->currentDirectory;
+		//directory = gRootFile;
 	}
 
 	while (*path != '\0')

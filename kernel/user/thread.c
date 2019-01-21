@@ -1,11 +1,16 @@
 #include "thread.h"
 #include "process.h"
 
+#include <kernel/kernel.h>
+
 #include <kernel/user/process_manager.h>
 #include <kernel/lib/kmalloc.h>
 
 #include <kernel/logger.h>
 #define KLOG(LOG_LEVEL, format, ...) KLOGGER("USER", LOG_LEVEL, format, ##__VA_ARGS__)
+
+static KeStatus InitThread(Thread * thread, u32 entryAddr);
+static KeStatus InitKernelThread(Thread * thread, u32 entryAddr);
 
 Thread * GetCurrentThread()
 {
@@ -23,15 +28,13 @@ Thread * GetThreadFromTid(int tid)
     return (Thread *)ListGet(gThreadsList, tid);
 }
 
-static KeStatus InitThread(Thread * thread, u32 entryAddr);
-
 /*
 | - CreateMainThread (p)
 |  - Init du pointeur sur process
 |  - Réservation d'une page pour la pile, on garde son adresse physique en mémoire
 |  - Init des registres
 */
-KeStatus CreateMainThread(Process * process, u32 entryAddr, Thread ** mainThread)
+KeStatus CreateMainThread(Process * process, u32 entryAddr, ExecMode mode, Thread ** mainThread)
 {
     KeStatus status = STATUS_FAILURE;
     Thread * thread = NULL;
@@ -60,14 +63,26 @@ KeStatus CreateMainThread(Process * process, u32 entryAddr, Thread ** mainThread
     thread->startExecutionTime = 0;
     thread->state = THREAD_STATE_INIT;
     thread->process = process;
-	thread->privilegeLevel = USER;
+	thread->privilegeLevel = mode;
 
-    status = InitThread(thread, entryAddr);
-	if (FAILED(status))
-	{
-		KLOG(LOG_ERROR, "InitThread() failed with code %d", status);
-		goto clean;
-	}
+    if (mode == USER)
+    {
+        status = InitThread(thread, entryAddr);
+        if (FAILED(status))
+        {
+            KLOG(LOG_ERROR, "InitThread() failed with code %d", status);
+            goto clean;
+        }
+    }
+    else
+    {
+        status = InitKernelThread(thread, entryAddr);
+        if (FAILED(status))
+        {
+            KLOG(LOG_ERROR, "InitThread() failed with code %d", status);
+            goto clean;
+        }
+    }
 
 	*mainThread = thread;
 	thread = NULL;
@@ -166,4 +181,49 @@ static KeStatus InitThread(Thread * thread, u32 entryAddr)
 
 clean:
 	return status;
+}
+
+static KeStatus InitKernelThread(Thread * thread, u32 entryAddr)
+{
+    KeStatus status = STATUS_FAILURE;
+
+    if (thread == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid thread parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    // TODO
+
+    //thread->regs.ss = USER_STACK_SEG_SELECTOR;
+    //thread->regs.cs = USER_CODE_SEG_SELECTOR;
+    //thread->regs.ds = USER_DATA_SEG_SELECTOR;
+    //thread->regs.es = USER_DATA_SEG_SELECTOR;
+    //thread->regs.fs = USER_DATA_SEG_SELECTOR;
+    //thread->regs.gs = USER_DATA_SEG_SELECTOR;
+
+    //thread->regs.eax = 0;
+    //thread->regs.ecx = 0;
+    //thread->regs.edx = 0;
+    //thread->regs.edi = 0;
+    //thread->regs.esi = 0;
+
+    //thread->regs.esp = (((u32)vUserStack + (u32)PAGE_SIZE) - (u32)(sizeof(void*)));
+    //thread->regs.ebp = thread->regs.esp;
+    //thread->regs.eip = entryAddr;
+
+    //thread->regs.eflags = 0x200 & 0xFFFFBFFF;
+    //thread->kstack.esp0 = (u32)kernelStackPage.vAddr + PAGE_SIZE;
+    //thread->kstack.ss0 = 0x10;
+
+    thread->kstack.ss0 = 0x10;
+
+    MmSet((u8 *)thread->console.consoleBuffer, 0, THREAD_CONSOLE_BUFFER_SIZE);
+    thread->console.bufferIndex = 0;
+    thread->console.readyToBeFlushed = FALSE;
+
+    status = STATUS_SUCCESS;
+
+clean:
+    return status;
 }

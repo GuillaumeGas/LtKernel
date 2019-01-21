@@ -64,14 +64,17 @@ void Schedules()
 		{
 			gCurrentThread->regs.ss = stack_ptr[18];
 			gCurrentThread->regs.esp = stack_ptr[17];
+
+            gCurrentThread->kstack.esp0 = gTss.esp0;
 		}
 		else
 		{
 			gCurrentThread->regs.ss = gTss.ss0;
 			gCurrentThread->regs.esp = (u32)(&stack_ptr[17]);
-		}
 
-		gCurrentThread->kstack.esp0 = gTss.esp0;
+            gCurrentThread->kstack.esp0 = gCurrentThread->regs.esp;
+		}
+		
 		gCurrentThread->kstack.ss0 = gTss.ss0;
 
 		PmStartThread(GetNextThreadTid());

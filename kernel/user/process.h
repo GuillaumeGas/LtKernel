@@ -40,6 +40,6 @@ struct Process
 Process * GetCurrentProcess();
 Process * GetProcessFromPid(int pid);
 
-KeStatus CreateProcess(PageDirectory pageDirectory, u32 entryAddr, Process * parent, File * location, Process ** newProcess);
+KeStatus CreateProcess(PageDirectory pageDirectory, u32 entryAddr, Process * parent, File * location, ExecMode mode, Process ** newProcess);
 
 void SwitchToMemoryMappingOfProcess(Process * process);

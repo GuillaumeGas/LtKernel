@@ -125,8 +125,13 @@ static void KernelInit(MultibootPartialInfo * mbi, u32 multibootMagicNumber)
 
 	InitCleanCallbacksList();
 
-	// TODO : créer un ThreadsManager ?
-	//PmCreateKernelThread();
+    DISABLE_IRQ();
+    if (FAILED(PmCreateSystemProcess()))
+    {
+        KLOG(LOG_ERROR, "PmCreateSystemProcess() failed");
+        Pause();
+    }
+    ENABLE_IRQ();
 
 	{
 		File * file = NULL;
