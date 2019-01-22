@@ -111,10 +111,9 @@ void PmStartThread(int tid)
 
 		pd = gCurrentProcess->pageDirectory.pdEntry;
 
-		if (gCurrentThread->privilegeLevel == USER)
-		{
-			ThreadPrepare(gCurrentThread);
-		}
+        kprint("[%d,%d] %x : %b*\n", gCurrentProcess->pid, gCurrentThread->tid, pd, pd, 32);
+
+		ThreadPrepare(gCurrentThread);
 
 		gTss.esp0 = gCurrentThread->kstack.esp0;
         gTss.ss0 = gCurrentThread->kstack.ss0;

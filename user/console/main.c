@@ -34,16 +34,18 @@ void main()
 	char buffer[MAX_BUFFER_SIZE];
 
     MmSet(buffer,'\0', MAX_BUFFER_SIZE);
+    Print(begin);
+    Scan(buffer);
 
 	while (1)
 	{
-		Print(begin);
-		Scan(buffer);
+		//Print(begin);
+		//Scan(buffer);
 
-		if (StrCmp(buffer, CMD_PROCESS_LIST) == 0)
-			ListProcess();
-		else if (StrCmp(buffer, CMD_LS) == 0)
-			Ls();
+		//if (StrCmp(buffer, CMD_PROCESS_LIST) == 0)
+		//	ListProcess();
+		//else if (StrCmp(buffer, CMD_LS) == 0)
+		//	Ls();
 	}
 
     while (1);

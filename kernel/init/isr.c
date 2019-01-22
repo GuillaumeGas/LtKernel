@@ -135,7 +135,7 @@ void page_fault_isr(ExceptionContextWithCode * context)
 {
 	u32 code = context->code;
 
-	Pause();
+	//Pause();
 	EXCEPTION_SCREEN
 
 	ScSetColorEx(BLUE, RED, 0, 1);

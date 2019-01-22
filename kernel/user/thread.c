@@ -119,8 +119,15 @@ void ThreadPrepare(Thread * thread)
 {
 	SwitchToMemoryMappingOfThread(thread);
 
-	KLOG(LOG_DEBUG, "ThreadPrepare() v : %x, p : %x", thread->stackPage.vAddr, thread->stackPage.pAddr);
-	AddPageToPageDirectory((u8 *)thread->stackPage.vAddr, (u8 *)thread->stackPage.pAddr, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, thread->process->pageDirectory);
+	//KLOG(LOG_DEBUG, "ThreadPrepare() v : %b*", thread->stackPage.vAddr, 32);
+    if (thread->privilegeLevel == USER)
+    {
+        AddPageToPageDirectory((u8 *)thread->stackPage.vAddr, (u8 *)thread->stackPage.pAddr, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_NON_PRIVILEGED_ACCESS, thread->process->pageDirectory);
+    }
+    else
+    {
+        AddPageToPageDirectory((u8 *)thread->stackPage.vAddr, (u8 *)thread->stackPage.pAddr, PAGE_PRESENT | PAGE_WRITEABLE, thread->process->pageDirectory);
+    }
 
 	RestoreMemoryMapping();
 }
@@ -171,7 +178,7 @@ static KeStatus InitThread(Thread * thread, u32 entryAddr)
 	thread->regs.eip = entryAddr;
 
 	thread->regs.eflags = 0x200 & 0xFFFFBFFF;
-	thread->kstack.esp0 = (u32)kernelStackPage.vAddr + PAGE_SIZE;
+	thread->kstack.esp0 = (((u32)kernelStackPage.vAddr + PAGE_SIZE) - (u32)(sizeof(void*)));
 	thread->kstack.ss0 = 0x10;
 
 	MmSet((u8 *)thread->console.consoleBuffer, 0, THREAD_CONSOLE_BUFFER_SIZE);
@@ -202,6 +209,9 @@ static KeStatus InitKernelThread(Thread * thread, u32 entryAddr)
 	kernelStackPage = PageAlloc();
 	kernelIntStackPage = PageAlloc();
 
+    thread->stackPage.vAddr = kernelStackPage.vAddr;
+    thread->stackPage.pAddr = kernelStackPage.pAddr;
+
     thread->regs.ss = KERNEL_DATA_SEG_SELECTOR;
     thread->regs.cs = KERNEL_CODE_SEG_SELECTOR;
     thread->regs.ds = KERNEL_DATA_SEG_SELECTOR;
@@ -220,7 +230,7 @@ static KeStatus InitKernelThread(Thread * thread, u32 entryAddr)
     thread->regs.eip = entryAddr;
 
     thread->regs.eflags = 0x200 & 0xFFFFBFFF;
-	thread->kstack.esp0 = (u32)kernelIntStackPage.vAddr + (u32)PAGE_SIZE;
+	thread->kstack.esp0 = (((u32)kernelIntStackPage.vAddr + (u32)PAGE_SIZE) - (u32)(sizeof(void*)));
     thread->kstack.ss0 = KERNEL_DATA_SEG_SELECTOR;
 
     MmSet((u8 *)thread->console.consoleBuffer, 0, THREAD_CONSOLE_BUFFER_SIZE);
