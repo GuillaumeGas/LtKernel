@@ -50,3 +50,20 @@ unsigned long StrLen(const char * str)
 		length++;
 	return length;
 }
+
+int FirstIndexOf(const char * str, char const c)
+{
+    if (str == NULL)
+        return -2;
+
+    int index = 0;
+
+    while (str[index] != '\0')
+    {
+        if (str[index] == c)
+            return index;
+        index++;
+    }
+
+    return -1;
+}

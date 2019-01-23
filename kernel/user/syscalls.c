@@ -30,6 +30,8 @@ static KeStatus SysOpenDirHandle(const Handle dirHandle, int * ret);
 static KeStatus SysReadDir(const Handle dirHandle, DirEntry * dirEntry, int * ret);
 static KeStatus SysCloseDir(const Handle dirHandle, int * ret);
 static KeStatus SysRewindDir(const Handle dirHandle, int * ret);
+static KeStatus SysGetProcDir(Handle * handle, int * ret);
+static KeStatus SysSetProcDir(const Handle handle, int * ret);
 
 //static KeStatus SysOpenFile(const char * filePath, Handle * dirHandle, int * ret);
 //static KeStatus SysReadFile(const Handle dirHandle, FileCursorType beginType, uint bytes, char * buffer, int * ret);
@@ -51,6 +53,9 @@ enum SyscallId
 	SYSCALL_READ_DIR = 8,
 	SYSCALL_CLOSE_DIR = 9,
 	SYSCALL_REWIND_DIR = 10,
+
+    SYSCALL_GET_PROC_DIR = 11,
+    SYSCALL_SET_PROC_DIR = 12,
 
     SYSCALL_DEBUG_LIST_PROCESS   = 255,
     SYSCALL_DEBUG_DUMP_REGISTERS = 256,
@@ -94,6 +99,13 @@ void SyscallHandler(int syscallNumber, InterruptContext * context)
 		case SYSCALL_REWIND_DIR:
 			status = SysRewindDir((const Handle)context->ebx, &ret);
 			break;
+
+        case SYSCALL_GET_PROC_DIR:
+            status = SysGetProcDir((Handle *)context->ebx, &ret);
+            break;
+        case SYSCALL_SET_PROC_DIR:
+            status = SysSetProcDir((const Handle)context->ebx, &ret);
+            break;
 
         case SYSCALL_DEBUG_LIST_PROCESS:
 			status = SysDebugListProcess(&ret);
@@ -502,6 +514,95 @@ static KeStatus SysCloseDir(const Handle dirHandle, int * ret)
 static KeStatus SysRewindDir(const Handle dirHandle, int * ret)
 {
 	return STATUS_SUCCESS;
+}
+
+static KeStatus SysGetProcDir(Handle * handle, int * ret)
+{
+    KeStatus status = STATUS_FAILURE;
+    Process * process = NULL;
+
+    if (handle == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid handle parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    if (ret == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid ret parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    process = GetCurrentProcess();
+    if (process == NULL)
+    {
+        KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL");
+        *ret = -3; // INTERNAL_ERROR
+        status = STATUS_PROCESS_NOT_FOUND;
+        goto clean;
+    }
+
+    DirHandle * dirHandle = NULL;
+    status = CreateDirHandle(process->currentDirectory, &dirHandle);
+    if (FAILED(status))
+    {
+        KLOG(LOG_ERROR, "CreateDirHandle() failed with code %d", status);
+        *ret = -3; // INTERNAL ERROR
+        goto clean;
+    }
+
+    ListPush(process->dirHandleList, dirHandle);
+    *handle = dirHandle->handle;
+
+    status = STATUS_SUCCESS;
+    *ret = 1;
+
+clean:
+    return status;
+}
+
+static KeStatus SysSetProcDir(const Handle handle, int * ret)
+{
+    KeStatus status = STATUS_FAILURE;
+    Process * process = NULL;
+    DirHandle * dirHandle = NULL;
+
+    if (handle == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid handle parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    if (ret == NULL)
+    {
+        KLOG(LOG_ERROR, "Invalid ret parameter");
+        return STATUS_NULL_PARAMETER;
+    }
+
+    process = GetCurrentProcess();
+    if (process == NULL)
+    {
+        KLOG(LOG_ERROR, "GetCurrentProcess() returned NULL");
+        *ret = -3; // INTERNAL_ERROR
+        status = STATUS_PROCESS_NOT_FOUND;
+        goto clean;
+    }
+
+    status = GetDirFromHandle(handle, process, &dirHandle);
+    if (FAILED(status))
+    {
+        KLOG(LOG_ERROR, "GetDirFromHandle() failed with code %d", status);
+        *ret = -4; // UNKNOWN HANDLE
+        goto clean;
+    }
+
+    process->currentDirectory = dirHandle->dir;
+
+    status = STATUS_SUCCESS;
+    *ret = 1;
+
+clean:
+    return status;
 }
 
 static KeStatus SysDebugListProcess(int * ret)

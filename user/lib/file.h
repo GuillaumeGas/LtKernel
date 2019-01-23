@@ -11,3 +11,5 @@ struct DirEntry
 
 int OpenDir(const char * dirPath, Handle * dirHandle);
 int ReadDir(const Handle fileHandle, DirEntry * dirEntry);
+int GetProcessDirectory(Handle * handle);
+int SetCurrentDirectory(const Handle handle);
