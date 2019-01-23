@@ -39,6 +39,7 @@ void StrCpy(const char * src, char * dst)
 
 	while (*src != '\0')
 		*(dst++) = *(src++);
+	*dst = '\0';
 }
 
 unsigned long StrLen(const char * str)

@@ -26,6 +26,10 @@ void Ls()
 {
 	DirEntry dirEntry;
     int ret = 0;
+
+	Print(".\n");
+	Print("..\n");
+
 	while ((ret = ReadDir(s_currentDirHandle, &dirEntry)) != 0)
 	{
 		Print(dirEntry.name);

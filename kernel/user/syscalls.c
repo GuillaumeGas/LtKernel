@@ -596,6 +596,7 @@ static KeStatus SysSetProcDir(const Handle handle, int * ret)
         goto clean;
     }
 
+	BrowseAndCacheDirectory(dirHandle->dir);
     process->currentDirectory = dirHandle->dir;
 
     status = STATUS_SUCCESS;
