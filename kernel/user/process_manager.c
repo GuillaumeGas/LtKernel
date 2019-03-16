@@ -111,7 +111,7 @@ void PmStartThread(int tid)
 
 		pd = gCurrentProcess->pageDirectory.pdEntry;
 
-        kprint("[%d,%d] %x : %b*\n", gCurrentProcess->pid, gCurrentThread->tid, pd, pd, 32);
+        //kprint("[%d,%d] %x : %b*\n", gCurrentProcess->pid, gCurrentThread->tid, pd, pd, 32);
 
 		ThreadPrepare(gCurrentThread);
 

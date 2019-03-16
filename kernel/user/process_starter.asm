@@ -32,6 +32,8 @@ _start_process:
 	jne user_mode
 
 kernel_mode:
+	mov esp, [esi+16]
+
 	; eflags
 	push dword [esi+20]
 	; cs

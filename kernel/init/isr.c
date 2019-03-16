@@ -10,6 +10,7 @@
 
 #include <kernel/debug/debug.h>
 #include <kernel/scheduler.h>
+#include <kernel/user/process_manager.h>
 
 #include <kernel/init/gdt.h>
 
@@ -165,6 +166,18 @@ void page_fault_isr(ExceptionContextWithCode * context)
 	{
 		PrintExceptionUserContextWithCode((ExceptionContextUserWithCode *)context);
 	}
+
+    kprint("Stack trace :\n");
+    u32 * ebp = (u32*)context->ebp;
+    while (ebp != NULL)
+    {
+        kprint("%x\n", (void*)ebp[1]);
+        ebp = (u32 *)ebp[0];
+    }
+
+    kprint("\nCurrent Process : %x, current thread : %d\n", gCurrentProcess->pid, gCurrentThread->tid);
+    Thread * t = GetThreadFromTid(0);
+    kprint("Last thread eip : %x\n", t->regs.eip);
 
 	Pause();
 }
